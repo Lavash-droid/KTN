@@ -1,0 +1,15 @@
+{
+  "name": "Sürü — Ferma idarəetməsi",
+  "short_name": "Sürü",
+  "description": "Heyvan uçotu, müalicə, mayalanma və çəki qeydləri. İnternetsiz işləyir.",
+  "lang": "az",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f3ee",
+  "theme_color": "#1f6f43",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

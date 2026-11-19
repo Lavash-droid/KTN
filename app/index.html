@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="az">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f6f43">
+  <meta name="description" content="Sürü — fermanız cibinizdə. Heyvan uçotu, müalicə, mayalanma və çəki qeydləri.">
+  <title>Sürü — Ferma</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <button class="icon-btn" id="backBtn" aria-label="Geri" hidden>‹</button>
+    <h1 id="title">Sürü</h1>
+    <span class="offline" id="offlineBadge" hidden>Offline</span>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <nav class="tabbar" aria-label="Əsas menyu">
+    <a href="#/" data-tab="home"><span>🏠</span>Panel</a>
+    <a href="#/animals" data-tab="animals"><span>🐄</span>Heyvanlar</a>
+    <a href="#/new" data-tab="new" class="add"><span>＋</span>Əlavə et</a>
+    <a href="#/tasks" data-tab="tasks"><span>✅</span>Tapşırıqlar</a>
+    <a href="#/more" data-tab="more"><span>⚙️</span>Digər</a>
+  </nav>
+
+  <dialog id="sheet">
+    <form method="dialog" id="sheetForm">
+      <h2 id="sheetTitle"></h2>
+      <div id="sheetBody"></div>
+      <div class="row-btns">
+        <button value="cancel" type="button" class="btn ghost" id="sheetCancel">Ləğv et</button>
+        <button value="ok" class="btn">Yadda saxla</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
