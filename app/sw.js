@@ -1,5 +1,5 @@
 /* Sürü service worker: tətbiq fayllarını keşləyir ki, internet olmadan da açılsın. */
-const CACHE = 'suru-v1';
+const CACHE = 'suru-v2';
 const ASSETS = ['./', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest', 'icon.svg'];
 
 self.addEventListener('install', (e) => {

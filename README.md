@@ -15,6 +15,8 @@ Herdwatch (İrlandiya) modelindən ilhamlanan, Azərbaycan bazarı üçün yerli
 - Heyvan reyestri: inək, camış, qoyun, keçi (bırka, cins, doğum tarixi, ana, qrup, status)
 - Müalicə jurnalı və **dərman qalığı** (ət/süd) son tarixinin avtomatik hesablanması
 - **Qrup müalicəsi** — bütün sürü, növ və ya qrup üzrə bir dəfəyə
+- **Dərman şkafı** — ehtiyat, son istifadə tarixi, az qalma xəbərdarlığı; müalicə yazanda qalıq müddətləri avtomatik dolur və ehtiyatdan çıxılır
+- **Heyvan şəkli** — kamera ilə; şəkillər IndexedDB-də saxlanılır və ehtiyat nüsxəyə daxildir
 - Mayalanma → **gözlənilən doğum tarixi**; "Doğdu" nəticəsindən balanın avtomatik əlavəsi
 - Çəki qeydləri və orta gündəlik artım (q/gün)
 - Tapşırıqlar, panelde xatırlatmalar

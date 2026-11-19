@@ -14,8 +14,75 @@ const STATUS = { aktiv: 'Aktiv', satilib: 'Satılıb', olub: 'Ölüb', kesilib: 
 /* ---------- Məlumat qatı ---------- */
 const emptyState = () => ({
   farm: { name: 'Mənim fermam', owner: '', region: '' },
-  animals: [], treatments: [], weights: [], breedings: [], tasks: [],
+  animals: [], treatments: [], weights: [], breedings: [], tasks: [], meds: [],
 });
+
+const MED_UNITS = ['ml', 'doza', 'ədəd', 'tablet', 'q', 'şüşə'];
+
+/** Heyvan şəkilləri localStorage-ı doldurmasın deyə IndexedDB-də saxlanılır (açar = heyvanın id-si). */
+const photoDB = (() => {
+  let dbp;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('suru-photos', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('p');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+  const tx = async (mode, fn) => {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('p', mode);
+      const req = fn(t.objectStore('p'));
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = () => rej(t.error);
+    });
+  };
+  return {
+    get: (k) => tx('readonly', (s) => s.get(k)).catch(() => null),
+    put: (k, v) => tx('readwrite', (s) => s.put(v, k)),
+    del: (k) => tx('readwrite', (s) => s.delete(k)).catch(() => {}),
+    clear: () => tx('readwrite', (s) => s.clear()).catch(() => {}),
+    all: async () => {
+      const out = {};
+      try {
+        const db = await open();
+        await new Promise((res) => {
+          const c = db.transaction('p').objectStore('p').openCursor();
+          c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } else res(); };
+          c.onerror = () => res();
+        });
+      } catch (e) { /* IndexedDB əlçatan deyil */ }
+      return out;
+    },
+  };
+})();
+
+/** Şəkli kiçildib JPEG data URL-ə çevirir (yaddaşa qənaət üçün). */
+function resizeImage(file, max = 640) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * k);
+      c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', 0.75));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('image')); };
+    img.src = url;
+  });
+}
+
+/** Səhifədəki img[data-photo] elementlərinə şəkilləri yükləyir. */
+function loadPhotos(root = document) {
+  root.querySelectorAll('img[data-photo]').forEach(async (img) => {
+    const src = await photoDB.get(img.dataset.photo);
+    if (src) img.src = src; else img.replaceWith(document.createTextNode('📷'));
+  });
+}
 
 let state = load();
 
@@ -93,6 +160,73 @@ function weightStats(animalId) {
     if (d > 0) adg = Math.round(((last.kg - ws[0].kg) / d) * 1000);
   }
   return { last, adg, count: ws.length };
+}
+
+/* ---------- Dərman şkafı ---------- */
+const findMed = (name) => {
+  const n = (name || '').trim().toLowerCase();
+  return n ? state.meds.find((m) => m.name.trim().toLowerCase() === n) : null;
+};
+const round1 = (x) => Math.round(x * 10) / 10;
+
+/** Dərmanın vəziyyəti: vaxtı keçib / yaxında bitir / az qalıb. */
+function medStatus(m) {
+  const t = todayISO();
+  const s = { expired: false, soon: false, low: false };
+  if (m.expiry) {
+    if (m.expiry < t) s.expired = true;
+    else if (m.expiry <= addDays(t, 30)) s.soon = true;
+  }
+  if (Number(m.minQty) > 0 && Number(m.qty) <= Number(m.minQty)) s.low = true;
+  return s;
+}
+function medBadges(m) {
+  const s = medStatus(m);
+  return [
+    s.expired ? '<span class="badge danger">Vaxtı keçib</span>' : '',
+    s.soon ? '<span class="badge warn">Vaxtı bitir</span>' : '',
+    s.low ? '<span class="badge warn">Az qalıb</span>' : '',
+  ].join(' ');
+}
+
+/** Müalicə formalarında dərman sahəsi: şkafdan seçim, qalıq müddətlərinin avtomatik doldurulması, ehtiyatdan çıxma. */
+function medFieldsHtml(perAnimal) {
+  return `
+    <label for="s-med">Dərman / peyvənd *</label>
+    <input id="s-med" name="medicine" required list="medList" autocomplete="off" placeholder="Məs: İvermektin, Şap peyvəndi">
+    <datalist id="medList">${state.meds.map((m) => `<option value="${esc(m.name)}">`).join('')}</datalist>
+    <p class="small" id="medInfo" hidden></p>
+    <div id="useWrap" hidden>
+      <label for="s-used">Şkafdan çıxılsın${perAnimal ? ' (hər heyvana)' : ''}, <span id="s-used-unit"></span></label>
+      <input id="s-used" type="number" min="0" step="0.1" name="used" value="0" inputmode="decimal">
+    </div>`;
+}
+function wireMedField() {
+  const inp = $('#s-med');
+  inp.addEventListener('input', () => {
+    const m = findMed(inp.value);
+    const info = $('#medInfo');
+    $('#useWrap').hidden = !m;
+    if (!m) { info.hidden = true; return; }
+    $('#s-meat').value = m.meatWd || 0;
+    $('#s-milk').value = m.milkWd || 0;
+    $('#s-used-unit').textContent = m.unit;
+    const st = medStatus(m);
+    info.hidden = false;
+    info.style.color = st.expired ? 'var(--danger)' : 'var(--muted)';
+    info.textContent = st.expired
+      ? `⚠️ Bu dərmanın son istifadə tarixi keçib (${fmt(m.expiry)})! Ehtiyatda: ${m.qty} ${m.unit}.`
+      : `Şkafda: ${m.qty} ${m.unit}${m.expiry ? ' · son istifadə: ' + fmt(m.expiry) : ''}. Qalıq müddətləri şkafdan götürüldü.`;
+  });
+}
+/** Ehtiyatdan çıxır; xəbərdarlıq mətni qaytarır (yoxdursa boş). */
+function takeFromStock(name, amount) {
+  const m = findMed(name);
+  if (!m || !(amount > 0)) return '';
+  m.qty = Math.max(0, round1(Number(m.qty) - amount));
+  if (m.qty === 0) return ` · ${m.name} şkafda bitdi`;
+  if (medStatus(m).low) return ` · ${m.name} az qalıb (${m.qty} ${m.unit})`;
+  return '';
 }
 
 function pendingBirths() {
@@ -185,6 +319,15 @@ function renderHome() {
     const n = daysBetween(t, k.due);
     alerts.push(`<a class="alert ${n < 0 ? 'warn' : 'info'}" href="#/tasks"><span>📌</span><div><b>${esc(k.title)}</b><br><small>${fmt(k.due)} (${inDays(n)})</small></div></a>`);
   }
+  for (const m of state.meds) {
+    const s = medStatus(m);
+    if (!s.expired && !s.soon && !s.low) continue;
+    const parts = [];
+    if (s.expired) parts.push(`son istifadə tarixi keçib (${fmt(m.expiry)})`);
+    if (s.soon) parts.push(`son istifadə: ${fmt(m.expiry)} (${inDays(daysBetween(t, m.expiry))})`);
+    if (s.low) parts.push(`az qalıb: ${m.qty} ${m.unit}`);
+    alerts.push(`<a class="alert ${s.expired ? 'danger' : 'warn'}" href="#/meds"><span>🧴</span><div><b>${esc(m.name)}</b> — dərman şkafı<br><small>${parts.join(' · ')}</small></div></a>`);
+  }
 
   const recent = [
     ...state.treatments.map((x) => ({ ...x, kind: 'tr' })),
@@ -257,10 +400,11 @@ function drawAnimalList() {
       a.status !== 'aktiv' ? `<span class="badge warn">${STATUS[a.status]}</span>` : '',
     ].join(' ');
     return `<li><a href="#/animal/${a.id}">
-      <span class="ico">${sp(a).icon}</span>
+      <span class="ico">${a.hasPhoto ? `<img class="thumb" data-photo="${a.id}" alt="">` : sp(a).icon}</span>
       <div class="main"><b>${esc(animalLabel(a))}</b><small>${esc(a.breed || sp(a).label)} · ${a.sex === 'd' ? 'Dişi' : 'Erkək'}${a.dob ? ' · ' + age(a.dob) : ''}</small></div>
       ${badges}<span class="chev">›</span></a></li>`;
   }).join('') : `<li class="empty">Heyvan tapılmadı. <a href="#/new">Yenisini əlavə edin</a></li>`;
+  loadPhotos($('#animalList'));
 }
 
 function renderAnimalForm(id) {
@@ -272,6 +416,14 @@ function renderAnimalForm(id) {
   const breedList = (s) => SPECIES[s].breeds.map((b) => `<option value="${esc(b)}">`).join('');
   view().innerHTML = `
     <form class="card" id="animalForm" autocomplete="off">
+      <div class="photo-field">
+        <div class="photo-box" id="f-photo-box">${a && a.hasPhoto ? `<img data-photo="${a.id}" alt="Heyvanın şəkli">` : '<span>📷</span>'}</div>
+        <div>
+          <label class="btn ghost sm" style="margin:0">Şəkil çək / seç<input type="file" id="f-photo" accept="image/*" hidden></label>
+          <button type="button" class="btn ghost sm" id="f-photo-del" ${a && a.hasPhoto ? '' : 'hidden'}>Şəkli sil</button>
+          <p class="muted small" style="margin:6px 0 0">Bırka itəndə heyvanı tanımağa kömək edir.</p>
+        </div>
+      </div>
       <label for="f-species">Növ</label>
       <select id="f-species" name="species">${options(SPECIES, v.species)}</select>
       <div class="grid2">
@@ -297,24 +449,51 @@ function renderAnimalForm(id) {
         <button class="btn">Yadda saxla</button>
       </div>
     </form>`;
+  loadPhotos(view());
   $('#f-species').onchange = (e) => { $('#breeds').innerHTML = breedList(e.target.value); };
-  $('#animalForm').onsubmit = (e) => {
+
+  // undefined = dəyişməyib, string = yeni şəkil, null = silinəcək
+  let photo;
+  $('#f-photo').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      photo = await resizeImage(file);
+      $('#f-photo-box').innerHTML = `<img src="${photo}" alt="Heyvanın şəkli">`;
+      $('#f-photo-del').hidden = false;
+    } catch (err) { toast('Şəkil oxunmadı'); }
+  };
+  $('#f-photo-del').onclick = () => {
+    photo = null;
+    $('#f-photo-box').innerHTML = '<span>📷</span>';
+    $('#f-photo-del').hidden = true;
+  };
+
+  $('#animalForm').onsubmit = async (e) => {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(e.target));
     d.tag = d.tag.trim();
     if (!d.tag) return toast('Bırka nömrəsi tələb olunur');
     const dup = state.animals.find((x) => x.tag.toLowerCase() === d.tag.toLowerCase() && x.id !== (a && a.id));
     if (dup) return toast('Bu bırka nömrəsi artıq mövcuddur');
+    let target = a;
     if (a) Object.assign(a, d);
-    else state.animals.push({ id: uid(), createdAt: todayISO(), ...d });
+    else { target = { id: uid(), createdAt: todayISO(), ...d }; state.animals.push(target); }
+    if (typeof photo === 'string') {
+      try { await photoDB.put(target.id, photo); target.hasPhoto = true; }
+      catch (err) { toast('Şəkil yadda saxlanmadı'); }
+    } else if (photo === null) {
+      await photoDB.del(target.id); target.hasPhoto = false;
+    }
     save();
     toast(a ? 'Yeniləndi' : 'Heyvan əlavə olundu');
-    location.hash = `#/animal/${a ? a.id : state.animals[state.animals.length - 1].id}`;
+    location.hash = `#/animal/${target.id}`;
   };
   if (a) $('#delBtn').onclick = () => {
     if (!confirm(`${animalLabel(a)} və bütün qeydləri silinsin?`)) return;
     state.animals = state.animals.filter((x) => x.id !== a.id);
     for (const k of ['treatments', 'weights', 'breedings']) state[k] = state[k].filter((x) => x.animalId !== a.id);
+    photoDB.del(a.id);
     save();
     toast('Silindi');
     location.hash = '#/animals';
@@ -359,6 +538,7 @@ function renderAnimal(id) {
 
   view().innerHTML = `
     <div class="card">
+      ${a.hasPhoto ? `<img class="animal-photo" data-photo="${a.id}" alt="${esc(animalLabel(a))}">` : ''}
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
         <span style="font-size:2.4rem">${s.icon}</span>
         <div style="flex:1"><b style="font-size:1.15rem">${esc(a.tag)}</b>${a.name ? `<div class="muted">${esc(a.name)}</div>` : ''}</div>
@@ -389,6 +569,7 @@ function renderAnimal(id) {
     <h2>Tarixçə</h2>
     <div class="card">${events.length ? `<ul class="timeline">${events.map(evHtml).join('')}</ul>` : '<p class="muted" style="margin:0">Hələ qeyd yoxdur</p>'}</div>`;
 
+  loadPhotos(view());
   $('#addTr').onclick = () => treatmentSheet(a);
   $('#addW').onclick = () => weightSheet(a);
   if (a.sex === 'd') $('#addB').onclick = () => breedingSheet(a);
@@ -405,7 +586,7 @@ function renderAnimal(id) {
 function treatmentSheet(a) {
   openSheet(`💊 Müalicə — ${a.tag}`, `
     <label for="s-date">Tarix</label><input id="s-date" type="date" name="date" required value="${todayISO()}" max="${todayISO()}">
-    <label for="s-med">Dərman / peyvənd *</label><input id="s-med" name="medicine" required placeholder="Məs: İvermektin, Şap peyvəndi">
+    ${medFieldsHtml(false)}
     <div class="grid2">
       <div><label for="s-dose">Doza</label><input id="s-dose" name="dose" placeholder="10 ml"></div>
       <div><label for="s-reason">Səbəb</label><input id="s-reason" name="reason" placeholder="Parazit, mastit…"></div>
@@ -416,10 +597,12 @@ function treatmentSheet(a) {
     </div>
     <p class="muted small">Qalıq müddətini dərmanın təlimatından və ya baytardan öyrənin. Tətbiq son tarixi avtomatik hesablayacaq.</p>`,
   (fd) => {
-    const d = Object.fromEntries(fd);
+    const { used, ...d } = Object.fromEntries(fd);
     state.treatments.push({ id: uid(), animalId: a.id, ...d, meatWd: Number(d.meatWd) || 0, milkWd: Number(d.milkWd) || 0 });
-    save(); toast('Müalicə qeyd olundu'); renderAnimal(a.id);
+    const note = takeFromStock(d.medicine, parseFloat(used) || 0);
+    save(); toast('Müalicə qeyd olundu' + note); renderAnimal(a.id);
   });
+  wireMedField();
 }
 
 /** Qrup müalicəsi: bütün sürü, bir növ və ya bir qrup üzrə eyni dərmanı bir dəfəyə qeyd edir. */
@@ -438,7 +621,7 @@ function groupTreatmentSheet() {
     <label for="s-target">Kimlər müalicə olunur?</label>
     <select id="s-target" name="target">${targets.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>
     <label for="s-date">Tarix</label><input id="s-date" type="date" name="date" required value="${todayISO()}" max="${todayISO()}">
-    <label for="s-med">Dərman / peyvənd *</label><input id="s-med" name="medicine" required placeholder="Məs: Şap peyvəndi, İvermektin">
+    ${medFieldsHtml(true)}
     <div class="grid2">
       <div><label for="s-dose">Doza (hər heyvana)</label><input id="s-dose" name="dose" placeholder="2 ml"></div>
       <div><label for="s-reason">Səbəb</label><input id="s-reason" name="reason" placeholder="Peyvənd, parazit…"></div>
@@ -460,10 +643,12 @@ function groupTreatmentSheet() {
         meatWd: Number(d.meatWd) || 0, milkWd: Number(d.milkWd) || 0,
       });
     }
+    const note = takeFromStock(d.medicine, (parseFloat(d.used) || 0) * list.length);
     save();
-    toast(`${list.length} heyvan üçün müalicə qeyd olundu`);
+    toast(`${list.length} heyvan üçün müalicə qeyd olundu${note}`);
     route();
   });
+  wireMedField();
 }
 
 function weightSheet(a) {
@@ -512,6 +697,62 @@ function outcomeSheet(a, bid) {
       location.hash = '#/new';
     } else renderAnimal(a.id);
   });
+}
+
+function renderMeds() {
+  setTitle('Dərman şkafı', true);
+  setTab('more');
+  const items = [...state.meds].sort((a, b) => a.name.localeCompare(b.name, 'az'));
+  view().innerHTML = `
+    <button class="btn block" id="addMed">＋ Dərman əlavə et</button>
+    <ul class="list" style="margin-top:12px">
+      ${items.length ? items.map((m) => {
+        const wd = [Number(m.meatWd) ? `ət ${m.meatWd} gün` : '', Number(m.milkWd) ? `süd ${m.milkWd} gün` : ''].filter(Boolean).join(', ');
+        return `<li><a href="#" data-med="${m.id}"><span class="ico">💊</span>
+          <div class="main"><b>${esc(m.name)}</b><small>${m.qty} ${esc(m.unit)}${m.expiry ? ' · son istifadə ' + fmt(m.expiry) : ''}${wd ? ' · qalıq: ' + wd : ''}</small></div>
+          ${medBadges(m)}<span class="chev">›</span></a></li>`;
+      }).join('') : '<li class="empty">Şkaf boşdur. Fermadakı dərman və peyvəndləri əlavə edin — müalicə yazanda qalıq müddətləri avtomatik dolacaq, ehtiyat azalacaq.</li>'}
+    </ul>
+    <p class="muted small" style="margin-top:14px">Son istifadə tarixi 30 gündən az qalan, vaxtı keçən və minimum miqdardan az qalan dərmanlar paneldə göstərilir.</p>`;
+  $('#addMed').onclick = () => medSheet();
+  view().querySelectorAll('[data-med]').forEach((el) => el.onclick = (e) => {
+    e.preventDefault();
+    medSheet(state.meds.find((m) => m.id === el.dataset.med));
+  });
+}
+
+function medSheet(m) {
+  const v = m || { unit: 'ml', qty: 0, minQty: 0, meatWd: 0, milkWd: 0 };
+  openSheet(m ? `💊 ${m.name}` : '💊 Yeni dərman', `
+    <label for="d-name">Ad *</label><input id="d-name" name="name" required value="${esc(v.name)}" placeholder="Məs: İvermektin 1%">
+    <div class="grid2">
+      <div><label for="d-qty">Ehtiyat</label><input id="d-qty" type="number" min="0" step="0.1" name="qty" value="${esc(v.qty)}" inputmode="decimal"></div>
+      <div><label for="d-unit">Vahid</label><select id="d-unit" name="unit">${MED_UNITS.map((u) => `<option ${u === v.unit ? 'selected' : ''}>${u}</option>`).join('')}</select></div>
+    </div>
+    <div class="grid2">
+      <div><label for="d-min">Minimum (xəbərdarlıq)</label><input id="d-min" type="number" min="0" step="0.1" name="minQty" value="${esc(v.minQty)}" inputmode="decimal"></div>
+      <div><label for="d-exp">Son istifadə tarixi</label><input id="d-exp" type="date" name="expiry" value="${esc(v.expiry)}"></div>
+    </div>
+    <div class="grid2">
+      <div><label for="d-meat">Ət qalığı (gün)</label><input id="d-meat" type="number" min="0" name="meatWd" value="${esc(v.meatWd)}" inputmode="numeric"></div>
+      <div><label for="d-milk">Süd qalığı (gün)</label><input id="d-milk" type="number" min="0" name="milkWd" value="${esc(v.milkWd)}" inputmode="numeric"></div>
+    </div>
+    <label for="d-notes">Qeyd</label><input id="d-notes" name="notes" value="${esc(v.notes)}" placeholder="Partiya nömrəsi, saxlama şəraiti…">
+    ${m ? '<button type="button" class="btn ghost sm" id="medDel" style="margin-top:14px;color:var(--danger)">Dərmanı sil</button>' : ''}`,
+  (fd) => {
+    const d = Object.fromEntries(fd);
+    d.name = d.name.trim();
+    const dup = findMed(d.name);
+    if (dup && dup !== m) { toast('Bu adda dərman artıq var'); return false; }
+    for (const k of ['qty', 'minQty', 'meatWd', 'milkWd']) d[k] = Number(d[k]) || 0;
+    if (m) Object.assign(m, d); else state.meds.push({ id: uid(), ...d });
+    save(); toast('Yadda saxlanıldı'); renderMeds();
+  });
+  if (m) $('#medDel').onclick = () => {
+    if (!confirm(`${m.name} şkafdan silinsin? (Keçmiş müalicə qeydləri qalacaq)`)) return;
+    state.meds = state.meds.filter((x) => x.id !== m.id);
+    save(); $('#sheet').close(); renderMeds();
+  };
 }
 
 function renderTasks() {
@@ -563,6 +804,11 @@ function renderMore() {
       <div class="row-btns"><button class="btn">Yadda saxla</button></div>
     </form>
 
+    <h2>Ferma ehtiyatı</h2>
+    <ul class="list">
+      <li><a href="#/meds"><span class="ico">🧴</span><div class="main"><b>Dərman şkafı</b><small>${state.meds.length} dərman${state.meds.some((m) => { const s = medStatus(m); return s.expired || s.soon || s.low; }) ? ' · diqqət tələb edənlər var' : ''}</small></div><span class="chev">›</span></a></li>
+    </ul>
+
     <h2>Hesabatlar və ehtiyat nüsxə</h2>
     <ul class="list">
       <li><a href="#" id="csvAnimals"><span class="ico">📄</span><div class="main"><b>Heyvan siyahısı (CSV / Excel)</b><small>Bütün heyvanlar, son çəki, status</small></div></a></li>
@@ -576,7 +822,7 @@ function renderMore() {
       <li><a href="#" id="demo"><span class="ico">🧪</span><div class="main"><b>Nümunə məlumat yüklə</b><small>Tətbiqi sınamaq üçün</small></div></a></li>
       <li><a href="#" id="wipe"><span class="ico">🗑️</span><div class="main"><b style="color:var(--danger)">Bütün məlumatı sil</b><small>Geri qaytarmaq olmaz</small></div></a></li>
     </ul>
-    <p class="muted small" style="text-align:center;margin-top:24px">Sürü v0.1 · Məlumatlar yalnız bu cihazda saxlanılır.<br>Mütəmadi ehtiyat nüsxə götürün.</p>`;
+    <p class="muted small" style="text-align:center;margin-top:24px">Sürü v0.2 · Məlumatlar yalnız bu cihazda saxlanılır.<br>Mütəmadi ehtiyat nüsxə götürün.</p>`;
 
   $('#farmForm').onsubmit = (e) => {
     e.preventDefault();
@@ -585,9 +831,10 @@ function renderMore() {
   };
   $('#csvAnimals').onclick = (e) => { e.preventDefault(); exportAnimalsCsv(); };
   $('#csvMeds').onclick = (e) => { e.preventDefault(); exportMedsCsv(); };
-  $('#backup').onclick = (e) => {
+  $('#backup').onclick = async (e) => {
     e.preventDefault();
-    download(`suru-ehtiyat-${todayISO()}.json`, JSON.stringify(state, null, 2), 'application/json');
+    const photos = await photoDB.all();
+    download(`suru-ehtiyat-${todayISO()}.json`, JSON.stringify({ ...state, photos }), 'application/json');
   };
   $('#restore').onchange = async (e) => {
     const f = e.target.files[0];
@@ -596,7 +843,12 @@ function renderMore() {
       const data = JSON.parse(await f.text());
       if (!Array.isArray(data.animals)) throw new Error('format');
       if (!confirm('Mövcud məlumat ehtiyat nüsxə ilə əvəz olunsun?')) return;
-      state = Object.assign(emptyState(), data);
+      const { photos, ...rest } = data;
+      state = Object.assign(emptyState(), rest);
+      await photoDB.clear();
+      for (const [k, v] of Object.entries(photos || {})) {
+        if (typeof v === 'string' && v.startsWith('data:image/')) await photoDB.put(k, v);
+      }
       save(); toast('Bərpa olundu'); location.hash = '#/';
     } catch (err) { toast('Fayl oxunmadı — düzgün ehtiyat nüsxə deyil'); }
   };
@@ -604,7 +856,7 @@ function renderMore() {
   $('#wipe').onclick = (e) => {
     e.preventDefault();
     if (!confirm('Bütün məlumat silinsin? Bu əməliyyatı geri qaytarmaq olmaz.')) return;
-    state = emptyState(); save(); toast('Məlumat silindi'); location.hash = '#/';
+    state = emptyState(); save(); photoDB.clear(); toast('Məlumat silindi'); location.hash = '#/';
   };
 }
 
@@ -673,7 +925,11 @@ function loadDemo() {
   s.tasks.push({ id: uid(), title: 'Qoyunlara parazit dərmanı', due: d(1), done: false });
   s.tasks.push({ id: uid(), title: 'Baytar çağır — Ceyranın yoxlanışı', due: d(3), done: false });
   s.tasks.push({ id: uid(), title: 'Yem sifarişi (qarğıdalı silosu)', due: d(-1), done: false });
+  s.meds.push({ id: uid(), name: 'Penisilin', qty: 80, unit: 'ml', minQty: 50, expiry: d(240), meatWd: 10, milkWd: 4, notes: '' });
+  s.meds.push({ id: uid(), name: 'İvermektin 1%', qty: 30, unit: 'ml', minQty: 50, expiry: d(20), meatWd: 28, milkWd: 0, notes: 'Sağmal heyvanlara vurulmur' });
+  s.meds.push({ id: uid(), name: 'Şap peyvəndi', qty: 18, unit: 'doza', minQty: 5, expiry: d(150), meatWd: 0, milkWd: 0, notes: 'Soyuducuda saxla' });
   state = s;
+  photoDB.clear();
   save();
   toast('Nümunə məlumat yükləndi');
   location.hash = '#/';
@@ -704,6 +960,7 @@ function route() {
     }
     case 'edit': return renderAnimalForm(id);
     case 'tasks': return renderTasks();
+    case 'meds': return renderMeds();
     case 'more': return renderMore();
     default: return notFound();
   }

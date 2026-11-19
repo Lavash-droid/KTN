@@ -80,8 +80,8 @@
 | Mayalanma → doğum, doğum kitabçası | ✅ Hazırdır | — |
 | Çəki və ADG | ✅ Hazırdır | — |
 | Bir kliklə hesabatlar | ✅ CSV (heyvanlar, dərman jurnalı) | — |
-| Dərman ehtiyatı ("dərman şkafı") | Dərman qalığı + son istifadə tarixi | Yüksək |
-| Şəkil qeydləri | Heyvan şəkli (tanınma üçün — yerli fermalarda bırka çox vaxt itir) | Yüksək |
+| Dərman ehtiyatı ("dərman şkafı") | ✅ Hazırdır: ehtiyat, son istifadə tarixi, minimum xəbərdarlığı, müalicədə avtomatik çıxma | — |
+| Şəkil qeydləri | ✅ Hazırdır: heyvan şəkli (bırka itəndə tanınma üçün) | — |
 | Çox istifadəçi, bulud | Fermer + işçi + baytar | Yüksək |
 | Dövlət reyestri inteqrasiyası | Elektron identifikasiya sistemi və EKTİS ilə (rəsmi tərəfdaşlıqla) | Orta (dövlət sisteminin hazırlığından asılı) |
 | Buy & Sell | Heyvan bazarı: təsdiqlənmiş tarixçə ilə elan, WhatsApp ilə əlaqə | Orta |
@@ -129,6 +129,8 @@ saxlama müddətləri konkret göstərilsin, cookie razılığı olsun, dövlət
 - Heyvan reyestri: inək, camış, qoyun, keçi
 - Müalicə jurnalı + ət/süd üçün dərman qalığı müddətinin avtomatik hesablanması
 - Qrup müalicəsi (bütün sürü, növ və ya qrup üzrə bir dəfəyə)
+- Dərman şkafı: ehtiyat, son istifadə tarixi, az qalma xəbərdarlığı; müalicədə qalıq müddətləri avtomatik dolur, ehtiyatdan çıxılır
+- Heyvan şəkilləri (telefonun kamerası ilə)
 - Mayalanma → gözlənilən doğum tarixi (inək 283, camış 310, qoyun 147, keçi 150 gün)
 - Çəki qeydləri və orta gündəlik artım
 - Tapşırıqlar və xatırlatmalar
