@@ -4,10 +4,10 @@
 const STORAGE_KEY = 'suru-data-v1';
 
 const SPECIES = {
-  inek:  { label: 'İnək',  icon: '🐄', gest: 283, breeds: ['Qafqaz qonuru', 'Holşteyn', 'Simmental', 'Şvis', 'Yerli', 'Digər'] },
-  camis: { label: 'Camış', icon: '🐃', gest: 310, breeds: ['Azərbaycan camışı', 'Digər'] },
-  qoyun: { label: 'Qoyun', icon: '🐑', gest: 147, breeds: ['Qarabağ', 'Balbas', 'Bozah', 'Qala', 'Merinos', 'Digər'] },
-  keci:  { label: 'Keçi',  icon: '🐐', gest: 150, breeds: ['Yerli', 'Zaanen', 'Alp', 'Digər'] },
+  inek:  { label: 'İnək', plural: 'inəklər',  icon: '🐄', gest: 283, breeds: ['Qafqaz qonuru', 'Holşteyn', 'Simmental', 'Şvis', 'Yerli', 'Digər'] },
+  camis: { label: 'Camış', plural: 'camışlar', icon: '🐃', gest: 310, breeds: ['Azərbaycan camışı', 'Digər'] },
+  qoyun: { label: 'Qoyun', plural: 'qoyunlar', icon: '🐑', gest: 147, breeds: ['Qarabağ', 'Balbas', 'Bozah', 'Qala', 'Merinos', 'Digər'] },
+  keci:  { label: 'Keçi', plural: 'keçilər',  icon: '🐐', gest: 150, breeds: ['Yerli', 'Zaanen', 'Alp', 'Digər'] },
 };
 const STATUS = { aktiv: 'Aktiv', satilib: 'Satılıb', olub: 'Ölüb', kesilib: 'Kəsilib' };
 
@@ -223,7 +223,7 @@ function renderAnimals() {
   setTab('animals');
   const chip = (key, val, label) => `<button class="chip ${listFilter[key] === val ? 'on' : ''}" data-k="${key}" data-v="${val}">${label}</button>`;
   view().innerHTML = `
-    <div class="toolbar"><input type="search" id="q" placeholder="Bırka nömrəsi, ad və ya cins ilə axtar…" value="${esc(listFilter.q)}" aria-label="Axtar"></div>
+    <div class="toolbar"><input type="search" id="q" placeholder="Bırka, ad və ya cins ilə axtar…" value="${esc(listFilter.q)}" aria-label="Axtar"><button class="btn sm" id="groupTr" title="Bir neçə heyvanı birdən müalicə et">💊 Qrup</button></div>
     <div class="chips">
       ${chip('species', 'all', 'Hamısı')}
       ${Object.entries(SPECIES).map(([k, v]) => chip('species', k, v.icon + ' ' + v.label)).join('')}
@@ -235,6 +235,7 @@ function renderAnimals() {
     <p class="muted small" id="count"></p>
     <ul class="list" id="animalList"></ul>`;
   $('#q').oninput = (e) => { listFilter.q = e.target.value; drawAnimalList(); };
+  $('#groupTr').onclick = groupTreatmentSheet;
   view().querySelectorAll('.chip').forEach((b) => b.onclick = () => { listFilter[b.dataset.k] = b.dataset.v; renderAnimals(); });
   drawAnimalList();
 }
@@ -418,6 +419,50 @@ function treatmentSheet(a) {
     const d = Object.fromEntries(fd);
     state.treatments.push({ id: uid(), animalId: a.id, ...d, meatWd: Number(d.meatWd) || 0, milkWd: Number(d.milkWd) || 0 });
     save(); toast('Müalicə qeyd olundu'); renderAnimal(a.id);
+  });
+}
+
+/** Qrup müalicəsi: bütün sürü, bir növ və ya bir qrup üzrə eyni dərmanı bir dəfəyə qeyd edir. */
+function groupTreatmentSheet() {
+  const active = state.animals.filter((a) => a.status === 'aktiv');
+  if (!active.length) return toast('Əvvəlcə heyvan əlavə edin');
+  const targets = [['all', `Bütün aktiv heyvanlar (${active.length})`]];
+  for (const [k, v] of Object.entries(SPECIES)) {
+    const n = active.filter((a) => a.species === k).length;
+    if (n) targets.push([`sp:${k}`, `${v.icon} Bütün ${v.plural} (${n})`]);
+  }
+  const groups = [...new Set(active.map((a) => (a.group || '').trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'az'));
+  for (const g of groups) targets.push([`gr:${g}`, `Qrup: ${g} (${active.filter((a) => (a.group || '').trim() === g).length})`]);
+
+  openSheet('💊 Qrup müalicəsi', `
+    <label for="s-target">Kimlər müalicə olunur?</label>
+    <select id="s-target" name="target">${targets.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>
+    <label for="s-date">Tarix</label><input id="s-date" type="date" name="date" required value="${todayISO()}" max="${todayISO()}">
+    <label for="s-med">Dərman / peyvənd *</label><input id="s-med" name="medicine" required placeholder="Məs: Şap peyvəndi, İvermektin">
+    <div class="grid2">
+      <div><label for="s-dose">Doza (hər heyvana)</label><input id="s-dose" name="dose" placeholder="2 ml"></div>
+      <div><label for="s-reason">Səbəb</label><input id="s-reason" name="reason" placeholder="Peyvənd, parazit…"></div>
+    </div>
+    <div class="grid2">
+      <div><label for="s-meat">Ət qalığı (gün)</label><input id="s-meat" type="number" min="0" name="meatWd" value="0" inputmode="numeric"></div>
+      <div><label for="s-milk">Süd qalığı (gün)</label><input id="s-milk" type="number" min="0" name="milkWd" value="0" inputmode="numeric"></div>
+    </div>`,
+  (fd) => {
+    const d = Object.fromEntries(fd);
+    const t = d.target;
+    const list = active.filter((a) =>
+      t === 'all' ? true : t.startsWith('sp:') ? a.species === t.slice(3) : (a.group || '').trim() === t.slice(3));
+    if (!list.length) { toast('Seçilən qrupda heyvan yoxdur'); return false; }
+    const batchId = uid();
+    for (const a of list) {
+      state.treatments.push({
+        id: uid(), batchId, animalId: a.id, date: d.date, medicine: d.medicine, dose: d.dose, reason: d.reason,
+        meatWd: Number(d.meatWd) || 0, milkWd: Number(d.milkWd) || 0,
+      });
+    }
+    save();
+    toast(`${list.length} heyvan üçün müalicə qeyd olundu`);
+    route();
   });
 }
 

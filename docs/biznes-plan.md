@@ -45,15 +45,54 @@
 | Herdi (AI) | Fermerlər | Təbii dildə suallar, səsli qeyd ("walk and talk") |
 | Baytar həlləri | Baytarlar | ComTag, TB Master (vərəm və qan testləri), VetDrive (klinika idarəsi) |
 
-- **Miqyas** (sayt): 20 000+ fermer, tətbiqdə ~2,3 mln baş iribuynuzlu və ~1,7 mln baş qoyun.
-- **Tarixçə:** 2014 — ilk versiya; 2020 — NextGen; 2022 — Flockwatch və Renatus investisiyası; 2023 — Kingswood Computing və Farmplan müştərilərinin alınması, ABŞ/Kanada; 2024 — ComTag və TB Master; 2025 — Herdi.
-- **Data prinsipi** (sayt FAQ): fermerin daxil etdiyi data fermerə məxsusdur və razılığı olmadan paylaşılmır.
+- **Miqyas** (sayt): 20 000+ fermer, 100 000+ yükləmə, NPS 70+; tətbiqdə ~2,3 mln baş iribuynuzlu, ~1,7 mln baş qoyun, 3,5 mln buzov doğumu qeydə alınıb; 170+ ölkədə əlçatandır (MarketScreener).
+- **Fermerə vəd olunan fayda:** həftədə orta hesabla ~3 saat kağız işinə qənaət (şirkətin açıqlaması).
+- **Şirkət:** CEO və həmtəsisçi Fabien Peyaud; FRS Network (fermer kooperativi) əhəmiyyətli səhmdar olaraq qalır; 80+ işçi.
+- **Tarixçə:** 2014 — ilk versiya (İrlandiya); 2015–2016 — 3 000 fermer; 2020 — NextGen (2 il Ar-Ge); 2022 — Flockwatch və Renatus investisiyası; 2023 — Farmplan-ın BK heyvandarlıq müştəriləri və Kingswood Computing (5 000+ fermer) alınır, ABŞ/Kanada; 2024 — ComTag və TB Master, Texas mal-qaraçılar assosiasiyası (TSCRA) ilə tərəfdaşlıq; 2025 — Herdi, Ploughing və British Farming Awards mükafatları; VetDrive alınır.
 - **Platformalar:** iOS, Android, Windows, veb; bulud əsaslı, offline işləyir.
 
+### Bütün məhsullarda ortaq funksiyalar (sayt və App Store)
+- Dərmanı skan edib heyvanı seçməklə müalicə qeydi; qalıq (withdrawal) müddətlərinin avtomatik izlənməsi; dərman alışı və ehtiyatı.
+- **Fərdi və qrup müalicələri**, peyvənd qeydləri.
+- Bir kliklə hesabatlar (damazlıq, çəki, bütün sürü, müalicə) — audit üçün hazır qeydlər.
+- Ferma keyfiyyət sertifikatı (Farm Assurance) statusunun izlənməsi.
+- Bluetooth EID oxuyucu və tərəzi inteqrasiyası.
+- Şəkil qeydləri (heyvan şəkli, qəbz surəti), tapşırıqlar, inventar (yem, gübrə).
+- Buy & Sell: elanda təsdiqlənmiş məlumat — cins, yaş, fermada qaldığı günlər, hərəkət sayı, son vərəm testi, çəki.
+
+### Data və məxfilik (ictimai məxfilik siyasəti və App Store etiketi)
+- **Toplanan data:** ad, e-poçt, telefon, ünvan; ferma identifikatorları və sürü ölçüsü (qiymət üçün); IP, cihaz və istifadə məlumatları; lokasiya yalnız icazə ilə; cookie, Google Analytics, remarketinq reklamları; ödəniş Stripe vasitəsilə (kart məlumatı saxlanılmır).
+- **Hüquqi əsaslar (GDPR):** müqavilənin icrası, razılıq, qanuni maraq, qanuni öhdəlik.
+- **İstifadəçi hüquqları:** giriş, düzəliş, silmə, etiraz, məhdudlaşdırma, daşınabilirlik, razılığı geri götürmə, nəzarət orqanına şikayət. Xidmət 18 yaşdan kiçiklər üçün deyil.
+- **Dövlət sistemlərinə avtomatik ötürmə üçün** fermerin icazəsi ilə onun portal giriş məlumatları saxlanılır (sayt FAQ) — bu çox həssas datadır.
+- **İctimai sənədlərdə müşahidə olunan zəif cəhətlər** (bizim üçün dərs): saxlama müddətləri konkret göstərilmir; istifadə şərtləri data sahibliyini açıq ifadə etmir və şirkətə geniş lisenziya verir; qeyri-zəruri cookie-lər üçün razılıq mexanizmi təsvir olunmur; siyasət 2021-ci ildən yenilənməyib.
+
 > ℹ️ İstifadəçinin göndərdiyi sənəddə Herdwatch-un **daxili** Confluence/Jira materiallarına
-> əsaslanan hissələr də var idi (daxili planlar, arxitektura, inteqrasiya detalları). Onlar
-> məxfi qeyd olunduğu üçün bu plana və məhsula **daxil edilməyib**. Yeni şirkət yalnız ictimai
-> məlumatlardan və öz araşdırmasından istifadə etməlidir.
+> əsaslanan hissələr də var (Enterprise PRD, Rəqəmsal Pasport, daxili data icmalı, inteqrasiya
+> platforması, daxili analitika, arxitektura). Onlar **istifadə edilməyib**. Bu bölmədəki
+> məlumatlar yalnız herdwatch.com, App Store, məxfilik siyasəti və mətbuata əsaslanır.
+
+### Sürü üçün nəticələr — nəyi götürürük, necə yerli edirik
+| Herdwatch-da (ictimai) | Sürü-də | Prioritet |
+|---|---|---|
+| Dərman qalığı izlənməsi | ✅ Hazırdır | — |
+| Qrup müalicəsi | ✅ Hazırdır (qrup, növ və ya bütün sürü üzrə) | — |
+| Mayalanma → doğum, doğum kitabçası | ✅ Hazırdır | — |
+| Çəki və ADG | ✅ Hazırdır | — |
+| Bir kliklə hesabatlar | ✅ CSV (heyvanlar, dərman jurnalı) | — |
+| Dərman ehtiyatı ("dərman şkafı") | Dərman qalığı + son istifadə tarixi | Yüksək |
+| Şəkil qeydləri | Heyvan şəkli (tanınma üçün — yerli fermalarda bırka çox vaxt itir) | Yüksək |
+| Çox istifadəçi, bulud | Fermer + işçi + baytar | Yüksək |
+| Dövlət reyestri inteqrasiyası | Elektron identifikasiya sistemi və EKTİS ilə (rəsmi tərəfdaşlıqla) | Orta (dövlət sisteminin hazırlığından asılı) |
+| Buy & Sell | Heyvan bazarı: təsdiqlənmiş tarixçə ilə elan, WhatsApp ilə əlaqə | Orta |
+| Baytar proqramları | Baytar girişi, sonra baytar portalı | Orta |
+| AI köməkçi və səsli qeyd | Azərbaycan dilində səsli qeyd | Aşağı (sonrakı mərhələ) |
+| Otlaq xəritəsi | Yaylaq/qışlaq köçü və otlaq qeydi | Aşağı |
+| Fermer kooperativi ilə birgə başlanğıc | Pilotu kooperativ və ya aqropark ilə başlamaq | Strateji |
+
+**Data siyasətində Herdwatch-dan daha yaxşı olmalıyıq:** data sahibliyi istifadə şərtlərində açıq yazılsın,
+saxlama müddətləri konkret göstərilsin, cookie razılığı olsun, dövlət portallarının şifrələri saxlanılmasın
+(mümkün olduqda token/rəsmi API). Bax: [`mexfilik-siyaseti.md`](mexfilik-siyaseti.md).
 
 ### Herdwatch-un uğur səbəbləri (bizim üçün dərslər)
 1. **Fermer kooperativi ilə birgə yaranıb** — ilk gündən etibar və paylanma kanalı.
@@ -89,6 +128,7 @@
 ### MVP (bu repoda hazırlanıb — `app/`)
 - Heyvan reyestri: inək, camış, qoyun, keçi
 - Müalicə jurnalı + ət/süd üçün dərman qalığı müddətinin avtomatik hesablanması
+- Qrup müalicəsi (bütün sürü, növ və ya qrup üzrə bir dəfəyə)
 - Mayalanma → gözlənilən doğum tarixi (inək 283, camış 310, qoyun 147, keçi 150 gün)
 - Çəki qeydləri və orta gündəlik artım
 - Tapşırıqlar və xatırlatmalar
