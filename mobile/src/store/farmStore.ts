@@ -12,7 +12,9 @@ import { AppState } from 'react-native';
 import { isTransient, repo } from '../data';
 import { isLocalPhoto } from '../data/mapping';
 import { stockAfterUse } from '../domain/logic';
-import { emptyFarmData, type Animal, type Breeding, type Farm, type FarmData, type Med, type TableName, type Task, type Treatment, type Weight } from '../domain/types';
+import { MOVEMENT } from '../domain/constants';
+import { fmt } from '../domain/dates';
+import { emptyFarmData, type Animal, type Breeding, type Farm, type FarmData, type Heat, type Med, type Movement, type PregCheck, type TableName, type Task, type Treatment, type Weight } from '../domain/types';
 import type { EventKind } from '../domain/logic';
 import { dataUrlToFile, deleteLocal } from '../lib/files';
 
@@ -280,6 +282,9 @@ class FarmStore {
         treatments: d.treatments.filter((x) => x.animalId !== id),
         weights: d.weights.filter((x) => x.animalId !== id),
         breedings: d.breedings.filter((x) => x.animalId !== id),
+        pregChecks: d.pregChecks.filter((x) => x.animalId !== id),
+        heats: d.heats.filter((x) => x.animalId !== id),
+        movements: d.movements.filter((x) => x.animalId !== id),
       },
       [{ kind: 'remove', table: 'animals', ids: [id] }],
     );
@@ -312,8 +317,63 @@ class FarmStore {
   }
 
   deleteEvent(kind: EventKind, id: string) {
-    const table = ({ tr: 'treatments', w: 'weights', b: 'breedings' } as const)[kind];
-    this.commit({ ...this.data, [table]: (this.data[table] as { id: string }[]).filter((x) => x.id !== id) }, [{ kind: 'remove', table, ids: [id] }]);
+    const table = ({ tr: 'treatments', w: 'weights', b: 'breedings', pc: 'pregChecks', h: 'heats', mv: 'movements' } as const)[kind];
+    let data: FarmData = { ...this.data, [table]: (this.data[table] as { id: string }[]).filter((x) => x.id !== id) };
+    const ops: Op[] = [{ kind: 'remove', table, ids: [id] }];
+    // Çıxış (satış, köçürmə…) silinirsə və heyvanın statusu ondan gəlirsə, heyvan yenidən aktiv olur.
+    if (kind === 'mv') {
+      const m = this.data.movements.find((x) => x.id === id);
+      const a = m && this.data.animals.find((x) => x.id === m.animalId);
+      const st = m && MOVEMENT[m.type].status;
+      const stillExited = m && data.movements.some((x) => x.animalId === m.animalId && MOVEMENT[x.type].status);
+      if (a && st && a.status === st && !stillExited) {
+        const updated = { ...a, status: 'aktiv' as const };
+        data = { ...data, animals: data.animals.map((x) => (x.id === a.id ? updated : x)) };
+        ops.push({ kind: 'upsert', table: 'animals', rows: [updated] });
+      }
+    }
+    this.commit(data, ops);
+  }
+
+  /** Toplu çəki: bir seansda bir neçə heyvanın çəkisi. */
+  addWeights(rows: Weight[]) {
+    if (!rows.length) return;
+    this.commit({ ...this.data, weights: [...this.data.weights, ...rows] }, [{ kind: 'upsert', table: 'weights', rows }]);
+  }
+
+  /**
+   * Boğazlıq yoxlaması. Nəticə "boşdur"-sa açıq mayalanma bağlanır (təkrar mayalanma lazımdır).
+   */
+  addPregCheck(pc: PregCheck) {
+    let data: FarmData = { ...this.data, pregChecks: [...this.data.pregChecks, pc] };
+    const ops: Op[] = [{ kind: 'upsert', table: 'pregChecks', rows: [pc] }];
+    if (pc.result === 'negative' && pc.breedingId) {
+      const b = data.breedings.find((x) => x.id === pc.breedingId);
+      if (b && !b.outcome) {
+        const closed = { ...b, outcome: `Boş çıxdı — yoxlama (${fmt(pc.date)})` };
+        data = { ...data, breedings: data.breedings.map((x) => (x.id === b.id ? closed : x)) };
+        ops.push({ kind: 'upsert', table: 'breedings', rows: [closed] });
+      }
+    }
+    this.commit(data, ops);
+  }
+
+  addHeat(h: Heat) {
+    this.commit({ ...this.data, heats: [...this.data.heats, h] }, [{ kind: 'upsert', table: 'heats', rows: [h] }]);
+  }
+
+  /** Hərəkət (alış/satış/köçürmə/kəsim/ölüm). Çıxışdırsa heyvanın statusu dəyişir. */
+  addMovement(m: Movement) {
+    let data: FarmData = { ...this.data, movements: [...this.data.movements, m] };
+    const ops: Op[] = [{ kind: 'upsert', table: 'movements', rows: [m] }];
+    const st = MOVEMENT[m.type].status;
+    const a = data.animals.find((x) => x.id === m.animalId);
+    if (st && a && a.status !== st) {
+      const updated = { ...a, status: st };
+      data = { ...data, animals: data.animals.map((x) => (x.id === a.id ? updated : x)) };
+      ops.push({ kind: 'upsert', table: 'animals', rows: [updated] });
+    }
+    this.commit(data, ops);
   }
 
   saveMed(m: Med) {

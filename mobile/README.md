@@ -9,7 +9,10 @@ React Native + Expo-ya köçürülüb; məlumat **Supabase**-də saxlanılır, g
 - Müalicə jurnalı, **dərman qalığı** (ət/süd) son tarixləri, **qrup müalicəsi**
 - **Dərman şkafı**: ehtiyat, son istifadə tarixi, az qalma xəbərdarlığı, müalicədə avtomatik çıxılma
 - Mayalanma → gözlənilən doğum; "Doğdu" → bala formasının avtomatik açılması
-- Çəki və orta gündəlik artım; tapşırıqlar; paneldə xatırlatmalar
+- Çəki və orta gündəlik artım, **toplu çəki seansı** (tərəzi yanında heyvanları ardıcıl çəkmək); tapşırıqlar; paneldə xatırlatmalar
+- **Boğazlıq yoxlaması** (USM / əl ilə, döl sayı) — "mayalanıb" / "boğazdır" vəziyyəti, "yoxlama vaxtıdır" xatırlatması
+- **Qızğınlıq** qeydi və növbəti qızğınlıq xatırlatması (növə görə tsikl)
+- **Alqı-satqı və çıxışlar**: alış (yeni heyvan əlavə edərkən), satış, köçürmə, kəsim, ölüm — qiymət, qarşı tərəf, çəki; illik yekun və CSV
 - CSV (Excel) ixrac, JSON ehtiyat nüsxə; **köhnə PWA-nın ehtiyat faylını idxal** (şəkillər daxil)
 - Hesab: e-poçt + şifrə və ya **myGov ilə giriş** (SİMA / ASAN İmza — [`docs/MYGOV.md`](docs/MYGOV.md)); tətbiqdən hesabın silinməsi, bir neçə cihaz, **internetsiz iş**: dəyişikliklər cihazda növbəyə düşür
   və bağlantı bərpa olunanda serverə göndərilir

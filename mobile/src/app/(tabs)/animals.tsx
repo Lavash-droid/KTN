@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { SPECIES, SPECIES_KEYS, STATUS } from '../../domain/constants';
 import { age } from '../../domain/dates';
-import { animalLabel, isPregnant, sexLabel, speciesOf, weightStats, withdrawal } from '../../domain/logic';
+import { animalLabel, pregnancy, sexLabel, speciesOf, weightStats, withdrawal } from '../../domain/logic';
 import type { SpeciesKey } from '../../domain/types';
 import { farmStore, useFarm } from '../../store/farmStore';
 import { Badge, Btn, ChipSelect, Empty, Field, IconTile, ListItem, Photo } from '../../ui/components';
@@ -49,6 +49,14 @@ export default function Animals() {
           style={{ paddingVertical: 12 }}
           onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? setGroupOpen(true) : toast('Əvvəlcə heyvan əlavə edin'))}
         />
+        <Btn
+          title="Çəki"
+          icon="weight"
+          variant="tonal"
+          small
+          style={{ paddingVertical: 12 }}
+          onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? router.push('/weigh') : toast('Əvvəlcə heyvan əlavə edin'))}
+        />
       </View>
       <View style={{ marginTop: 10 }}>
         <ChipSelect<SpeciesFilter>
@@ -92,7 +100,7 @@ export default function Animals() {
         }
         renderItem={({ item: a, index }) => {
           const w = withdrawal(data, a.id);
-          const preg = isPregnant(data, a.id);
+          const preg = pregnancy(data, a.id).state;
           const s = speciesOf(a);
           const last = index === items.length - 1;
           return (
@@ -114,7 +122,8 @@ export default function Animals() {
                     {wide && <WideCols group={a.group} weight={weightStats(data, a.id)?.last.kg} status={STATUS[a.status]} />}
                   <View style={{ gap: 4, alignItems: 'flex-end' }}>
                     {w && <Badge kind="danger">Dərman qalığı</Badge>}
-                    {preg && <Badge kind="info">Boğaz</Badge>}
+                    {preg === 'pregnant' && <Badge kind="info">Boğaz</Badge>}
+                    {preg === 'bred' && <Badge kind="info">Mayalanıb</Badge>}
                     {a.status !== 'aktiv' && <Badge kind="warn">{STATUS[a.status]}</Badge>}
                   </View>
                   </View>

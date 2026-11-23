@@ -1,7 +1,7 @@
 /** Biznes məntiqi — PWA versiyasından köçürülüb, UI və backend-dən asılı deyil. */
-import { SPECIES, STATUS, type IconKey } from './constants';
+import { MOVEMENT, SCAN_RESULT, SPECIES, STATUS, type IconKey } from './constants';
 import { addDays, daysBetween, fmt, inDays, todayISO } from './dates';
-import type { Animal, Breeding, FarmData, Med } from './types';
+import type { Animal, Breeding, FarmData, Med, PregCheck } from './types';
 
 export const animalLabel = (a: Animal | undefined | null) =>
   a ? `${a.tag}${a.name ? ' · ' + a.name : ''}` : 'Silinmiş heyvan';
@@ -100,6 +100,40 @@ export function pendingBirths(data: FarmData): PendingBirth[] {
 export const isPregnant = (data: FarmData, animalId: string) =>
   data.breedings.some((b) => b.animalId === animalId && !b.outcome);
 
+/* ---------- Boğazlıq və qızğınlıq ---------- */
+export type PregState = 'none' | 'bred' | 'pregnant';
+export interface Pregnancy {
+  state: PregState;
+  breeding?: Breeding;
+  scan?: PregCheck;
+}
+
+/** Son açıq mayalanma və ona aid son yoxlama: "mayalanıb" (təsdiqsiz) və ya "boğazdır" (təsdiqlənib). */
+export function pregnancy(data: FarmData, animalId: string): Pregnancy {
+  const b = data.breedings
+    .filter((x) => x.animalId === animalId && !x.outcome)
+    .sort((x, y) => y.date.localeCompare(x.date))[0];
+  if (!b) return { state: 'none' };
+  const scan = data.pregChecks
+    .filter((p) => p.animalId === animalId && (p.breedingId === b.id || (!p.breedingId && p.date >= b.date)))
+    .sort((x, y) => y.date.localeCompare(x.date))[0];
+  return { state: scan?.result === 'positive' ? 'pregnant' : 'bred', breeding: b, scan };
+}
+
+/** Növbəti gözlənilən qızğınlıq: son qızğınlıq + növün tsikli (boğaz/mayalanmış heyvan üçün yoxdur). */
+export function nextHeat(data: FarmData, a: Animal): string | null {
+  if (a.sex !== 'd' || a.status !== 'aktiv') return null;
+  if (pregnancy(data, a.id).state !== 'none') return null;
+  const last = data.heats.filter((h) => h.animalId === a.id).sort((x, y) => y.date.localeCompare(x.date))[0];
+  if (!last) return null;
+  const cycle = speciesOf(a).cycle;
+  const t = todayISO();
+  let next = addDays(last.date, cycle);
+  // Bir neçə tsikl keçibsə, bu günə ən yaxın gələcək tsikli göstəririk (ən çox 6 tsikl).
+  for (let i = 0; i < 6 && next < addDays(t, -2); i++) next = addDays(next, cycle);
+  return next < addDays(t, -2) ? null : next;
+}
+
 /* ---------- Panel xəbərdarlıqları ---------- */
 export type AlertLevel = 'danger' | 'warn' | 'info';
 export interface HomeAlert {
@@ -130,6 +164,22 @@ export function homeAlerts(data: FarmData): HomeAlert[] {
     if (n > 30) continue;
     out.push({ key: 'b' + b.id, level: n < 0 ? 'warn' : 'info', icon: 'baby-bottle', title: `${animalLabel(b.animal)} — gözlənilən doğum`, subtitle: `${fmt(b.expected)} (${inDays(n)})`, href: `/animal/${b.animal.id}` });
   }
+  for (const a of active) {
+    if (a.sex !== 'd') continue;
+    const p = pregnancy(data, a.id);
+    if (p.state === 'bred' && p.breeding && !p.scan) {
+      const due = addDays(p.breeding.date, speciesOf(a).scanAfter);
+      // Yalnız məntiqli pəncərədə: tövsiyə olunan gündən 60 gün sonraya qədər (doğuma yaxın heyvana lazım deyil).
+      if (due <= t && daysBetween(due, t) <= 60) {
+        out.push({ key: 'sc' + a.id, level: 'warn', icon: 'scan', title: `${animalLabel(a)} — boğazlıq yoxlaması vaxtıdır`, subtitle: `Mayalanma: ${fmt(p.breeding.date)} (${daysBetween(p.breeding.date, t)} gün əvvəl)`, href: `/animal/${a.id}` });
+      }
+    }
+    const h = nextHeat(data, a);
+    if (h) {
+      const n = daysBetween(t, h);
+      if (n <= 3) out.push({ key: 'h' + a.id, level: 'info', icon: 'heat', title: `${animalLabel(a)} — gözlənilən qızğınlıq`, subtitle: `${fmt(h)} (${inDays(n)})`, href: `/animal/${a.id}` });
+    }
+  }
   const tasks = data.tasks
     .filter((x) => !x.done && x.due && x.due <= addDays(t, 7))
     .sort((a, b) => (a.due ?? '').localeCompare(b.due ?? ''));
@@ -150,7 +200,7 @@ export function homeAlerts(data: FarmData): HomeAlert[] {
 }
 
 /* ---------- Hadisələr (tarixçə) ---------- */
-export type EventKind = 'tr' | 'w' | 'b';
+export type EventKind = 'tr' | 'w' | 'b' | 'pc' | 'h' | 'mv';
 export interface AnimalEvent {
   kind: EventKind;
   id: string;
@@ -180,7 +230,45 @@ export function events(data: FarmData, animalId?: string): AnimalEvent[] {
     const sub = [e.sire ? `Ata: ${e.sire}` : '', `Gözlənilən doğum: ${fmt(e.expected)}`, e.outcome ? `Nəticə: ${e.outcome}` : ''].filter(Boolean).join(' · ');
     list.push({ kind: 'b', id: e.id, animalId: e.animalId, date: e.date, icon: 'dna', title: e.method === 'suni' ? 'Süni mayalanma' : 'Təbii cütləşmə', subtitle: sub, openBreeding: !e.outcome });
   }
+  for (const e of data.pregChecks.filter(match)) {
+    const sub = [e.fetuses ? `${e.fetuses} döl` : '', e.method === 'manual' ? 'əl ilə' : 'USM', e.notes].filter(Boolean).join(' · ');
+    list.push({ kind: 'pc', id: e.id, animalId: e.animalId, date: e.date, icon: 'scan', title: `Boğazlıq yoxlaması: ${SCAN_RESULT[e.result]}`, subtitle: sub, openBreeding: false });
+  }
+  for (const e of data.heats.filter(match)) {
+    list.push({ kind: 'h', id: e.id, animalId: e.animalId, date: e.date, icon: 'heat', title: 'Qızğınlıq', subtitle: e.notes, openBreeding: false });
+  }
+  for (const e of data.movements.filter(match)) {
+    const m = MOVEMENT[e.type];
+    const sub = [e.counterparty, e.price ? `${e.price} AZN` : '', e.weight ? `${e.weight} kq` : '', e.notes].filter(Boolean).join(' · ');
+    list.push({ kind: 'mv', id: e.id, animalId: e.animalId, date: e.date, icon: m.icon, title: m.label, subtitle: sub, openBreeding: false });
+  }
   return list.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/* ---------- Alqı-satqı ---------- */
+export interface TradeSummary {
+  sold: number;
+  revenue: number;
+  bought: number;
+  spend: number;
+  /** Satılan heyvanların orta qiyməti (qiyməti yazılanlar üzrə). */
+  avgSale: number | null;
+}
+
+/** Verilən tarixdən (daxil) bu günədək alış və satış yekunu. */
+export function tradeSummary(data: FarmData, from?: string): TradeSummary {
+  const mv = data.movements.filter((m) => !from || m.date >= from);
+  const sales = mv.filter((m) => m.type === 'sale');
+  const buys = mv.filter((m) => m.type === 'purchase');
+  const priced = sales.filter((m) => m.price > 0);
+  const sum = (xs: { price: number }[]) => Math.round(xs.reduce((s, x) => s + (x.price || 0), 0) * 100) / 100;
+  return {
+    sold: sales.length,
+    revenue: sum(sales),
+    bought: buys.length,
+    spend: sum(buys),
+    avgSale: priced.length ? Math.round(sum(priced) / priced.length) : null,
+  };
 }
 
 /* ---------- CSV ixrac ---------- */
@@ -207,6 +295,15 @@ export function treatmentsCsv(data: FarmData): string {
   for (const t of [...data.treatments].sort((a, b) => a.date.localeCompare(b.date))) {
     const a = data.animals.find((x) => x.id === t.animalId);
     rows.push([fmt(t.date), a ? a.tag : '', t.medicine, t.dose, t.reason, t.meatWd, t.meatWd ? fmt(addDays(t.date, t.meatWd)) : '', t.milkWd, t.milkWd ? fmt(addDays(t.date, t.milkWd)) : '']);
+  }
+  return csv(rows);
+}
+
+export function movementsCsv(data: FarmData): string {
+  const rows: (string | number)[][] = [['Tarix', 'Bırka', 'Növ', 'Əməliyyat', 'Qarşı tərəf', 'Qiymət (AZN)', 'Çəki (kq)', 'Qeyd']];
+  for (const m of [...data.movements].sort((a, b) => a.date.localeCompare(b.date))) {
+    const a = data.animals.find((x) => x.id === m.animalId);
+    rows.push([fmt(m.date), a ? a.tag : '', a ? speciesOf(a).label : '', MOVEMENT[m.type].label, m.counterparty, m.price || '', m.weight || '', m.notes]);
   }
   return csv(rows);
 }

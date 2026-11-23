@@ -16,8 +16,16 @@ const FIELDS: { [T in TableName]: (keyof Tables[T])[] } = {
   breedings: ['id', 'animalId', 'date', 'method', 'sire', 'expected', 'outcome'],
   tasks: ['id', 'title', 'due', 'done'],
   meds: ['id', 'name', 'qty', 'unit', 'minQty', 'expiry', 'meatWd', 'milkWd', 'notes'],
+  pregChecks: ['id', 'animalId', 'breedingId', 'date', 'result', 'fetuses', 'method', 'notes'],
+  heats: ['id', 'animalId', 'date', 'notes'],
+  movements: ['id', 'animalId', 'date', 'type', 'counterparty', 'price', 'weight', 'notes'],
 };
-const NUMERIC = new Set(['meatWd', 'milkWd', 'kg', 'qty', 'minQty']);
+
+/** Domen cədvəl adı → verilənlər bazası cədvəli. */
+export const dbTable = (t: TableName): string => (t === 'pregChecks' ? 'preg_checks' : t);
+const NUMERIC = new Set(['meatWd', 'milkWd', 'kg', 'qty', 'minQty', 'price', 'weight', 'fetuses']);
+/** 0 = bilinmir → bazada NULL (məs. qiymət, çəki, döl sayı). */
+const ZERO_AS_NULL = new Set(['price', 'weight', 'fetuses']);
 const DATES = new Set(['dob', 'date', 'expected', 'due', 'expiry', 'createdAt']);
 
 /** Lokal (hələ yüklənməmiş) şəkil istinadı. */
@@ -31,6 +39,7 @@ export function toRow<T extends TableName>(table: T, item: Tables[T], extra: Rec
     if (DATES.has(k) && v === '') v = null;
     // Lokal şəkil yolu serverə göndərilmir — şəkil yüklənəndən sonra istinad ayrıca yazılır.
     if (k === 'photo' && isLocalPhoto(v as string)) continue;
+    if (ZERO_AS_NULL.has(k) && !v) v = null;
     row[toSnake(k)] = v ?? null;
   }
   return row;
@@ -43,7 +52,7 @@ export function fromRow<T extends TableName>(table: T, row: Record<string, unkno
     if (NUMERIC.has(k)) out[k] = Number(v) || 0;
     else if (DATES.has(k)) out[k] = typeof v === 'string' ? v.slice(0, 10) : null;
     else if (k === 'done') out[k] = !!v;
-    else if (k === 'batchId' || k === 'photo') out[k] = v ?? null;
+    else if (k === 'batchId' || k === 'photo' || k === 'breedingId') out[k] = v ?? null;
     else out[k] = v ?? '';
   }
   return out as unknown as Tables[T];

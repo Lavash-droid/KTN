@@ -10,7 +10,7 @@ import type { Animal, AnimalStatus, Sex, SpeciesKey } from '../../domain/types';
 import { preparePhoto } from '../../lib/files';
 import { uid } from '../../lib/id';
 import { farmStore, useFarm } from '../../store/farmStore';
-import { Btn, Card, ChipSelect, DateField, Field, Grid2, Muted, Photo, Row, Screen, SuggestField } from '../../ui/components';
+import { Btn, Card, ChipSelect, DateField, Field, Grid2, Muted, NumField, Photo, Row, Screen, SuggestField, toNum } from '../../ui/components';
 import { confirm, useToast } from '../../ui/feedback';
 import { Icon } from '../../ui/Icon';
 import { RADIUS, useColors } from '../../ui/theme';
@@ -34,6 +34,9 @@ export default function AnimalForm() {
   );
   // undefined = dəyişməyib, string = yeni lokal şəkil, null = silinəcək
   const [photo, setPhoto] = useState<string | null | undefined>(undefined);
+  // Yeni heyvanın mənşəyi: fermada doğulub və ya alınıb (alış qeydi yaradılır)
+  const [origin, setOrigin] = useState<'born' | 'bought'>('born');
+  const [buy, setBuy] = useState({ date: todayISO() as string | null, seller: '', price: '', weight: '' });
   const set = <K extends keyof Animal>(k: K, val: Animal[K]) => setV((p) => ({ ...p, [k]: val }));
 
   if (params.id && !existing) {
@@ -68,6 +71,12 @@ export default function AnimalForm() {
     const dup = data.animals.find((x) => x.tag.trim().toLowerCase() === tag.toLowerCase() && x.id !== v.id);
     if (dup) return toast('Bu bırka nömrəsi artıq mövcuddur');
     farmStore.saveAnimal({ ...v, tag, name: v.name.trim(), breed: v.breed.trim(), group: v.group.trim(), damTag: v.damTag.trim() }, photo);
+    if (!existing && origin === 'bought') {
+      const date = buy.date ?? todayISO();
+      const kg = toNum(buy.weight);
+      farmStore.addMovement({ id: uid(), animalId: v.id, date, type: 'purchase', counterparty: buy.seller.trim(), price: toNum(buy.price), weight: kg, notes: '' });
+      if (kg > 0) farmStore.addWeight({ id: uid(), animalId: v.id, date, kg });
+    }
     toast(existing ? 'Yeniləndi' : 'Heyvan əlavə olundu');
     if (existing) router.back();
     else router.replace(`/animal/${v.id}`);
@@ -120,6 +129,28 @@ export default function AnimalForm() {
           placeholder="Sağmal, Buzovlar…"
         />
         <ChipSelect<AnimalStatus> label="Status" options={(Object.keys(STATUS) as AnimalStatus[]).map((k) => ({ value: k, label: STATUS[k] }))} value={v.status} onChange={(s) => set('status', s)} />
+        {!existing && !isCalf && (
+          <>
+            <ChipSelect<'born' | 'bought'>
+              label="Mənşəyi"
+              options={[{ value: 'born', label: 'Fermada doğulub' }, { value: 'bought', label: 'Alınıb', icon: 'cart-in' }]}
+              value={origin}
+              onChange={setOrigin}
+            />
+            {origin === 'bought' && (
+              <>
+                <Grid2>
+                  <DateField label="Alış tarixi" value={buy.date} onChange={(d) => setBuy({ ...buy, date: d })} max={todayISO()} />
+                  <Field label="Satıcı" value={buy.seller} onChangeText={(t) => setBuy({ ...buy, seller: t })} placeholder="Bazar, fermer…" />
+                </Grid2>
+                <Grid2>
+                  <NumField label="Qiymət (AZN)" value={buy.price} onChange={(t) => setBuy({ ...buy, price: t })} decimal />
+                  <NumField label="Çəki (kq)" value={buy.weight} onChange={(t) => setBuy({ ...buy, weight: t })} decimal />
+                </Grid2>
+              </>
+            )}
+          </>
+        )}
         <Field label="Qeyd" value={v.notes} onChangeText={(t) => set('notes', t)} multiline />
 
         <Row style={{ marginTop: 18 }}>

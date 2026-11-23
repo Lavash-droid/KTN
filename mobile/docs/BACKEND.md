@@ -45,7 +45,7 @@ Daxili server hazır olanda ekranlara, biznes məntiqinə və offline növbəyə
 | GET | `/photos/url?ref=` | — | `{ url }` — göstərmək üçün (müddətli) URL |
 | DELETE | `/photos?ref=` | — | `204` |
 
-`:table` ∈ `animals`, `treatments`, `weights`, `breedings`, `tasks`, `meds`.
+`:table` ∈ `animals`, `treatments`, `weights`, `breedings`, `tasks`, `meds`, `pregChecks`, `heats`, `movements`.
 
 ```ts
 interface FarmData {
@@ -57,6 +57,9 @@ interface FarmData {
   breedings:  { id; animalId; date; method: 'suni'|'tebii'; sire; expected; outcome }[];
   tasks:      { id; title; due: string|null; done: boolean }[];
   meds:       { id; name; qty: number; unit; minQty: number; expiry: string|null; meatWd: number; milkWd: number; notes }[];
+  pregChecks: { id; animalId; breedingId: string|null; date; result: 'positive'|'negative'|'uncertain'; fetuses: number; method: 'scan'|'manual'; notes }[];
+  heats:      { id; animalId; date; notes }[];
+  movements:  { id; animalId; date; type: 'purchase'|'sale'|'move_out'|'slaughter'|'death'; counterparty; price: number; weight: number; notes }[];
 }
 ```
 

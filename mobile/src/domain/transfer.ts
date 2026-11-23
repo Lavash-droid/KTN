@@ -55,7 +55,7 @@ export function parseBackup(raw: unknown): ImportResult {
   for (const a of arr('animals')) {
     const id = mapId(a.id);
     const species: SpeciesKey = a.species in SPECIES ? a.species : 'inek';
-    const status: AnimalStatus = ['aktiv', 'satilib', 'olub', 'kesilib'].includes(a.status) ? a.status : 'aktiv';
+    const status: AnimalStatus = ['aktiv', 'satilib', 'olub', 'kesilib', 'kocurulub'].includes(a.status) ? a.status : 'aktiv';
     const legacy = legacyPhotos[str(a.id)];
     if (typeof legacy === 'string' && legacy.startsWith('data:image/')) photos[id] = legacy;
     out.animals.push({
@@ -114,6 +114,30 @@ export function parseBackup(raw: unknown): ImportResult {
       expiry: date(m.expiry), meatWd: num(m.meatWd), milkWd: num(m.milkWd), notes: str(m.notes),
     });
   }
+  const breedingIds = new Set(out.breedings.map((b) => b.id));
+  for (const p of arr('pregChecks')) {
+    const animalId = animalRef(p.animalId);
+    if (!animalId || !isISODate(p.date)) continue;
+    const bid = p.breedingId ? idMap.get(str(p.breedingId)) : undefined;
+    out.pregChecks.push({
+      id: mapId(p.id), animalId, breedingId: bid && breedingIds.has(bid) ? bid : null, date: p.date,
+      result: ['positive', 'negative', 'uncertain'].includes(p.result) ? p.result : 'uncertain',
+      fetuses: Math.max(0, Math.min(6, Math.round(num(p.fetuses)))), method: p.method === 'manual' ? 'manual' : 'scan', notes: str(p.notes),
+    });
+  }
+  for (const h of arr('heats')) {
+    const animalId = animalRef(h.animalId);
+    if (!animalId || !isISODate(h.date)) continue;
+    out.heats.push({ id: mapId(h.id), animalId, date: h.date, notes: str(h.notes) });
+  }
+  for (const m of arr('movements')) {
+    const animalId = animalRef(m.animalId);
+    if (!animalId || !isISODate(m.date) || !['purchase', 'sale', 'move_out', 'slaughter', 'death'].includes(m.type)) continue;
+    out.movements.push({
+      id: mapId(m.id), animalId, date: m.date, type: m.type, counterparty: str(m.counterparty),
+      price: Math.max(0, num(m.price)), weight: Math.max(0, num(m.weight)), notes: str(m.notes),
+    });
+  }
   return { data: out, photos };
 }
 
@@ -137,7 +161,8 @@ export function demoData(): FarmData {
   for (let i = 1; i <= 6; i++) {
     mk({ tag: `Q-${300 + i}`, species: 'qoyun', breed: i % 2 ? 'Qarabağ' : 'Balbas', sex: i === 6 ? 'e' : 'd', dob: d(-365 * 2 - i * 20), group: 'Sürü 1' });
   }
-  mk({ tag: 'K-501', species: 'keci', breed: 'Yerli', sex: 'd', dob: d(-700) });
+  const keci = mk({ tag: 'K-501', species: 'keci', breed: 'Yerli', sex: 'd', dob: d(-700) });
+  const satilan = mk({ tag: 'AZ 1006', species: 'inek', breed: 'Simmental', sex: 'e', dob: d(-365 * 2 - 90), group: 'Kökəltmə', status: 'satilib' });
 
   const tr = (o: Omit<FarmData['treatments'][number], 'id' | 'batchId'>) => s.treatments.push({ id: uid(), batchId: null, ...o });
   tr({ animalId: ceyran.id, date: d(-2), medicine: 'Penisilin', dose: '20 ml', reason: 'Mastit', meatWd: 10, milkWd: 4 });
@@ -146,7 +171,15 @@ export function demoData(): FarmData {
   s.weights.push({ id: uid(), animalId: buzov.id, date: d(-90), kg: 78 });
   s.weights.push({ id: uid(), animalId: buzov.id, date: d(-5), kg: 141 });
   s.breedings.push({ id: uid(), animalId: maral.id, date: d(-270), method: 'suni', sire: 'SIM-2231', expected: d(13), outcome: '' });
-  s.breedings.push({ id: uid(), animalId: qaraca.id, date: d(-60), method: 'tebii', sire: 'AZ 1005', expected: d(223), outcome: '' });
+  const qb = { id: uid(), animalId: qaraca.id, date: d(-60), method: 'tebii' as const, sire: 'AZ 1005', expected: d(223), outcome: '' };
+  s.breedings.push(qb);
+  s.pregChecks.push({ id: uid(), animalId: qaraca.id, breedingId: qb.id, date: d(-20), result: 'positive', fetuses: 1, method: 'scan', notes: '' });
+  // Ceyran: 40 gün əvvəl mayalanıb, hələ yoxlanmayıb → paneldə "yoxlama vaxtıdır"
+  s.breedings.push({ id: uid(), animalId: ceyran.id, date: d(-40), method: 'suni', sire: 'HOL-1180', expected: d(243), outcome: '' });
+  // Keçi: 19 gün əvvəl qızğınlıq → 2 gün sonra növbəti gözlənilir
+  s.heats.push({ id: uid(), animalId: keci.id, date: d(-19), notes: '' });
+  s.movements.push({ id: uid(), animalId: maral.id, date: d(-365 * 3), type: 'purchase', counterparty: 'Ağcabədi heyvan bazarı', price: 2400, weight: 0, notes: '' });
+  s.movements.push({ id: uid(), animalId: satilan.id, date: d(-12), type: 'sale', counterparty: 'Yerli qəssab', price: 3100, weight: 465, notes: '' });
   s.tasks.push({ id: uid(), title: 'Qoyunlara parazit dərmanı', due: d(1), done: false });
   s.tasks.push({ id: uid(), title: 'Baytar çağır — Ceyranın yoxlanışı', due: d(3), done: false });
   s.tasks.push({ id: uid(), title: 'Yem sifarişi (qarğıdalı silosu)', due: d(-1), done: false });

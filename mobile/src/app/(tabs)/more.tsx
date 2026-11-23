@@ -1,10 +1,10 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { isTransient, repo } from '../../data';
 import { todayISO } from '../../domain/dates';
-import { animalsCsv, medNeedsAttention, treatmentsCsv } from '../../domain/logic';
+import { animalsCsv, medNeedsAttention, movementsCsv, tradeSummary, treatmentsCsv } from '../../domain/logic';
 import { demoData, makeBackup, parseBackup } from '../../domain/transfer';
 import { emptyFarmData, type Farm } from '../../domain/types';
 import { readTextFile, shareTextFile } from '../../lib/files';
@@ -100,9 +100,13 @@ export default function More() {
         <ListItem first icon="medical-bag" title="Dərman şkafı" subtitle={`${data.meds.length} dərman${sizeNote}`} onPress={() => router.push('/meds')} />
       </List>
 
+      <H2>{`Alqı-satqı — ${todayISO().slice(0, 4)}`}</H2>
+      <TradeCard />
+
       <H2>Hesabatlar və ehtiyat nüsxə</H2>
       <List>
         <ListItem first icon="file-excel" title="Heyvan siyahısı (CSV / Excel)" subtitle="Bütün heyvanlar, son çəki, status" onPress={() => run(() => shareTextFile(`suru-heyvanlar-${todayISO()}.csv`, animalsCsv(data), 'text/csv'))} />
+        <ListItem icon="cart-out" title="Alqı-satqı jurnalı (CSV / Excel)" subtitle="Alış, satış, köçürmə, kəsim, ölüm" onPress={() => run(() => shareTextFile(`suru-alqi-satqi-${todayISO()}.csv`, movementsCsv(data), 'text/csv'))} />
         <ListItem icon="clipboard-text" title="Dərman jurnalı (CSV / Excel)" subtitle="Baytar və yoxlama üçün" onPress={() => run(() => shareTextFile(`suru-derman-jurnali-${todayISO()}.csv`, treatmentsCsv(data), 'text/csv'))} />
         <ListItem icon="download" title="Ehtiyat nüsxə (JSON)" subtitle="Bütün qeydlər bir faylda" onPress={() => run(() => shareTextFile(`suru-ehtiyat-${todayISO()}.json`, JSON.stringify(makeBackup(data)), 'application/json'))} />
         <ListItem icon="upload" title="Ehtiyat nüsxəni bərpa et" subtitle="Köhnə veb-tətbiqin (PWA) faylı da qəbul olunur · mövcud məlumatı əvəz edir" onPress={restore} />
@@ -192,5 +196,32 @@ export default function More() {
         {busy ? 'Gözləyin…\n' : ''}Sürü v1.0 · Mütəmadi ehtiyat nüsxə götürün.
       </Muted>
     </Screen>
+  );
+}
+
+const azn = (n: number) => `${n.toLocaleString('az-AZ', { maximumFractionDigits: 2 })} ₼`;
+
+/** Bu ilin alış-satış yekunu. */
+function TradeCard() {
+  const c = useColors();
+  const { data } = useFarm();
+  const t = tradeSummary(data, `${todayISO().slice(0, 4)}-01-01`);
+  const net = Math.round((t.revenue - t.spend) * 100) / 100;
+  const cell = (label: string, value: string, sub?: string, color?: string) => (
+    <View style={{ flexGrow: 1, flexBasis: 140, padding: 12, borderRadius: 12, backgroundColor: c.bg }}>
+      <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
+      <Text style={{ color: color ?? c.text, fontSize: 20, fontWeight: '700', marginTop: 2 }}>{value}</Text>
+      {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
+    </View>
+  );
+  return (
+    <Card>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {cell('Satış', azn(t.revenue), `${t.sold} heyvan${t.avgSale ? ` · orta ${azn(t.avgSale)}` : ''}`)}
+        {cell('Alış', azn(t.spend), `${t.bought} heyvan`)}
+        {cell('Fərq', azn(net), 'satış − alış', net >= 0 ? c.green : c.danger)}
+      </View>
+      <Muted small style={{ marginTop: 10 }}>Satış heyvan kartında "Satış / çıxış", alış isə yeni heyvan əlavə edərkən "Alınıb" ilə qeyd olunur.</Muted>
+    </Card>
   );
 }

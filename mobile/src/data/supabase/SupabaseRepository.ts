@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 import { emptyFarmData, TABLES, type Farm, type FarmData, type TableName, type Tables } from '../../domain/types';
 import { readBytes } from '../../lib/files';
-import { fromRow, toRow } from '../mapping';
+import { dbTable, fromRow, toRow } from '../mapping';
 import { RepoError, type AuthApi, type FarmRepository, type Session } from '../repository';
 import { getSupabase } from './client';
 
@@ -99,7 +99,7 @@ export class SupabaseRepository implements FarmRepository {
     const fid = await this.farmId();
     const out = emptyFarmData();
     const farmQ = this.sb.from('farms').select('name, owner_name, region').eq('id', fid).single();
-    const results = await Promise.all([farmQ, ...TABLES.map((t) => this.sb.from(t).select('*').eq('farm_id', fid).limit(100000))]);
+    const results = await Promise.all([farmQ, ...TABLES.map((t) => this.sb.from(dbTable(t)).select('*').eq('farm_id', fid).limit(100000))]);
     const [farmRes, ...tableRes] = results;
     wrap(farmRes.error, 'Ferma');
     const f = farmRes.data as { name: string; owner_name: string; region: string };
@@ -121,7 +121,7 @@ export class SupabaseRepository implements FarmRepository {
   async upsert<T extends TableName>(table: T, rows: Tables[T][]) {
     if (!rows.length) return;
     const fid = await this.farmId();
-    const { error } = await this.sb.from(table).upsert(rows.map((r) => toRow(table, r, { farm_id: fid })), { onConflict: 'id' });
+    const { error } = await this.sb.from(dbTable(table)).upsert(rows.map((r) => toRow(table, r, { farm_id: fid })), { onConflict: 'id' });
     wrap(error, table);
   }
 
@@ -134,7 +134,7 @@ export class SupabaseRepository implements FarmRepository {
       if (paths.length) await this.sb.storage.from(BUCKET).remove(paths);
     }
     // Heyvana aid müalicə, çəki və mayalanma qeydləri verilənlər bazasında ON DELETE CASCADE ilə silinir.
-    const { error } = await this.sb.from(table).delete().in('id', ids).eq('farm_id', fid);
+    const { error } = await this.sb.from(dbTable(table)).delete().in('id', ids).eq('farm_id', fid);
     wrap(error, table);
   }
 

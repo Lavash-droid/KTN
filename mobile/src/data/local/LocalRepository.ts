@@ -58,6 +58,9 @@ export class LocalRepository implements FarmRepository {
       d.treatments = d.treatments.filter((x) => !set.has(x.animalId));
       d.weights = d.weights.filter((x) => !set.has(x.animalId));
       d.breedings = d.breedings.filter((x) => !set.has(x.animalId));
+      d.pregChecks = d.pregChecks.filter((x) => !set.has(x.animalId));
+      d.heats = d.heats.filter((x) => !set.has(x.animalId));
+      d.movements = d.movements.filter((x) => !set.has(x.animalId));
     }
     await this.write(d);
   }
