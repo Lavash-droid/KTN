@@ -105,9 +105,9 @@ export default function AnimalDetail() {
       </Card>
 
       <Row style={{ marginVertical: 12 }}>
-        <Btn title="Müalicə" icon="pill" vertical onPress={() => setSheet('tr')} style={{ flex: 1 }} />
-        <Btn title="Çəki" icon="weight" vertical onPress={() => setSheet('w')} style={{ flex: 1 }} />
-        <Btn title="Mayalanma" icon="dna" vertical onPress={() => setSheet('b')} disabled={a.sex !== 'd'} style={{ flex: 1 }} />
+        <Btn title="Müalicə" icon="pill" variant="tonal" vertical onPress={() => setSheet('tr')} style={{ flex: 1 }} />
+        <Btn title="Çəki" icon="weight" variant="tonal" vertical onPress={() => setSheet('w')} style={{ flex: 1 }} />
+        <Btn title="Mayalanma" icon="dna" variant="tonal" vertical onPress={() => setSheet('b')} disabled={a.sex !== 'd'} style={{ flex: 1 }} />
       </Row>
 
       <H2>Tarixçə</H2>

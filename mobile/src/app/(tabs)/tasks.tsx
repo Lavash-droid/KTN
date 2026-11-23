@@ -60,7 +60,7 @@ function TaskRow({ task: k, first }: { task: Task; first: boolean }) {
         accessibilityState={{ checked: k.done }}
         accessibilityLabel="Tamamlandı"
         hitSlop={8}
-        style={{ width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: c.green, backgroundColor: k.done ? c.green : 'transparent', alignItems: 'center', justifyContent: 'center' }}
+        style={{ width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: c.green, backgroundColor: k.done ? c.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}
       >
         {k.done ? <Icon name="check" size={17} color={c.onGreen} /> : null}
       </Pressable>

@@ -116,14 +116,14 @@ function Stat({ value, label, primary, icon }: { value: number; label: string; p
     <View
       style={{
         flexGrow: 1, flexBasis: 130, padding: 12, paddingHorizontal: 14, borderRadius: RADIUS, borderWidth: 1,
-        backgroundColor: primary ? c.green : c.card, borderColor: primary ? 'transparent' : c.line,
+        backgroundColor: primary ? c.greenSoft : c.card, borderColor: primary ? 'transparent' : c.line,
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Text style={{ fontSize: 26, fontWeight: '800', color: primary ? c.onGreen : c.text }}>{value}</Text>
+        <Text style={{ fontSize: 26, fontWeight: '800', color: primary ? c.green : c.text }}>{value}</Text>
         {icon ? <Icon name={icon} size={26} color={c.green} /> : null}
       </View>
-      <Text style={{ fontSize: 13.5, color: primary ? c.onGreen : c.muted, opacity: primary ? 0.9 : 1 }}>{label}</Text>
+      <Text style={{ fontSize: 13.5, color: primary ? c.green : c.muted }}>{label}</Text>
     </View>
   );
 }

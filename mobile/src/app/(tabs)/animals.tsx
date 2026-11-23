@@ -44,6 +44,7 @@ export default function Animals() {
         <Btn
           title="Qrup"
           icon="pill-multiple"
+          variant="tonal"
           small
           style={{ paddingVertical: 12 }}
           onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? setGroupOpen(true) : toast('Əvvəlcə heyvan əlavə edin'))}

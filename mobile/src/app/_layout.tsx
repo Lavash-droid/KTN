@@ -6,7 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../store/auth';
 import { farmStore } from '../store/farmStore';
 import { ToastProvider, useToast } from '../ui/feedback';
-import { BRAND, useColors } from '../ui/theme';
+import { useColors } from '../ui/theme';
 
 /** Store xətalarını ekranda bildiriş kimi göstərir. */
 function ErrorToasts() {
@@ -31,8 +31,9 @@ function RootStack() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: BRAND },
-        headerTintColor: '#fff',
+        headerStyle: { backgroundColor: c.header },
+        headerTintColor: c.text,
+        headerShadowVisible: false,
         headerTitleStyle: { fontWeight: '700' },
         contentStyle: { backgroundColor: c.bg },
         headerBackButtonDisplayMode: 'minimal',
@@ -59,7 +60,7 @@ export default function RootLayout() {
       <AuthProvider>
         <ToastProvider>
           <ErrorToasts />
-          <StatusBar style="light" />
+          <StatusBar style="auto" />
           <RootStack />
         </ToastProvider>
       </AuthProvider>

@@ -53,7 +53,7 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
             })}
           >
             {isAdd ? (
-              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' }}>
                 <Icon name="plus" size={17} color={c.onGreen} />
               </View>
             ) : (

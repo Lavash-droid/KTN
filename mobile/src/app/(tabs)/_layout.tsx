@@ -5,7 +5,7 @@ import { useWide } from '../../ui/layout';
 import { Sidebar } from '../../ui/Sidebar';
 import { useFarm } from '../../store/farmStore';
 import { SyncBadge } from '../../ui/SyncBadge';
-import { BRAND, useColors } from '../../ui/theme';
+import { useColors } from '../../ui/theme';
 
 const icon = (name: IconName) =>
   function TabIcon({ color }: { focused: boolean; color: unknown }) {
@@ -22,8 +22,9 @@ export default function TabsLayout() {
       tabBar={wide ? (props) => <Sidebar {...props} /> : undefined}
       screenOptions={{
         tabBarPosition: wide ? 'left' : 'bottom',
-        headerStyle: { backgroundColor: BRAND },
-        headerTintColor: '#fff',
+        headerStyle: { backgroundColor: c.header },
+        headerTintColor: c.text,
+        headerShadowVisible: false,
         headerTitleStyle: { fontWeight: '700' },
         headerRight: () => <SyncBadge />,
         tabBarActiveTintColor: c.green,
@@ -39,7 +40,7 @@ export default function TabsLayout() {
         options={{
           title: 'Əlavə et',
           tabBarIcon: () => (
-            <View style={{ backgroundColor: c.green, width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ backgroundColor: c.primary, width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="plus" size={24} color={c.onGreen} />
             </View>
           ),

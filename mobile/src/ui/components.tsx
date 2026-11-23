@@ -66,7 +66,8 @@ export function Card({ children, style }: { children: ReactNode; style?: StylePr
 }
 
 /* ---------- Düymə ---------- */
-type BtnVariant = 'primary' | 'ghost' | 'danger';
+/** primary — əsas əməliyyat (dolu); tonal — ikinci dərəcəli (yüngül fon); ghost — kontur; danger — silmə (yüngül qırmızı). */
+type BtnVariant = 'primary' | 'tonal' | 'ghost' | 'danger';
 export function Btn({
   title, onPress, variant = 'primary', small, disabled, icon, style, loading, vertical,
 }: {
@@ -74,8 +75,8 @@ export function Btn({
   style?: StyleProp<ViewStyle>; loading?: boolean; vertical?: boolean;
 }) {
   const c = useColors();
-  const bg = variant === 'primary' ? c.green : variant === 'danger' ? c.danger : 'transparent';
-  const fg = variant === 'ghost' ? c.green : variant === 'primary' ? c.onGreen : '#fff';
+  const bg = { primary: c.primary, tonal: c.greenSoft, ghost: 'transparent', danger: c.dangerSoft }[variant];
+  const fg = { primary: c.onGreen, tonal: c.green, ghost: c.green, danger: c.danger }[variant];
   return (
     <Pressable
       accessibilityRole="button"
@@ -177,13 +178,13 @@ export function ChipSelect<T extends string>({ label, options, value, onChange, 
               accessibilityRole="radio"
               accessibilityState={{ selected: on }}
               style={{
-                borderWidth: 1, borderColor: on ? c.green : c.line, backgroundColor: on ? c.green : c.card,
+                borderWidth: 1, borderColor: on ? c.green : c.line, backgroundColor: on ? c.greenSoft : c.card,
                 borderRadius: vertical ? 10 : 99, paddingHorizontal: 12, paddingVertical: vertical ? 10 : 7,
                 flexDirection: 'row', alignItems: 'center', gap: 6,
               }}
             >
-              {o.icon ? <Icon name={o.icon} size={17} color={on ? c.onGreen : c.green} /> : null}
-              <Text style={{ color: on ? c.onGreen : c.text, fontSize: 14.5 }}>{o.label}</Text>
+              {o.icon ? <Icon name={o.icon} size={17} color={on ? c.green : c.muted} /> : null}
+              <Text style={{ color: on ? c.green : c.text, fontSize: 14.5, fontWeight: on ? '600' : '400' }}>{o.label}</Text>
             </Pressable>
           );
         })}
@@ -393,13 +394,23 @@ export function Badge({ kind, children }: { kind: BadgeKind; children: ReactNode
 
 export function AlertBox({ level, icon, title, subtitle, onPress }: { level: 'danger' | 'warn' | 'info'; icon: IconName; title: string; subtitle?: string; onPress?: () => void }) {
   const c = useColors();
-  const bg = level === 'danger' ? c.dangerSoft : level === 'warn' ? c.warnSoft : c.infoSoft;
+  const accent = level === 'danger' ? c.danger : level === 'warn' ? c.warn : c.info;
+  const soft = level === 'danger' ? c.dangerSoft : level === 'warn' ? c.warnSoft : c.infoSoft;
   return (
-    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => ({ flexDirection: 'row', gap: 10, padding: 12, borderRadius: RADIUS, backgroundColor: bg, marginBottom: 8, opacity: pressed ? 0.8 : 1 })}>
-      <Icon name={icon} size={22} color={level === 'danger' ? c.danger : level === 'warn' ? c.warn : c.info} style={{ marginTop: 1 }} />
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 12, marginBottom: 8,
+        backgroundColor: c.card, borderWidth: 1, borderColor: c.line, borderLeftWidth: 3, borderLeftColor: accent, opacity: pressed ? 0.8 : 1,
+      })}
+    >
+      <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: soft, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={icon} size={20} color={accent} />
+      </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontWeight: '700', color: c.text, fontSize: 15 }}>{title}</Text>
-        {subtitle ? <Text style={{ color: c.text, fontSize: 13.5, marginTop: 1 }}>{subtitle}</Text> : null}
+        <Text style={{ fontWeight: '600', color: c.text, fontSize: 15 }}>{title}</Text>
+        {subtitle ? <Text style={{ color: c.muted, fontSize: 13.5, marginTop: 1 }}>{subtitle}</Text> : null}
       </View>
     </Pressable>
   );
