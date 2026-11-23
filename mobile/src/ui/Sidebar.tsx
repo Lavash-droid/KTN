@@ -77,7 +77,7 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       ) : null}
       {Platform.OS === 'web' && base ? (
         <Pressable onPress={() => window.location.assign('/')} style={{ paddingHorizontal: 8, paddingVertical: 8 }}>
-          <Text style={{ color: c.green, fontSize: 13.5 }}>← suru.az ana səhifə</Text>
+          <Text style={{ color: c.green, fontSize: 13.5 }}>← Ana səhifə</Text>
         </Pressable>
       ) : null}
     </View>
