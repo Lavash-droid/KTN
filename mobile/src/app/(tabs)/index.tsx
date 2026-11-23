@@ -1,6 +1,6 @@
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
-import { RefreshControl, Text, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, Text, View } from 'react-native';
 import { SPECIES, SPECIES_KEYS } from '../../domain/constants';
 import { fmt } from '../../domain/dates';
 import { animalLabel, events, homeAlerts } from '../../domain/logic';
@@ -24,15 +24,25 @@ export default function Home() {
   };
   const refreshControl = <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={c.green} colors={[c.green]} />;
 
+  // Yeni cihazda ilk yükləmə: serverdə ferma ola bilər — "nümunə məlumat" düyməsi real məlumatı əvəz etməsin.
+  if (!data.animals.length && status.loading) {
+    return (
+      <Screen refreshControl={refreshControl}>
+        <Card style={{ alignItems: 'center', paddingVertical: 36, gap: 12 }}>
+          <ActivityIndicator color={c.green} size="large" />
+          <Muted center>Fermanızın məlumatı yüklənir…</Muted>
+        </Card>
+      </Screen>
+    );
+  }
+
   if (!data.animals.length) {
     return (
       <Screen refreshControl={refreshControl}>
         <Card style={{ alignItems: 'center', paddingVertical: 28 }}>
           <Text style={{ fontSize: 48 }}>🐄🐑</Text>
           <Text style={{ fontSize: 20, fontWeight: '700', color: c.text, marginVertical: 8 }}>Sürüyə xoş gəlmisiniz!</Text>
-          <Muted center>
-            {status.loading ? 'Məlumat yüklənir…' : 'Heyvanlarınızı, müalicələri, mayalanma və çəki qeydlərini bir yerdə aparın. İnternet olmadan da işləyir.'}
-          </Muted>
+          <Muted center>Heyvanlarınızı, müalicələri, mayalanma və çəki qeydlərini bir yerdə aparın. İnternet olmadan da işləyir.</Muted>
           <View style={{ gap: 8, marginTop: 16, alignSelf: 'stretch' }}>
             <Btn title="＋ İlk heyvanı əlavə et" onPress={() => router.push('/animal/form')} />
             <Btn

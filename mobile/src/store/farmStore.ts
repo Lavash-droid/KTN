@@ -48,6 +48,9 @@ class FarmStore {
   private listeners = new Set<() => void>();
   private errorListeners = new Set<(msg: string) => void>();
   private flushing: Promise<void> | null = null;
+  /** Hər lokal dəyişiklikdə artır — yolda olan köhnə server cavabının yeni dəyişiklikləri əzməsinin qarşısını alır. */
+  private version = 0;
+  private resyncTimer: ReturnType<typeof setTimeout> | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private appStateSub: { remove(): void } | null = null;
 
@@ -99,6 +102,8 @@ class FarmStore {
 
   stop() {
     if (this.timer) clearInterval(this.timer);
+    if (this.resyncTimer) clearTimeout(this.resyncTimer);
+    this.resyncTimer = null;
     this.appStateSub?.remove();
     this.timer = null;
     this.appStateSub = null;
@@ -114,11 +119,16 @@ class FarmStore {
     await this.flush();
     if (this.outbox.length || this.userId !== user) return;
     this.emit({ status: { syncing: true } });
+    const startedAt = this.version;
     try {
       const data = await repo.loadAll();
       if (this.userId !== user) return;
-      // Serverdən yükləmə zamanı yeni lokal dəyişiklik olubsa, onları əzməmək üçün növbəti dövrəyə saxlayırıq.
-      if (this.outbox.length) return;
+      // Yükləmə gedərkən lokal dəyişiklik olubsa (yeni qeyd, bərpa, nümunə məlumat), bu cavab köhnədir —
+      // onu atırıq və dəyişikliklər serverə çatandan sonra yenidən yükləyirik.
+      if (this.outbox.length || this.version !== startedAt) {
+        this.scheduleResync();
+        return;
+      }
       this.emit({ data, status: { loading: false, online: true, lastSync: Date.now() } });
       await this.persistCache();
     } catch (e) {
@@ -127,6 +137,14 @@ class FarmStore {
     } finally {
       this.emit({ status: { syncing: false } });
     }
+  }
+
+  private scheduleResync() {
+    if (this.resyncTimer) clearTimeout(this.resyncTimer);
+    this.resyncTimer = setTimeout(() => {
+      this.resyncTimer = null;
+      void this.sync();
+    }, 1500);
   }
 
   private flush(): Promise<void> {
@@ -204,6 +222,7 @@ class FarmStore {
 
   /** Lokal dəyişikliyi tətbiq edir və əməliyyatları növbəyə qoyur. */
   private commit(data: FarmData, ops: Op[]) {
+    this.version++;
     this.outbox.push(...ops);
     this.emit({ data });
     void this.persistCache();
@@ -325,6 +344,7 @@ class FarmStore {
     await this.flush();
     if (this.outbox.length) throw new Error('Göndərilməmiş dəyişikliklər var — internetə qoşulub yenidən cəhd edin');
     for (const a of this.data.animals) if (a.photo && isLocalPhoto(a.photo)) deleteLocal(a.photo);
+    this.version++;
     await repo.replaceAll(data);
     const ops: Op[] = [];
     const animals = [...data.animals];
