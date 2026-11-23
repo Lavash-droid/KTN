@@ -19,18 +19,21 @@ React Native + Expo-ya köçürülüb; məlumat **Supabase**-də saxlanılır, g
 ```bash
 cd mobile
 npm install
-cp .env.example .env   # Supabase URL və publishable açarı yazın
+cp .env.example .env   # "suru" Supabase layihəsinin URL və açarı artıq yazılıb
 npx expo start         # Expo Go ilə QR kodu skan edin
 ```
 
 `.env` boş qalsa tətbiq **lokal rejimdə** (yalnız cihazda, hesabsız) işləyir — sınaq üçün əlverişlidir.
 
 ### Supabase
-1. Supabase-də yeni layihə yaradın.
-2. Sxemi tətbiq edin: `supabase/migrations/20261123000000_suru_init.sql` (SQL Editor-da işə salın
-   və ya `supabase db push`). Bu, cədvəlləri, Row Level Security qaydalarını və `animal-photos` bucket-ini yaradır.
-3. Project Settings → API-dən URL və **publishable** (və ya anon) açarı `.env`-ə yazın.
-   `service_role` açarını heç vaxt tətbiqə qoymayın.
+"suru" layihəsi (eu-central-1) artıq qurulub və `supabase/migrations/` içindəki sxem ona tətbiq olunub:
+cədvəllər, Row Level Security qaydaları və `animal-photos` (gizli) bucket-i.
+
+Yeni mühit (məs. ayrıca test layihəsi) qurmaq üçün:
+1. Supabase-də layihə yaradın.
+2. `supabase/migrations/` içindəki faylları ardıcıl tətbiq edin (SQL Editor və ya `supabase db push`).
+3. Project Settings → API-dən URL və **publishable** açarı `.env`-ə yazın.
+   `service_role` açarını heç vaxt tətbiqə qoymayın — publishable açar açıq olmaq üçündür, məlumatı RLS qoruyur.
 4. Authentication → Providers → Email: test zamanı "Confirm email"-i söndürmək olar.
 
 ## Struktur
