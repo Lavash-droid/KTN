@@ -19,13 +19,16 @@ const FIELDS: { [T in TableName]: (keyof Tables[T])[] } = {
   pregChecks: ['id', 'animalId', 'breedingId', 'date', 'result', 'fetuses', 'method', 'notes'],
   heats: ['id', 'animalId', 'date', 'notes'],
   movements: ['id', 'animalId', 'date', 'type', 'counterparty', 'price', 'weight', 'notes'],
+  feeds: ['id', 'name', 'qty', 'unit', 'minQty', 'notes'],
+  purchases: ['id', 'kind', 'itemId', 'itemName', 'date', 'qty', 'unit', 'price', 'supplier', 'batch', 'expiry', 'notes'],
+  milkRecords: ['id', 'date', 'liters', 'fat', 'protein', 'scc', 'buyer', 'price', 'notes'],
 };
 
 /** Domen cədvəl adı → verilənlər bazası cədvəli. */
-export const dbTable = (t: TableName): string => (t === 'pregChecks' ? 'preg_checks' : t);
-const NUMERIC = new Set(['meatWd', 'milkWd', 'kg', 'qty', 'minQty', 'price', 'weight', 'fetuses']);
+export const dbTable = (t: TableName): string => (t === 'pregChecks' ? 'preg_checks' : t === 'milkRecords' ? 'milk_records' : t);
+const NUMERIC = new Set(['meatWd', 'milkWd', 'kg', 'qty', 'minQty', 'price', 'weight', 'fetuses', 'liters', 'fat', 'protein', 'scc']);
 /** 0 = bilinmir → bazada NULL (məs. qiymət, çəki, döl sayı). */
-const ZERO_AS_NULL = new Set(['price', 'weight', 'fetuses']);
+const ZERO_AS_NULL = new Set(['price', 'weight', 'fetuses', 'fat', 'protein', 'scc']);
 const DATES = new Set(['dob', 'date', 'expected', 'due', 'expiry', 'createdAt']);
 
 /** Lokal (hələ yüklənməmiş) şəkil istinadı. */
@@ -52,7 +55,7 @@ export function fromRow<T extends TableName>(table: T, row: Record<string, unkno
     if (NUMERIC.has(k)) out[k] = Number(v) || 0;
     else if (DATES.has(k)) out[k] = typeof v === 'string' ? v.slice(0, 10) : null;
     else if (k === 'done') out[k] = !!v;
-    else if (k === 'batchId' || k === 'photo' || k === 'breedingId') out[k] = v ?? null;
+    else if (k === 'batchId' || k === 'photo' || k === 'breedingId' || k === 'itemId') out[k] = v ?? null;
     else out[k] = v ?? '';
   }
   return out as unknown as Tables[T];

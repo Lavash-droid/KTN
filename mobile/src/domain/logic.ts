@@ -1,7 +1,7 @@
 /** Biznes məntiqi — PWA versiyasından köçürülüb, UI və backend-dən asılı deyil. */
 import { MOVEMENT, SCAN_RESULT, SPECIES, STATUS, type IconKey } from './constants';
 import { addDays, daysBetween, fmt, inDays, todayISO } from './dates';
-import type { Animal, Breeding, FarmData, Med, PregCheck } from './types';
+import type { Animal, Breeding, FarmData, Feed, Med, PregCheck } from './types';
 
 export const animalLabel = (a: Animal | undefined | null) =>
   a ? `${a.tag}${a.name ? ' · ' + a.name : ''}` : 'Silinmiş heyvan';
@@ -180,6 +180,10 @@ export function homeAlerts(data: FarmData): HomeAlert[] {
       if (n <= 3) out.push({ key: 'h' + a.id, level: 'info', icon: 'heat', title: `${animalLabel(a)} — gözlənilən qızğınlıq`, subtitle: `${fmt(h)} (${inDays(n)})`, href: `/animal/${a.id}` });
     }
   }
+  for (const f of data.feeds) {
+    if (!feedLow(f)) continue;
+    out.push({ key: 'f' + f.id, level: 'warn', icon: 'feed', title: `${f.name} — yem anbarı`, subtitle: `az qalıb: ${f.qty} ${f.unit} (minimum ${f.minQty})`, href: '/feeds' });
+  }
   const tasks = data.tasks
     .filter((x) => !x.done && x.due && x.due <= addDays(t, 7))
     .sort((a, b) => (a.due ?? '').localeCompare(b.due ?? ''));
@@ -299,6 +303,68 @@ export function treatmentsCsv(data: FarmData): string {
   return csv(rows);
 }
 
+/* ---------- Yem, alışlar, süd ---------- */
+export const feedLow = (f: Feed) => f.minQty > 0 && f.qty <= f.minQty;
+
+export interface ExpenseSummary {
+  meds: number;
+  feeds: number;
+  /** Süd satışı (litr × qiymət, qiyməti yazılanlar üzrə). */
+  milkRevenue: number;
+  milkLiters: number;
+}
+export function expenseSummary(data: FarmData, from?: string): ExpenseSummary {
+  const ok = (d: string) => !from || d >= from;
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  const sum = (k: 'med' | 'feed') => r2(data.purchases.filter((p) => p.kind === k && ok(p.date)).reduce((s, p) => s + (p.price || 0), 0));
+  const milk = data.milkRecords.filter((m) => ok(m.date));
+  return {
+    meds: sum('med'),
+    feeds: sum('feed'),
+    milkRevenue: r2(milk.reduce((s, m) => s + (m.price ? m.price * m.liters : 0), 0)),
+    milkLiters: Math.round(milk.reduce((s, m) => s + m.liters, 0) * 10) / 10,
+  };
+}
+
+export interface MilkStats {
+  days: number;
+  liters: number;
+  perDay: number | null;
+  fat: number | null;
+  protein: number | null;
+  scc: number | null;
+}
+/** Son N gündə süd: cəm, gündəlik orta, keyfiyyət göstəricilərinin litrə görə çəkili ortası. */
+export function milkStats(data: FarmData, days = 30): MilkStats {
+  const from = addDays(todayISO(), -days + 1);
+  const rs = data.milkRecords.filter((m) => m.date >= from);
+  const liters = rs.reduce((s, m) => s + m.liters, 0);
+  const wavg = (k: 'fat' | 'protein' | 'scc') => {
+    const xs = rs.filter((m) => m[k] > 0);
+    const w = xs.reduce((s, m) => s + m.liters, 0);
+    return w ? xs.reduce((s, m) => s + m[k] * m.liters, 0) / w : null;
+  };
+  const dayCount = new Set(rs.map((m) => m.date)).size;
+  const r = (x: number | null, d: number) => (x === null ? null : Math.round(x * 10 ** d) / 10 ** d);
+  return { days, liters: Math.round(liters * 10) / 10, perDay: dayCount ? r(liters / dayCount, 1) : null, fat: r(wavg('fat'), 2), protein: r(wavg('protein'), 2), scc: r(wavg('scc'), 0) };
+}
+
+export function purchasesCsv(data: FarmData): string {
+  const rows: (string | number)[][] = [['Tarix', 'Növ', 'Ad', 'Miqdar', 'Vahid', 'Məbləğ (AZN)', 'Təchizatçı', 'Partiya', 'Son istifadə', 'Qeyd']];
+  for (const p of [...data.purchases].sort((a, b) => a.date.localeCompare(b.date))) {
+    rows.push([fmt(p.date), p.kind === 'med' ? 'Dərman' : 'Yem', p.itemName, p.qty, p.unit, p.price || '', p.supplier, p.batch, p.expiry ? fmt(p.expiry) : '', p.notes]);
+  }
+  return csv(rows);
+}
+
+export function milkCsv(data: FarmData): string {
+  const rows: (string | number)[][] = [['Tarix', 'Litr', 'Yağ (%)', 'Zülal (%)', 'SHS (hüceyrə/ml)', 'Alıcı', 'Qiymət (AZN/l)', 'Məbləğ (AZN)', 'Qeyd']];
+  for (const m of [...data.milkRecords].sort((a, b) => a.date.localeCompare(b.date))) {
+    rows.push([fmt(m.date), m.liters, m.fat || '', m.protein || '', m.scc || '', m.buyer, m.price || '', m.price ? Math.round(m.price * m.liters * 100) / 100 : '', m.notes]);
+  }
+  return csv(rows);
+}
+
 export function movementsCsv(data: FarmData): string {
   const rows: (string | number)[][] = [['Tarix', 'Bırka', 'Növ', 'Əməliyyat', 'Qarşı tərəf', 'Qiymət (AZN)', 'Çəki (kq)', 'Qeyd']];
   for (const m of [...data.movements].sort((a, b) => a.date.localeCompare(b.date))) {
@@ -306,4 +372,49 @@ export function movementsCsv(data: FarmData): string {
     rows.push([fmt(m.date), a ? a.tag : '', a ? speciesOf(a).label : '', MOVEMENT[m.type].label, m.counterparty, m.price || '', m.weight || '', m.notes]);
   }
   return csv(rows);
+}
+
+/* ---------- Ferma xülasəsi (e-poçt hesabatı) ---------- */
+/** Qısa mətn hesabatı — mailto gövdəsi üçün (uzunluğu bir neçə min simvoldan çox olmur). */
+export function farmReport(data: FarmData, from: string): string {
+  const t = todayISO();
+  const n = (x: number) => x.toLocaleString('az-AZ', { maximumFractionDigits: 2 });
+  const active = data.animals.filter((a) => a.status === 'aktiv');
+  const lines: string[] = [];
+  lines.push(`${data.farm.name || 'Ferma'} — xülasə (${fmt(from)} – ${fmt(t)})`);
+  if (data.farm.owner || data.farm.region) lines.push([data.farm.owner, data.farm.region].filter(Boolean).join(', '));
+  lines.push('');
+  lines.push(`HEYVANLAR: ${active.length} aktiv`);
+  for (const [k, s] of Object.entries(SPECIES)) {
+    const xs = active.filter((a) => a.species === k);
+    if (xs.length) lines.push(`  ${s.label}: ${xs.length} (${xs.filter((a) => a.sex === 'd').length} dişi, ${xs.filter((a) => a.sex !== 'd').length} erkək)`);
+  }
+  const preg = active.filter((a) => a.sex === 'd' && pregnancy(data, a.id).state === 'pregnant').length;
+  const births = pendingBirths(data).filter((b) => daysBetween(t, b.expected) <= 30);
+  lines.push(`  Boğaz: ${preg} · 30 gün ərzində gözlənilən doğum: ${births.length}`);
+  const born = data.animals.filter((a) => a.dob && a.dob >= from && a.damTag).length;
+  if (born) lines.push(`  Dövrdə doğulan: ${born}`);
+  lines.push('');
+  const tr = tradeSummary(data, from);
+  lines.push('ALQI-SATQI');
+  lines.push(`  Satış: ${tr.sold} heyvan, ${n(tr.revenue)} ₼ · Alış: ${tr.bought} heyvan, ${n(tr.spend)} ₼`);
+  const exits = data.movements.filter((m) => m.date >= from && (m.type === 'death' || m.type === 'slaughter'));
+  if (exits.length) lines.push(`  Ölüm: ${exits.filter((m) => m.type === 'death').length} · Kəsim: ${exits.filter((m) => m.type === 'slaughter').length}`);
+  lines.push('');
+  const ex = expenseSummary(data, from);
+  lines.push('XƏRC VƏ GƏLİR');
+  lines.push(`  Dərman alışı: ${n(ex.meds)} ₼ · Yem alışı: ${n(ex.feeds)} ₼`);
+  lines.push(`  Süd: ${n(ex.milkLiters)} l, satış ${n(ex.milkRevenue)} ₼`);
+  const trs = data.treatments.filter((x) => x.date >= from);
+  lines.push(`  Müalicə qeydi: ${trs.length} (${new Set(trs.map((x) => x.animalId)).size} heyvan)`);
+  const alerts = homeAlerts(data).filter((a) => a.level !== 'info');
+  if (alerts.length) {
+    lines.push('');
+    lines.push('DİQQƏT');
+    for (const a of alerts.slice(0, 12)) lines.push(`  • ${a.title}: ${a.subtitle}`);
+    if (alerts.length > 12) lines.push(`  … və daha ${alerts.length - 12}`);
+  }
+  lines.push('');
+  lines.push('— Sürü ferma tətbiqi');
+  return lines.join('\n');
 }

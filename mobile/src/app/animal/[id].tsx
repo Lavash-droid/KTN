@@ -238,30 +238,77 @@ function BreedingSheet({ visible, onClose, animal }: { visible: boolean; onClose
   );
 }
 
+interface Newborn {
+  tag: string;
+  sex: 'd' | 'e';
+  kg: string;
+}
+const blankBorn = (): Newborn => ({ tag: '', sex: 'd', kg: '' });
+
 function OutcomeSheet({ breedingId, onClose, animal }: { breedingId: string | null; onClose: () => void; animal: Animal }) {
   const { data } = useFarm();
+  const toast = useToast();
   const [outcome, setOutcome] = useState(OUTCOMES[0]);
   const [date, setDate] = useState(todayISO());
-  useEffect(() => {
-    if (breedingId) {
-      setOutcome(OUTCOMES[0]);
-      setDate(todayISO());
-    }
-  }, [breedingId]);
+  const [born, setBorn] = useState<Newborn[]>([blankBorn()]);
   const b = data.breedings.find((x) => x.id === breedingId);
+  useEffect(() => {
+    if (!breedingId) return;
+    setOutcome(OUTCOMES[0]);
+    setDate(todayISO());
+    // Döl sayı skanerlə məlumdursa, o qədər bala sətri hazırlanır.
+    const scan = data.pregChecks.filter((pc) => pc.breedingId === breedingId && pc.result === 'positive' && pc.fetuses > 0).sort((x, y) => y.date.localeCompare(x.date))[0];
+    setBorn(Array.from({ length: Math.min(4, scan?.fetuses ?? 1) }, blankBorn));
+  }, [breedingId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const setCount = (n: number) => setBorn((p) => (n > p.length ? [...p, ...Array.from({ length: n - p.length }, blankBorn)] : p.slice(0, n)));
+  const patch = (i: number, v: Partial<Newborn>) => setBorn((p) => p.map((x, j) => (j === i ? { ...x, ...v } : x)));
+  const birth = outcome === 'Doğdu';
+
   const submit = () => {
     if (!b) return onClose();
-    farmStore.saveBreeding({ ...b, outcome: `${outcome} (${fmt(date)})` });
-    onClose();
-    if (outcome === 'Doğdu') {
-      router.push({ pathname: '/animal/form', params: { species: animal.species, damTag: animal.tag, dob: date, breed: animal.breed } });
+    if (!birth) {
+      farmStore.saveBreeding({ ...b, outcome: `${outcome} (${fmt(date)})` });
+      return onClose();
     }
+    const rows = born.map((x) => ({ ...x, tag: x.tag.trim() })).filter((x) => x.tag);
+    const tags = new Set<string>();
+    for (const r of rows) {
+      const key = r.tag.toLocaleLowerCase('az');
+      if (tags.has(key) || data.animals.some((a) => a.tag.toLocaleLowerCase('az') === key)) return toast(`Bu bırka artıq var: ${r.tag}`);
+      tags.add(key);
+    }
+    const now = new Date().toISOString();
+    const animals: Animal[] = rows.map((r) => ({
+      id: uid(), tag: r.tag, name: '', species: animal.species, breed: animal.breed, sex: r.sex, dob: date,
+      damTag: animal.tag, group: '', status: 'aktiv', notes: b.sire ? `Ata: ${b.sire}` : '', photo: null, createdAt: now,
+    }));
+    farmStore.saveBreeding({ ...b, outcome: `Doğdu (${fmt(date)})${born.length > 1 ? ` — ${born.length} bala` : ''}` });
+    farmStore.addAnimals(animals);
+    const weights = animals.map((a, i) => ({ a, kg: toNum(rows[i].kg) })).filter((x) => x.kg > 0).map((x) => ({ id: uid(), animalId: x.a.id, date, kg: x.kg }));
+    if (weights.length) farmStore.addWeights(weights);
+    toast(animals.length ? `${animals.length} bala qeydiyyata alındı` : 'Doğum qeyd olundu — balaları sonra əlavə edə bilərsiniz');
+    onClose();
   };
+
   return (
     <Sheet visible={!!breedingId} icon="baby-bottle" title={`Nəticə — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
       <ChipSelect label="Nəticə" options={OUTCOMES.map((o) => ({ value: o, label: o }))} value={outcome} onChange={setOutcome} vertical />
       <DateField label="Tarix" value={date} onChange={(v) => setDate(v ?? todayISO())} max={todayISO()} />
-      <Muted small style={{ marginTop: 10 }}>"Doğdu" seçsəniz, balanı ayrıca heyvan kimi əlavə etmək üçün forma açılacaq.</Muted>
+      {birth && (
+        <>
+          <ChipSelect label="Bala sayı" options={['1', '2', '3', '4'].map((n) => ({ value: n, label: n }))} value={String(born.length)} onChange={(n) => setCount(Number(n))} />
+          {born.map((x, i) => (
+            <View key={i} style={{ marginTop: 6 }}>
+              <Grid2>
+                <Field label={born.length > 1 ? `${i + 1}-ci bala — bırka` : 'Bala — bırka'} value={x.tag} onChangeText={(t) => patch(i, { tag: t })} placeholder="AZ 1234" autoCapitalize="characters" />
+                <NumField label="Çəki (kq)" value={x.kg} onChange={(t) => patch(i, { kg: t })} decimal />
+              </Grid2>
+              <ChipSelect options={[{ value: 'd', label: 'Dişi' }, { value: 'e', label: 'Erkək' }]} value={x.sex} onChange={(v) => patch(i, { sex: v as 'd' | 'e' })} />
+            </View>
+          ))}
+          <Muted small style={{ marginTop: 10 }}>Balalar ana ({animal.tag}), növ, cins və doğum tarixi ilə avtomatik qeydiyyata alınır. Bırkası boş qalan bala əlavə olunmur — sonra "Heyvan əlavə et" ilə yazmaq olar.</Muted>
+        </>
+      )}
     </Sheet>
   );
 }

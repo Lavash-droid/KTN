@@ -11,7 +11,8 @@ import { ChipSelect, DateField, Field, Grid2, Muted, NumField, Sheet, SuggestFie
 import { useToast } from './feedback';
 import { useColors } from './theme';
 
-export function TreatmentSheet({ visible, onClose, animal }: { visible: boolean; onClose: () => void; animal?: Animal }) {
+/** animal — tək heyvan; ids — siyahıda seçilmiş heyvanlar; heç biri yoxdursa qrup (növ / qrup adı) seçilir. */
+export function TreatmentSheet({ visible, onClose, animal, ids }: { visible: boolean; onClose: () => void; animal?: Animal; ids?: string[] }) {
   const c = useColors();
   const toast = useToast();
   const { data } = useFarm();
@@ -61,7 +62,10 @@ export function TreatmentSheet({ visible, onClose, animal }: { visible: boolean;
 
   const submit = () => {
     if (!medicine.trim()) return toast('Dərmanın adını yazın');
-    const list = group
+    const picked = ids ? new Set(ids) : null;
+    const list = picked
+      ? active.filter((a) => picked.has(a.id))
+      : group
       ? active.filter((a) => (target === 'all' ? true : target.startsWith('sp:') ? a.species === target.slice(3) : a.group.trim() === target.slice(3)))
       : [animal];
     if (!list.length) return toast('Seçilən qrupda heyvan yoxdur');
@@ -79,7 +83,8 @@ export function TreatmentSheet({ visible, onClose, animal }: { visible: boolean;
   const st = med ? medStatus(med) : null;
   return (
     <Sheet visible={visible} icon={group ? 'pill-multiple' : 'pill'} title={group ? 'Qrup müalicəsi' : `Müalicə — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
-      {group && <ChipSelect label="Kimlər müalicə olunur?" options={targets} value={target} onChange={setTarget} vertical />}
+      {group && ids && <Muted small style={{ marginTop: 8 }}>{`Seçilmiş ${ids.length} heyvan müalicə olunur.`}</Muted>}
+      {group && !ids && <ChipSelect label="Kimlər müalicə olunur?" options={targets} value={target} onChange={setTarget} vertical />}
       <DateField label="Tarix" value={date} onChange={(v) => setDate(v ?? todayISO())} max={todayISO()} />
       <SuggestField label="Dərman / peyvənd *" value={medicine} onChange={setMedicine} suggestions={data.meds.map((m) => m.name)} placeholder="Məs: İvermektin, Şap peyvəndi" />
       {med && st && (

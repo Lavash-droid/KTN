@@ -50,6 +50,8 @@ function RootStack() {
         <Stack.Screen name="animal/form" options={{ title: 'Heyvan' }} />
         <Stack.Screen name="meds" options={{ title: 'Dərman şkafı' }} />
         <Stack.Screen name="weigh" options={{ title: 'Toplu çəki' }} />
+        <Stack.Screen name="feeds" options={{ title: 'Yem anbarı' }} />
+        <Stack.Screen name="milk" options={{ title: 'Süd çəni' }} />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" options={{ headerShown: false }} />

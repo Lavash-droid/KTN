@@ -45,7 +45,7 @@ Daxili server hazır olanda ekranlara, biznes məntiqinə və offline növbəyə
 | GET | `/photos/url?ref=` | — | `{ url }` — göstərmək üçün (müddətli) URL |
 | DELETE | `/photos?ref=` | — | `204` |
 
-`:table` ∈ `animals`, `treatments`, `weights`, `breedings`, `tasks`, `meds`, `pregChecks`, `heats`, `movements`.
+`:table` ∈ `animals`, `treatments`, `weights`, `breedings`, `tasks`, `meds`, `pregChecks`, `heats`, `movements`, `feeds`, `purchases`, `milkRecords`.
 
 ```ts
 interface FarmData {
@@ -60,6 +60,9 @@ interface FarmData {
   pregChecks: { id; animalId; breedingId: string|null; date; result: 'positive'|'negative'|'uncertain'; fetuses: number; method: 'scan'|'manual'; notes }[];
   heats:      { id; animalId; date; notes }[];
   movements:  { id; animalId; date; type: 'purchase'|'sale'|'move_out'|'slaughter'|'death'; counterparty; price: number; weight: number; notes }[];
+  feeds:      { id; name; qty: number; unit; minQty: number; notes }[];
+  purchases:  { id; kind: 'med'|'feed'; itemId: string|null; itemName; date; qty: number; unit; price: number; supplier; batch; expiry: string|null; notes }[];
+  milkRecords:{ id; date; liters: number; fat: number; protein: number; scc: number; buyer; price: number; notes }[];
 }
 ```
 

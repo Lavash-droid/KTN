@@ -6,17 +6,23 @@ import { findMed, medStatus } from '../domain/logic';
 import type { Med } from '../domain/types';
 import { uid } from '../lib/id';
 import { farmStore, useFarm } from '../store/farmStore';
-import { Badge, Btn, ChipSelect, DateField, Empty, Field, Grid2, List, ListItem, Muted, NumField, Screen, Sheet, toNum } from '../ui/components';
+import { Badge, Btn, ChipSelect, DateField, Empty, Field, Grid2, H2, List, ListItem, Muted, NumField, Row, Screen, Sheet, toNum } from '../ui/components';
 import { confirm, useToast } from '../ui/feedback';
+import { PurchaseHistory, PurchaseSheet } from '../ui/PurchaseSheet';
 
 export default function Meds() {
   const { data } = useFarm();
   const [editing, setEditing] = useState<Med | 'new' | null>(null);
+  // Alış: null — bağlı; 'any' — ad yazılır; Med — kartdan seçilmiş dərman.
+  const [buying, setBuying] = useState<Med | 'any' | null>(null);
   const items = [...data.meds].sort((a, b) => a.name.localeCompare(b.name, 'az'));
 
   return (
     <Screen>
-      <Btn title="Dərman əlavə et" icon="plus" onPress={() => setEditing('new')} />
+      <Row>
+        <Btn title="Alış qeyd et" icon="cart-in" onPress={() => setBuying('any')} style={{ flex: 1 }} />
+        <Btn title="Yeni dərman" icon="plus" variant="tonal" onPress={() => setEditing('new')} style={{ flex: 1 }} />
+      </Row>
       <View style={{ marginTop: 12 }}>
         <List>
           {items.length ? (
@@ -47,14 +53,24 @@ export default function Meds() {
         </List>
       </View>
       <Muted small style={{ marginTop: 14 }}>
-        Son istifadə tarixi 30 gündən az qalan, vaxtı keçən və minimum miqdardan az qalan dərmanlar paneldə göstərilir.
+        Son istifadə tarixi 30 gündən az qalan, vaxtı keçən və minimum miqdardan az qalan dərmanlar paneldə göstərilir. Alış qeyd edəndə ehtiyat artır, son istifadə tarixi yenilənir.
       </Muted>
-      <MedSheet med={editing} onClose={() => setEditing(null)} />
+      <H2>Son alışlar</H2>
+      <PurchaseHistory kind="med" limit={15} />
+      <MedSheet
+        med={editing}
+        onClose={() => setEditing(null)}
+        onBuy={(m) => {
+          setEditing(null);
+          setBuying(m);
+        }}
+      />
+      <PurchaseSheet kind="med" item={buying && buying !== 'any' ? buying : null} visible={!!buying} onClose={() => setBuying(null)} />
     </Screen>
   );
 }
 
-function MedSheet({ med, onClose }: { med: Med | 'new' | null; onClose: () => void }) {
+function MedSheet({ med, onClose, onBuy }: { med: Med | 'new' | null; onClose: () => void; onBuy: (m: Med) => void }) {
   const toast = useToast();
   const { data } = useFarm();
   const existing = med && med !== 'new' ? med : null;
@@ -104,7 +120,27 @@ function MedSheet({ med, onClose }: { med: Med | 'new' | null; onClose: () => vo
         <NumField label="Süd qalığı (gün)" value={f.milkWd} onChange={(t) => set('milkWd', t)} />
       </Grid2>
       <Field label="Qeyd" value={f.notes} onChangeText={(t) => set('notes', t)} placeholder="Partiya nömrəsi, saxlama şəraiti…" />
-      {existing && <Btn title="Dərmanı sil" variant="ghost" small onPress={remove} style={{ alignSelf: 'flex-start', marginTop: 14 }} />}
+      {existing && (
+        <>
+          <LastPurchase med={existing} />
+          <Row style={{ marginTop: 14 }}>
+            <Btn title="Alış qeyd et" icon="cart-in" variant="tonal" small onPress={() => onBuy(existing)} />
+            <Btn title="Dərmanı sil" icon="trash" variant="danger" small onPress={remove} />
+          </Row>
+        </>
+      )}
     </Sheet>
+  );
+}
+
+function LastPurchase({ med }: { med: Med }) {
+  const { data } = useFarm();
+  const ps = data.purchases.filter((p) => p.kind === 'med' && p.itemId === med.id).sort((a, b) => b.date.localeCompare(a.date));
+  if (!ps.length) return null;
+  const p = ps[0];
+  return (
+    <Muted small style={{ marginTop: 12 }}>
+      {`Son alış: ${fmt(p.date)} · +${p.qty} ${p.unit}${p.supplier ? ' · ' + p.supplier : ''}${p.batch ? ' · partiya ' + p.batch : ''}${ps.length > 1 ? ` (cəmi ${ps.length} alış)` : ''}`}
+    </Muted>
   );
 }

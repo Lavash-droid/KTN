@@ -2,7 +2,7 @@ import type { AnimalStatus, MovementType, ScanResult, SpeciesKey } from './types
 
 /** UI ikon açarları (src/ui/iconPaths.ts). Domen yalnız adı daşıyır, çəkmək UI-nin işidir. */
 export type IconKey = 'cow' | 'buffalo' | 'sheep' | 'goat' | 'pill' | 'weight' | 'dna' | 'baby-bottle' | 'calendar-clock' | 'medical-bag'
-  | 'scan' | 'heat' | 'cart-in' | 'cart-out' | 'truck' | 'knife' | 'cross';
+  | 'scan' | 'heat' | 'cart-in' | 'cart-out' | 'truck' | 'knife' | 'cross' | 'feed' | 'milk';
 
 export interface SpeciesInfo {
   label: string;
@@ -59,3 +59,5 @@ export const MOVEMENT: Record<MovementType, MovementInfo> = {
   death: { label: 'Ölüm', status: 'olub', icon: 'cross', party: 'Səbəb' },
 };
 export const EXIT_TYPES: MovementType[] = ['sale', 'move_out', 'slaughter', 'death'];
+
+export const FEED_UNITS = ['kq', 'ton', 'kisə', 'tay', 'bağlama', 'litr'];

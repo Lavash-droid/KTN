@@ -7,13 +7,17 @@ React Native + Expo-ya köçürülüb; məlumat **Supabase**-də saxlanılır, g
 ## İmkanlar
 - Heyvan reyestri (inək, camış, qoyun, keçi), şəkil (kamera / qalereya), axtarış və filtrlər
 - Müalicə jurnalı, **dərman qalığı** (ət/süd) son tarixləri, **qrup müalicəsi**
-- **Dərman şkafı**: ehtiyat, son istifadə tarixi, az qalma xəbərdarlığı, müalicədə avtomatik çıxılma
-- Mayalanma → gözlənilən doğum; "Doğdu" → bala formasının avtomatik açılması
+- **Dərman şkafı**: ehtiyat, son istifadə tarixi, az qalma xəbərdarlığı, müalicədə avtomatik çıxılma; **dərman alışı** (təchizatçı, partiya, son istifadə, məbləğ) — ehtiyat avtomatik artır
+- **Yem anbarı**: yem növləri, alış və sərf, minimumdan az qalanda xəbərdarlıq
+- **Süd çəni**: gündəlik litr, yağlılıq, zülal, somatik hüceyrə, alıcı və qiymət; 30 günlük göstəricilər
+- Mayalanma → gözlənilən doğum; "Doğdu" → **çoxlu bala** (əkiz/üçəm) bir dəfəyə qeydiyyat: bırka, cins, doğum çəkisi
+- **Toplu seçim**: heyvanları qrupa köçürmək, seçilmişlərə müalicə; qrup filtri
+- **Xərc və gəlir** kartı (dərman, yem, süd satışı), **hesabatın e-poçtla göndərilməsi** (həftəlik / aylıq)
 - Çəki və orta gündəlik artım, **toplu çəki seansı** (tərəzi yanında heyvanları ardıcıl çəkmək); tapşırıqlar; paneldə xatırlatmalar
 - **Boğazlıq yoxlaması** (USM / əl ilə, döl sayı) — "mayalanıb" / "boğazdır" vəziyyəti, "yoxlama vaxtıdır" xatırlatması
 - **Qızğınlıq** qeydi və növbəti qızğınlıq xatırlatması (növə görə tsikl)
 - **Alqı-satqı və çıxışlar**: alış (yeni heyvan əlavə edərkən), satış, köçürmə, kəsim, ölüm — qiymət, qarşı tərəf, çəki; illik yekun və CSV
-- CSV (Excel) ixrac, JSON ehtiyat nüsxə; **köhnə PWA-nın ehtiyat faylını idxal** (şəkillər daxil)
+- CSV (Excel) ixrac (heyvanlar, alqı-satqı, dərman jurnalı, alışlar, süd), JSON ehtiyat nüsxə; **köhnə PWA-nın ehtiyat faylını idxal** (şəkillər daxil)
 - Hesab: e-poçt + şifrə və ya **myGov ilə giriş** (SİMA / ASAN İmza — [`docs/MYGOV.md`](docs/MYGOV.md)); tətbiqdən hesabın silinməsi, bir neçə cihaz, **internetsiz iş**: dəyişikliklər cihazda növbəyə düşür
   və bağlantı bərpa olunanda serverə göndərilir
 

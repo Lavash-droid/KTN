@@ -1,10 +1,10 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Linking, Text, View } from 'react-native';
 import { isTransient, repo } from '../../data';
-import { todayISO } from '../../domain/dates';
-import { animalsCsv, medNeedsAttention, movementsCsv, tradeSummary, treatmentsCsv } from '../../domain/logic';
+import { addDays, todayISO } from '../../domain/dates';
+import { animalsCsv, expenseSummary, farmReport, feedLow, medNeedsAttention, milkCsv, milkStats, movementsCsv, purchasesCsv, tradeSummary, treatmentsCsv } from '../../domain/logic';
 import { demoData, makeBackup, parseBackup } from '../../domain/transfer';
 import { emptyFarmData, type Farm } from '../../domain/types';
 import { readTextFile, shareTextFile } from '../../lib/files';
@@ -74,6 +74,19 @@ export default function More() {
   };
 
   const sizeNote = data.meds.some(medNeedsAttention) ? ' · diqqət tələb edənlər var' : '';
+  const feedNote = data.feeds.some(feedLow) ? ' · az qalanlar var' : '';
+  const milk = milkStats(data, 30);
+  const emailReport = (days: number) =>
+    run(async () => {
+      const from = addDays(todayISO(), -days + 1);
+      const subject = `${data.farm.name || 'Ferma'} — ${days} günlük hesabat`;
+      const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(farmReport(data, from))}`;
+      try {
+        await Linking.openURL(url);
+      } catch {
+        throw new Error('E-poçt tətbiqi tapılmadı');
+      }
+    });
   const lastSync = status.lastSync ? new Date(status.lastSync).toLocaleString('az-AZ') : '—';
 
   return (
@@ -98,16 +111,25 @@ export default function More() {
       <H2>Ferma ehtiyatı</H2>
       <List>
         <ListItem first icon="medical-bag" title="Dərman şkafı" subtitle={`${data.meds.length} dərman${sizeNote}`} onPress={() => router.push('/meds')} />
+        <ListItem icon="feed" title="Yem anbarı" subtitle={`${data.feeds.length} növ yem${feedNote}`} onPress={() => router.push('/feeds')} />
+        <ListItem icon="milk" title="Süd çəni" subtitle={milk.perDay !== null ? `Son 30 gün: gündə orta ${milk.perDay} l` : 'Gündəlik süd, yağlılıq, zülal, alıcı'} onPress={() => router.push('/milk')} />
       </List>
 
       <H2>{`Alqı-satqı — ${todayISO().slice(0, 4)}`}</H2>
       <TradeCard />
+
+      <H2>{`Xərc və gəlir — ${todayISO().slice(0, 4)}`}</H2>
+      <ExpenseCard />
 
       <H2>Hesabatlar və ehtiyat nüsxə</H2>
       <List>
         <ListItem first icon="file-excel" title="Heyvan siyahısı (CSV / Excel)" subtitle="Bütün heyvanlar, son çəki, status" onPress={() => run(() => shareTextFile(`suru-heyvanlar-${todayISO()}.csv`, animalsCsv(data), 'text/csv'))} />
         <ListItem icon="cart-out" title="Alqı-satqı jurnalı (CSV / Excel)" subtitle="Alış, satış, köçürmə, kəsim, ölüm" onPress={() => run(() => shareTextFile(`suru-alqi-satqi-${todayISO()}.csv`, movementsCsv(data), 'text/csv'))} />
         <ListItem icon="clipboard-text" title="Dərman jurnalı (CSV / Excel)" subtitle="Baytar və yoxlama üçün" onPress={() => run(() => shareTextFile(`suru-derman-jurnali-${todayISO()}.csv`, treatmentsCsv(data), 'text/csv'))} />
+        <ListItem icon="receipt" title="Alış jurnalı (CSV / Excel)" subtitle="Dərman və yem alışları, təchizatçı, partiya" onPress={() => run(() => shareTextFile(`suru-alislar-${todayISO()}.csv`, purchasesCsv(data), 'text/csv'))} />
+        <ListItem icon="milk" title="Süd jurnalı (CSV / Excel)" subtitle="Litr, keyfiyyət, alıcı, məbləğ" onPress={() => run(() => shareTextFile(`suru-sud-${todayISO()}.csv`, milkCsv(data), 'text/csv'))} />
+        <ListItem icon="email" title="Həftəlik hesabatı e-poçtla göndər" subtitle="Son 7 gün: heyvanlar, alqı-satqı, xərclər, xəbərdarlıqlar" onPress={() => emailReport(7)} />
+        <ListItem icon="email" title="Aylıq hesabatı e-poçtla göndər" subtitle="Son 30 gün" onPress={() => emailReport(30)} />
         <ListItem icon="download" title="Ehtiyat nüsxə (JSON)" subtitle="Bütün qeydlər bir faylda" onPress={() => run(() => shareTextFile(`suru-ehtiyat-${todayISO()}.json`, JSON.stringify(makeBackup(data)), 'application/json'))} />
         <ListItem icon="upload" title="Ehtiyat nüsxəni bərpa et" subtitle="Köhnə veb-tətbiqin (PWA) faylı da qəbul olunur · mövcud məlumatı əvəz edir" onPress={restore} />
       </List>
@@ -222,6 +244,32 @@ function TradeCard() {
         {cell('Fərq', azn(net), 'satış − alış', net >= 0 ? c.green : c.danger)}
       </View>
       <Muted small style={{ marginTop: 10 }}>Satış heyvan kartında "Satış / çıxış", alış isə yeni heyvan əlavə edərkən "Alınıb" ilə qeyd olunur.</Muted>
+    </Card>
+  );
+}
+
+/** Bu ilin dərman/yem xərci və süd gəliri. */
+function ExpenseCard() {
+  const c = useColors();
+  const { data } = useFarm();
+  const e = expenseSummary(data, `${todayISO().slice(0, 4)}-01-01`);
+  const net = Math.round((e.milkRevenue - e.meds - e.feeds) * 100) / 100;
+  const cell = (label: string, value: string, sub?: string, color?: string) => (
+    <View style={{ flexGrow: 1, flexBasis: 140, padding: 12, borderRadius: 12, backgroundColor: c.bg }}>
+      <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
+      <Text style={{ color: color ?? c.text, fontSize: 20, fontWeight: '700', marginTop: 2 }}>{value}</Text>
+      {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
+    </View>
+  );
+  return (
+    <Card>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {cell('Dərman', azn(e.meds), 'alışlar')}
+        {cell('Yem', azn(e.feeds), 'alışlar')}
+        {cell('Süd satışı', azn(e.milkRevenue), `${e.milkLiters.toLocaleString('az-AZ')} l`)}
+        {cell('Fərq', azn(net), 'süd − dərman − yem', net >= 0 ? c.green : c.danger)}
+      </View>
+      <Muted small style={{ marginTop: 10 }}>Heyvan alqı-satqısı yuxarıdakı kartdadır. Xərclər məbləği yazılmış alışlar üzrə hesablanır.</Muted>
     </Card>
   );
 }

@@ -122,6 +122,52 @@ export interface Movement {
   notes: string;
 }
 
+/** Yem anbarı maddəsi. */
+export interface Feed {
+  id: string;
+  name: string;
+  qty: number;
+  unit: string;
+  minQty: number;
+  notes: string;
+}
+
+export type PurchaseKind = 'med' | 'feed';
+
+/** Dərman və ya yem alışı. Maddə silinsə də tarixçə qalır (itemName). */
+export interface Purchase {
+  id: string;
+  kind: PurchaseKind;
+  itemId: string | null;
+  itemName: string;
+  date: string;
+  qty: number;
+  unit: string;
+  /** Ümumi məbləğ, AZN; bilinmirsə 0. */
+  price: number;
+  supplier: string;
+  batch: string;
+  expiry: string | null;
+  notes: string;
+}
+
+/** Süd çəni qeydi (gündəlik təhvil / ölçmə). */
+export interface MilkRecord {
+  id: string;
+  date: string;
+  liters: number;
+  /** Yağlılıq, %; bilinmirsə 0. */
+  fat: number;
+  /** Zülal, %; bilinmirsə 0. */
+  protein: number;
+  /** Somatik hüceyrə sayı (min/ml deyil, hüceyrə/ml); bilinmirsə 0. */
+  scc: number;
+  buyer: string;
+  /** 1 litrin qiyməti, AZN; bilinmirsə 0. */
+  price: number;
+  notes: string;
+}
+
 export interface FarmData {
   farm: Farm;
   animals: Animal[];
@@ -133,6 +179,9 @@ export interface FarmData {
   pregChecks: PregCheck[];
   heats: Heat[];
   movements: Movement[];
+  feeds: Feed[];
+  purchases: Purchase[];
+  milkRecords: MilkRecord[];
 }
 
 /** Backend-də ayrıca cədvəl/kolleksiya kimi saxlanılan qeydlər. */
@@ -146,10 +195,13 @@ export interface Tables {
   pregChecks: PregCheck;
   heats: Heat;
   movements: Movement;
+  feeds: Feed;
+  purchases: Purchase;
+  milkRecords: MilkRecord;
 }
 export type TableName = keyof Tables;
 /** Sıra vacibdir: əvvəl heyvanlar və mayalanmalar, sonra onlara istinad edən qeydlər. */
-export const TABLES: TableName[] = ['animals', 'meds', 'treatments', 'weights', 'breedings', 'tasks', 'pregChecks', 'heats', 'movements'];
+export const TABLES: TableName[] = ['animals', 'meds', 'treatments', 'weights', 'breedings', 'tasks', 'pregChecks', 'heats', 'movements', 'feeds', 'purchases', 'milkRecords'];
 
 export const emptyFarmData = (): FarmData => ({
   farm: { name: 'Mənim fermam', owner: '', region: '' },
@@ -162,4 +214,7 @@ export const emptyFarmData = (): FarmData => ({
   pregChecks: [],
   heats: [],
   movements: [],
+  feeds: [],
+  purchases: [],
+  milkRecords: [],
 });

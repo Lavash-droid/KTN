@@ -14,7 +14,7 @@ import { isLocalPhoto } from '../data/mapping';
 import { stockAfterUse } from '../domain/logic';
 import { MOVEMENT } from '../domain/constants';
 import { fmt } from '../domain/dates';
-import { emptyFarmData, type Animal, type Breeding, type Farm, type FarmData, type Heat, type Med, type Movement, type PregCheck, type TableName, type Task, type Treatment, type Weight } from '../domain/types';
+import { emptyFarmData, type Animal, type Breeding, type Farm, type FarmData, type Feed, type Heat, type MilkRecord, type Purchase, type Tables, type Med, type Movement, type PregCheck, type TableName, type Task, type Treatment, type Weight } from '../domain/types';
 import type { EventKind } from '../domain/logic';
 import { dataUrlToFile, deleteLocal } from '../lib/files';
 
@@ -333,6 +333,107 @@ class FarmStore {
       }
     }
     this.commit(data, ops);
+  }
+
+  /* ---------- ümumi köməkçilər ---------- */
+  private upsertIn<T extends TableName>(data: FarmData, table: T, row: Tables[T]): FarmData {
+    const list = data[table] as Tables[T][];
+    const exists = list.some((x) => x.id === row.id);
+    return { ...data, [table]: exists ? list.map((x) => (x.id === row.id ? row : x)) : [...list, row] };
+  }
+  private saveRow<T extends TableName>(table: T, row: Tables[T]) {
+    this.commit(this.upsertIn(this.data, table, row), [{ kind: 'upsert', table, rows: [row] }]);
+  }
+  private deleteRow(table: TableName, id: string) {
+    this.commit({ ...this.data, [table]: (this.data[table] as { id: string }[]).filter((x) => x.id !== id) }, [{ kind: 'remove', table, ids: [id] }]);
+  }
+
+  /* ---------- yem anbarı ---------- */
+  saveFeed(f: Feed) {
+    this.saveRow('feeds', f);
+  }
+  deleteFeed(id: string) {
+    this.deleteRow('feeds', id);
+  }
+  /** Yem sərfi (və ya düzəliş): miqdarı dəyişir, sıfırdan aşağı düşmür. */
+  useFeed(id: string, amount: number) {
+    const f = this.data.feeds.find((x) => x.id === id);
+    if (!f || !(amount > 0)) return;
+    this.saveFeed({ ...f, qty: Math.max(0, Math.round((f.qty - amount) * 100) / 100) });
+  }
+
+  /* ---------- alışlar ---------- */
+  /** Alış: dərmanın/yemin ehtiyatı artır; dərman üçün ən yaxın son istifadə tarixi saxlanılır. */
+  addPurchase(p: Purchase) {
+    let data = this.upsertIn(this.data, 'purchases', p);
+    const ops: Op[] = [{ kind: 'upsert', table: 'purchases', rows: [p] }];
+    const add = (q: number) => Math.round((q + p.qty) * 100) / 100;
+    if (p.kind === 'med' && p.itemId) {
+      const m = data.meds.find((x) => x.id === p.itemId);
+      if (m) {
+        const t = new Date().toISOString().slice(0, 10);
+        const oldValid = m.expiry && m.expiry >= t && m.qty > 0 ? m.expiry : null;
+        const expiry = p.expiry && oldValid ? (p.expiry < oldValid ? p.expiry : oldValid) : p.expiry ?? m.expiry;
+        const updated: Med = { ...m, qty: add(m.qty), expiry };
+        data = this.upsertIn(data, 'meds', updated);
+        ops.push({ kind: 'upsert', table: 'meds', rows: [updated] });
+      }
+    } else if (p.kind === 'feed' && p.itemId) {
+      const f = data.feeds.find((x) => x.id === p.itemId);
+      if (f) {
+        const updated: Feed = { ...f, qty: add(f.qty) };
+        data = this.upsertIn(data, 'feeds', updated);
+        ops.push({ kind: 'upsert', table: 'feeds', rows: [updated] });
+      }
+    }
+    this.commit(data, ops);
+  }
+  /** Alış silinir və ehtiyatdan geri çıxılır (sıfırdan aşağı düşmür). */
+  deletePurchase(id: string) {
+    const p = this.data.purchases.find((x) => x.id === id);
+    if (!p) return;
+    let data: FarmData = { ...this.data, purchases: this.data.purchases.filter((x) => x.id !== id) };
+    const ops: Op[] = [{ kind: 'remove', table: 'purchases', ids: [id] }];
+    const sub = (q: number) => Math.max(0, Math.round((q - p.qty) * 100) / 100);
+    if (p.kind === 'med' && p.itemId) {
+      const m = data.meds.find((x) => x.id === p.itemId);
+      if (m) {
+        const updated = { ...m, qty: sub(m.qty) };
+        data = this.upsertIn(data, 'meds', updated);
+        ops.push({ kind: 'upsert', table: 'meds', rows: [updated] });
+      }
+    } else if (p.kind === 'feed' && p.itemId) {
+      const f = data.feeds.find((x) => x.id === p.itemId);
+      if (f) {
+        const updated = { ...f, qty: sub(f.qty) };
+        data = this.upsertIn(data, 'feeds', updated);
+        ops.push({ kind: 'upsert', table: 'feeds', rows: [updated] });
+      }
+    }
+    this.commit(data, ops);
+  }
+
+  /* ---------- süd ---------- */
+  saveMilk(r: MilkRecord) {
+    this.saveRow('milkRecords', r);
+  }
+  deleteMilk(id: string) {
+    this.deleteRow('milkRecords', id);
+  }
+
+  /* ---------- toplu əməliyyatlar ---------- */
+  /** Bir neçə heyvanı bir dəfəyə əlavə edir (məs. əkiz/üçəm doğum). */
+  addAnimals(rows: Animal[]) {
+    if (!rows.length) return;
+    this.commit({ ...this.data, animals: [...this.data.animals, ...rows] }, [{ kind: 'upsert', table: 'animals', rows }]);
+  }
+  /** Seçilmiş heyvanları qrupa keçirir (boş ad — qrupdan çıxarır). */
+  assignGroup(ids: string[], group: string) {
+    const set = new Set(ids);
+    const changed = this.data.animals.filter((a) => set.has(a.id) && a.group !== group).map((a) => ({ ...a, group }));
+    if (!changed.length) return;
+    const byId = new Map(changed.map((a) => [a.id, a]));
+    this.commit({ ...this.data, animals: this.data.animals.map((a) => byId.get(a.id) ?? a) }, [{ kind: 'upsert', table: 'animals', rows: changed }]);
   }
 
   /** Toplu çəki: bir seansda bir neçə heyvanın çəkisi. */

@@ -138,6 +138,26 @@ export function parseBackup(raw: unknown): ImportResult {
       price: Math.max(0, num(m.price)), weight: Math.max(0, num(m.weight)), notes: str(m.notes),
     });
   }
+  for (const f of arr('feeds')) {
+    if (!str(f.name).trim()) continue;
+    out.feeds.push({ id: mapId(f.id), name: str(f.name).trim(), qty: num(f.qty), unit: str(f.unit) || 'kq', minQty: num(f.minQty), notes: str(f.notes) });
+  }
+  const items = new Set([...out.meds, ...out.feeds].map((x) => x.id));
+  for (const p of arr('purchases')) {
+    if (!isISODate(p.date) || !(num(p.qty) > 0) || !['med', 'feed'].includes(p.kind)) continue;
+    const iid = p.itemId ? idMap.get(str(p.itemId)) : undefined;
+    out.purchases.push({
+      id: mapId(p.id), kind: p.kind, itemId: iid && items.has(iid) ? iid : null, itemName: str(p.itemName) || '—', date: p.date,
+      qty: num(p.qty), unit: str(p.unit), price: Math.max(0, num(p.price)), supplier: str(p.supplier), batch: str(p.batch), expiry: date(p.expiry), notes: str(p.notes),
+    });
+  }
+  for (const m of arr('milkRecords')) {
+    if (!isISODate(m.date) || !(num(m.liters) > 0)) continue;
+    out.milkRecords.push({
+      id: mapId(m.id), date: m.date, liters: num(m.liters), fat: Math.max(0, num(m.fat)), protein: Math.max(0, num(m.protein)),
+      scc: Math.max(0, Math.round(num(m.scc))), buyer: str(m.buyer), price: Math.max(0, num(m.price)), notes: str(m.notes),
+    });
+  }
   return { data: out, photos };
 }
 
@@ -186,5 +206,15 @@ export function demoData(): FarmData {
   s.meds.push({ id: uid(), name: 'Penisilin', qty: 80, unit: 'ml', minQty: 50, expiry: d(240), meatWd: 10, milkWd: 4, notes: '' });
   s.meds.push({ id: uid(), name: 'İvermektin 1%', qty: 30, unit: 'ml', minQty: 50, expiry: d(20), meatWd: 28, milkWd: 0, notes: 'Sağmal heyvanlara vurulmur' });
   s.meds.push({ id: uid(), name: 'Şap peyvəndi', qty: 18, unit: 'doza', minQty: 5, expiry: d(150), meatWd: 0, milkWd: 0, notes: 'Soyuducuda saxla' });
+  const pen = s.meds[0];
+  s.purchases.push({ id: uid(), kind: 'med', itemId: pen.id, itemName: pen.name, date: d(-30), qty: 100, unit: 'ml', price: 35, supplier: 'Vet-aptek', batch: 'P-2211', expiry: d(240), notes: '' });
+  const silo = { id: uid(), name: 'Qarğıdalı silosu', qty: 2400, unit: 'kq', minQty: 800, notes: '' };
+  const arpa = { id: uid(), name: 'Arpa', qty: 350, unit: 'kq', minQty: 400, notes: 'Əzilmiş' };
+  s.feeds.push(silo, arpa, { id: uid(), name: 'Yonca (quru ot)', qty: 60, unit: 'tay', minQty: 20, notes: '' });
+  s.purchases.push({ id: uid(), kind: 'feed', itemId: silo.id, itemName: silo.name, date: d(-20), qty: 3000, unit: 'kq', price: 540, supplier: 'Kooperativ', batch: '', expiry: null, notes: '' });
+  s.purchases.push({ id: uid(), kind: 'feed', itemId: arpa.id, itemName: arpa.name, date: d(-45), qty: 1000, unit: 'kq', price: 420, supplier: 'Bazar', batch: '', expiry: null, notes: '' });
+  for (let i = 0; i < 14; i++) {
+    s.milkRecords.push({ id: uid(), date: d(-i), liters: Math.round((58 + ((i * 7) % 9) - 4) * 10) / 10, fat: Math.round((3.7 + (i % 3) * 0.1) * 10) / 10, protein: Math.round((3.2 + (i % 2) * 0.1) * 10) / 10, scc: 180000 + (i % 4) * 15000, buyer: 'Süd zavodu', price: 0.85, notes: '' });
+  }
   return s;
 }
