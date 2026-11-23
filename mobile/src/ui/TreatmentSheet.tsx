@@ -7,7 +7,7 @@ import { findMed, medStatus } from '../domain/logic';
 import type { Animal, Treatment } from '../domain/types';
 import { uid } from '../lib/id';
 import { farmStore, useFarm } from '../store/farmStore';
-import { ChipSelect, DateField, Field, Grid2, Muted, NumField, Sheet, SuggestField, toNum } from './components';
+import { ChipSelect, DateField, Field, Grid2, Muted, NumField, Sheet, SuggestField, toNum, type Option } from './components';
 import { useToast } from './feedback';
 import { useColors } from './theme';
 
@@ -19,10 +19,10 @@ export function TreatmentSheet({ visible, onClose, animal }: { visible: boolean;
 
   const active = useMemo(() => data.animals.filter((a) => a.status === 'aktiv'), [data.animals]);
   const targets = useMemo(() => {
-    const t: { value: string; label: string }[] = [{ value: 'all', label: `Bütün aktiv heyvanlar (${active.length})` }];
+    const t: Option<string>[] = [{ value: 'all', label: `Bütün aktiv heyvanlar (${active.length})` }];
     for (const k of SPECIES_KEYS) {
       const n = active.filter((a) => a.species === k).length;
-      if (n) t.push({ value: `sp:${k}`, label: `${SPECIES[k].icon} Bütün ${SPECIES[k].plural} (${n})` });
+      if (n) t.push({ value: `sp:${k}`, label: `Bütün ${SPECIES[k].plural} (${n})`, icon: SPECIES[k].icon });
     }
     const groups = [...new Set(active.map((a) => a.group.trim()).filter(Boolean))].sort((x, y) => x.localeCompare(y, 'az'));
     for (const g of groups) t.push({ value: `gr:${g}`, label: `Qrup: ${g} (${active.filter((a) => a.group.trim() === g).length})` });
@@ -78,14 +78,14 @@ export function TreatmentSheet({ visible, onClose, animal }: { visible: boolean;
 
   const st = med ? medStatus(med) : null;
   return (
-    <Sheet visible={visible} title={group ? '💊 Qrup müalicəsi' : `💊 Müalicə — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
+    <Sheet visible={visible} icon={group ? 'pill-multiple' : 'pill'} title={group ? 'Qrup müalicəsi' : `Müalicə — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
       {group && <ChipSelect label="Kimlər müalicə olunur?" options={targets} value={target} onChange={setTarget} vertical />}
       <DateField label="Tarix" value={date} onChange={(v) => setDate(v ?? todayISO())} max={todayISO()} />
       <SuggestField label="Dərman / peyvənd *" value={medicine} onChange={setMedicine} suggestions={data.meds.map((m) => m.name)} placeholder="Məs: İvermektin, Şap peyvəndi" />
       {med && st && (
         <Text style={{ color: st.expired ? c.danger : c.muted, fontSize: 13.5, marginTop: 6 }}>
           {st.expired
-            ? `⚠️ Bu dərmanın son istifadə tarixi keçib (${fmt(med.expiry)})! Ehtiyatda: ${med.qty} ${med.unit}.`
+            ? `Diqqət: bu dərmanın son istifadə tarixi keçib (${fmt(med.expiry)})! Ehtiyatda: ${med.qty} ${med.unit}.`
             : `Şkafda: ${med.qty} ${med.unit}${med.expiry ? ' · son istifadə: ' + fmt(med.expiry) : ''}. Qalıq müddətləri şkafdan götürüldü.`}
         </Text>
       )}

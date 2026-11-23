@@ -6,6 +6,7 @@ import { uid } from '../../lib/id';
 import { farmStore, useFarm } from '../../store/farmStore';
 import { Badge, Btn, Card, DateField, Empty, Field, H2, List, Screen } from '../../ui/components';
 import { useToast } from '../../ui/feedback';
+import { Icon } from '../../ui/Icon';
 import { useColors } from '../../ui/theme';
 
 export default function Tasks() {
@@ -28,7 +29,7 @@ export default function Tasks() {
       <Card>
         <Field label="Yeni tapşırıq" value={title} onChangeText={setTitle} placeholder="Məs: Şap peyvəndi — bütün sürü" onSubmitEditing={add} returnKeyType="done" />
         <DateField label="Son tarix" value={due} onChange={setDue} optional />
-        <Btn title="＋ Əlavə et" onPress={add} style={{ marginTop: 14 }} />
+        <Btn title="Əlavə et" icon="plus" onPress={add} style={{ marginTop: 14 }} />
       </Card>
 
       <H2>{`Gözləyən (${open.length})`}</H2>
@@ -61,12 +62,12 @@ function TaskRow({ task: k, first }: { task: Task; first: boolean }) {
         hitSlop={8}
         style={{ width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: c.green, backgroundColor: k.done ? c.green : 'transparent', alignItems: 'center', justifyContent: 'center' }}
       >
-        {k.done ? <Text style={{ color: c.onGreen, fontWeight: '800', fontSize: 14 }}>✓</Text> : null}
+        {k.done ? <Icon name="check" size={17} color={c.onGreen} /> : null}
       </Pressable>
       <Text style={{ flex: 1, fontWeight: '700', fontSize: 15.5, color: k.done ? c.muted : c.text, textDecorationLine: k.done ? 'line-through' : 'none' }}>{k.title}</Text>
       {!k.done && n !== null && (n < 0 ? <Badge kind="danger">{inDays(n)}</Badge> : n <= 2 ? <Badge kind="warn">{inDays(n)}</Badge> : <Badge kind="ok">{fmt(k.due)}</Badge>)}
       <Pressable onPress={() => farmStore.deleteTask(k.id)} hitSlop={10} accessibilityLabel="Sil">
-        <Text style={{ color: c.muted, fontSize: 16 }}>✕</Text>
+        <Icon name="close" size={18} color={c.muted} />
       </Pressable>
     </View>
   );

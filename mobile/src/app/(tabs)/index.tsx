@@ -8,7 +8,9 @@ import { demoData } from '../../domain/transfer';
 import { farmStore, useFarm } from '../../store/farmStore';
 import { AlertBox, Btn, Card, Empty, H2, List, ListItem, Muted, Screen } from '../../ui/components';
 import { useToast } from '../../ui/feedback';
+import { Icon, type IconName } from '../../ui/Icon';
 import { useWide } from '../../ui/layout';
+import { Logo } from '../../ui/Logo';
 import { RADIUS, useColors } from '../../ui/theme';
 
 export default function Home() {
@@ -40,11 +42,11 @@ export default function Home() {
     return (
       <Screen refreshControl={refreshControl}>
         <Card style={{ alignItems: 'center', paddingVertical: 28 }}>
-          <Text style={{ fontSize: 48 }}>🐄🐑</Text>
+          <Logo size={64} />
           <Text style={{ fontSize: 20, fontWeight: '700', color: c.text, marginVertical: 8 }}>Sürüyə xoş gəlmisiniz!</Text>
           <Muted center>Heyvanlarınızı, müalicələri, mayalanma və çəki qeydlərini bir yerdə aparın. İnternet olmadan da işləyir.</Muted>
           <View style={{ gap: 8, marginTop: 16, alignSelf: 'stretch' }}>
-            <Btn title="＋ İlk heyvanı əlavə et" onPress={() => router.push('/animal/form')} />
+            <Btn title="İlk heyvanı əlavə et" icon="plus" onPress={() => router.push('/animal/form')} />
             <Btn
               title="Nümunə məlumatla bax"
               variant="ghost"
@@ -73,7 +75,7 @@ export default function Home() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         <Stat value={active.length} label="Aktiv heyvan" primary />
         {counts.map((x) => (
-          <Stat key={x.k} value={x.n} label={`${SPECIES[x.k].icon} ${SPECIES[x.k].label}`} />
+          <Stat key={x.k} value={x.n} label={SPECIES[x.k].label} icon={SPECIES[x.k].icon} />
         ))}
       </View>
 
@@ -84,8 +86,9 @@ export default function Home() {
           {alerts.length ? (
             alerts.map((a) => <AlertBox key={a.key} level={a.level} icon={a.icon} title={a.title} subtitle={a.subtitle} onPress={() => router.push(a.href as Href)} />)
           ) : (
-            <Card>
-              <Muted>Hər şey qaydasındadır 👍 Yaxın günlərdə xatırlatma yoxdur.</Muted>
+            <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Icon name="check-circle" size={24} color={c.green} />
+              <Muted style={{ flex: 1 }}>Hər şey qaydasındadır. Yaxın günlərdə xatırlatma yoxdur.</Muted>
             </Card>
           )}
         </View>
@@ -107,7 +110,7 @@ export default function Home() {
   );
 }
 
-function Stat({ value, label, primary }: { value: number; label: string; primary?: boolean }) {
+function Stat({ value, label, primary, icon }: { value: number; label: string; primary?: boolean; icon?: IconName }) {
   const c = useColors();
   return (
     <View
@@ -116,7 +119,10 @@ function Stat({ value, label, primary }: { value: number; label: string; primary
         backgroundColor: primary ? c.green : c.card, borderColor: primary ? 'transparent' : c.line,
       }}
     >
-      <Text style={{ fontSize: 26, fontWeight: '800', color: primary ? c.onGreen : c.text }}>{value}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Text style={{ fontSize: 26, fontWeight: '800', color: primary ? c.onGreen : c.text }}>{value}</Text>
+        {icon ? <Icon name={icon} size={26} color={c.green} /> : null}
+      </View>
       <Text style={{ fontSize: 13.5, color: primary ? c.onGreen : c.muted, opacity: primary ? 0.9 : 1 }}>{label}</Text>
     </View>
   );

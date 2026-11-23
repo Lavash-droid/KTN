@@ -14,6 +14,7 @@ const light = {
   danger: '#b91c1c',
   dangerSoft: '#fee2e2',
   infoSoft: '#e0ecff',
+  info: '#2457a6',
   onGreen: '#ffffff',
 };
 
@@ -31,6 +32,7 @@ const dark: typeof light = {
   danger: '#f87171',
   dangerSoft: '#3b1a1a',
   infoSoft: '#1b2740',
+  info: '#8fb4f0',
   onGreen: '#0d1a12',
 };
 

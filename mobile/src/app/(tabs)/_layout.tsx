@@ -1,14 +1,15 @@
 import { router, Tabs } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Icon, type IconName } from '../../ui/Icon';
 import { useWide } from '../../ui/layout';
 import { Sidebar } from '../../ui/Sidebar';
 import { useFarm } from '../../store/farmStore';
 import { SyncBadge } from '../../ui/SyncBadge';
 import { BRAND, useColors } from '../../ui/theme';
 
-const icon = (emoji: string) =>
-  function TabIcon({ focused }: { focused: boolean }) {
-    return <Text style={{ fontSize: 21, opacity: focused ? 1 : 0.65 }}>{emoji}</Text>;
+const icon = (name: IconName) =>
+  function TabIcon({ color }: { focused: boolean; color: unknown }) {
+    return <Icon name={name} size={25} color={typeof color === 'string' ? color : undefined} />;
   };
 
 export default function TabsLayout() {
@@ -31,15 +32,15 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: c.bg },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: data.farm.name || 'Sürü', tabBarLabel: 'Panel', tabBarIcon: icon('🏠') }} />
-      <Tabs.Screen name="animals" options={{ title: 'Heyvanlar', tabBarIcon: icon('🐄') }} />
+      <Tabs.Screen name="index" options={{ title: data.farm.name || 'Sürü', tabBarLabel: 'Panel', tabBarIcon: icon('home') }} />
+      <Tabs.Screen name="animals" options={{ title: 'Heyvanlar', tabBarIcon: icon('cow') }} />
       <Tabs.Screen
         name="add"
         options={{
           title: 'Əlavə et',
           tabBarIcon: () => (
             <View style={{ backgroundColor: c.green, width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ color: c.onGreen, fontSize: 22, lineHeight: 26 }}>＋</Text>
+              <Icon name="plus" size={24} color={c.onGreen} />
             </View>
           ),
         }}
@@ -51,8 +52,8 @@ export default function TabsLayout() {
           },
         }}
       />
-      <Tabs.Screen name="tasks" options={{ title: 'Tapşırıqlar', tabBarIcon: icon('✅') }} />
-      <Tabs.Screen name="more" options={{ title: 'Digər', tabBarIcon: icon('⚙️') }} />
+      <Tabs.Screen name="tasks" options={{ title: 'Tapşırıqlar', tabBarIcon: icon('tasks') }} />
+      <Tabs.Screen name="more" options={{ title: 'Digər', tabBarIcon: icon('settings') }} />
     </Tabs>
   );
 }

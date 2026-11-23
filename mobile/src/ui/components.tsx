@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
 import { isLocalPhoto } from '../data/mapping';
 import { fmt, fromISO, toISO, todayISO } from '../domain/dates';
+import { Icon, type IconName } from './Icon';
 import { useWide } from './layout';
 import { RADIUS, useColors, type Colors } from './theme';
 
@@ -69,7 +70,7 @@ type BtnVariant = 'primary' | 'ghost' | 'danger';
 export function Btn({
   title, onPress, variant = 'primary', small, disabled, icon, style, loading, vertical,
 }: {
-  title: string; onPress?: () => void; variant?: BtnVariant; small?: boolean; disabled?: boolean; icon?: string;
+  title: string; onPress?: () => void; variant?: BtnVariant; small?: boolean; disabled?: boolean; icon?: IconName;
   style?: StyleProp<ViewStyle>; loading?: boolean; vertical?: boolean;
 }) {
   const c = useColors();
@@ -98,7 +99,7 @@ export function Btn({
       ]}
     >
       {loading ? <ActivityIndicator color={fg} /> : null}
-      {icon ? <Text style={{ fontSize: vertical ? 21 : small ? 14 : 16 }}>{icon}</Text> : null}
+      {icon ? <Icon name={icon} size={vertical ? 24 : small ? 17 : 19} color={fg} /> : null}
       <Text style={{ color: fg, fontWeight: '600', fontSize: small || vertical ? 14 : 16 }}>{title}</Text>
     </Pressable>
   );
@@ -157,6 +158,7 @@ export const toNum = (s: string) => {
 export interface Option<T extends string> {
   value: T;
   label: string;
+  icon?: IconName;
 }
 
 /** Seçim — "çip" düymələri ilə (az sayda variant üçün). */
@@ -177,8 +179,10 @@ export function ChipSelect<T extends string>({ label, options, value, onChange, 
               style={{
                 borderWidth: 1, borderColor: on ? c.green : c.line, backgroundColor: on ? c.green : c.card,
                 borderRadius: vertical ? 10 : 99, paddingHorizontal: 12, paddingVertical: vertical ? 10 : 7,
+                flexDirection: 'row', alignItems: 'center', gap: 6,
               }}
             >
+              {o.icon ? <Icon name={o.icon} size={17} color={on ? c.onGreen : c.green} /> : null}
               <Text style={{ color: on ? c.onGreen : c.text, fontSize: 14.5 }}>{o.label}</Text>
             </Pressable>
           );
@@ -255,10 +259,10 @@ export function DateField({ label, value, onChange, optional, max }: { label: st
         <Text style={{ flex: 1, fontSize: 16, color: value ? c.text : c.muted }}>{value ? fmt(value) : 'Seçin'}</Text>
         {optional && value ? (
           <Pressable onPress={() => onChange(null)} hitSlop={10} accessibilityLabel="Tarixi təmizlə">
-            <Text style={{ color: c.muted, fontSize: 16 }}>✕</Text>
+            <Icon name="close" size={18} color={c.muted} />
           </Pressable>
         ) : (
-          <Text>📅</Text>
+          <Icon name="calendar" size={20} color={c.muted} />
         )}
       </Pressable>
       {Platform.OS === 'ios' && iosOpen && (
@@ -281,9 +285,9 @@ export function DateField({ label, value, onChange, optional, max }: { label: st
 
 /* ---------- Modal forma ---------- */
 export function Sheet({
-  visible, title, onClose, onSubmit, submitLabel = 'Yadda saxla', children, busy,
+  visible, title, icon, onClose, onSubmit, submitLabel = 'Yadda saxla', children, busy,
 }: {
-  visible: boolean; title: string; onClose: () => void; onSubmit?: () => void; submitLabel?: string; children: ReactNode; busy?: boolean;
+  visible: boolean; title: string; icon?: IconName; onClose: () => void; onSubmit?: () => void; submitLabel?: string; children: ReactNode; busy?: boolean;
 }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -303,7 +307,14 @@ export function Sheet({
           }}
         >
           <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 18 + insets.bottom }} keyboardShouldPersistTaps="handled">
-            <Text style={{ fontSize: 18, fontWeight: '700', color: c.text, marginBottom: 2 }}>{title}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+              {icon ? (
+                <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: c.greenSoft, alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name={icon} size={20} color={c.green} />
+                </View>
+              ) : null}
+              <Text style={{ fontSize: 18, fontWeight: '700', color: c.text, flex: 1 }}>{title}</Text>
+            </View>
             {children}
             {onSubmit && (
               <Row style={{ marginTop: 18 }}>
@@ -327,7 +338,7 @@ export function List({ children }: { children: ReactNode }) {
 export function ListItem({
   icon, title, subtitle, right, onPress, first, chevron = true, titleColor,
 }: {
-  icon?: ReactNode; title: string; subtitle?: string; right?: ReactNode; onPress?: () => void; first?: boolean; chevron?: boolean; titleColor?: string;
+  icon?: ReactNode | IconName; title: string; subtitle?: string; right?: ReactNode; onPress?: () => void; first?: boolean; chevron?: boolean; titleColor?: string;
 }) {
   const c = useColors();
   return (
@@ -339,14 +350,24 @@ export function ListItem({
         borderTopWidth: first ? 0 : 1, borderTopColor: c.line, backgroundColor: pressed ? c.greenSoft : 'transparent',
       })}
     >
-      {icon != null && <View style={{ width: 38, alignItems: 'center' }}>{typeof icon === 'string' ? <Text style={{ fontSize: 26 }}>{icon}</Text> : icon}</View>}
+      {icon != null && <View style={{ width: 38, alignItems: 'center' }}>{typeof icon === 'string' ? <IconTile name={icon as IconName} /> : icon}</View>}
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={{ fontWeight: '700', fontSize: 15.5, color: titleColor ?? c.text }} numberOfLines={1}>{title}</Text>
         {subtitle ? <Text style={{ color: c.muted, fontSize: 13.5, marginTop: 1 }} numberOfLines={2}>{subtitle}</Text> : null}
       </View>
       {right}
-      {onPress && chevron ? <Text style={{ color: c.muted, fontSize: 20 }}>›</Text> : null}
+      {onPress && chevron ? <Icon name="chevron-right" size={22} color={c.muted} /> : null}
     </Pressable>
+  );
+}
+
+/** Yumşaq fonlu kvadrat içində ikon — siyahı sətirləri üçün. */
+export function IconTile({ name, size = 38, color, bg }: { name: IconName; size?: number; color?: string; bg?: string }) {
+  const c = useColors();
+  return (
+    <View style={{ width: size, height: size, borderRadius: size * 0.3, backgroundColor: bg ?? c.greenSoft, alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name={name} size={size * 0.58} color={color ?? c.green} />
+    </View>
   );
 }
 
@@ -370,12 +391,12 @@ export function Badge({ kind, children }: { kind: BadgeKind; children: ReactNode
   );
 }
 
-export function AlertBox({ level, icon, title, subtitle, onPress }: { level: 'danger' | 'warn' | 'info'; icon: string; title: string; subtitle?: string; onPress?: () => void }) {
+export function AlertBox({ level, icon, title, subtitle, onPress }: { level: 'danger' | 'warn' | 'info'; icon: IconName; title: string; subtitle?: string; onPress?: () => void }) {
   const c = useColors();
   const bg = level === 'danger' ? c.dangerSoft : level === 'warn' ? c.warnSoft : c.infoSoft;
   return (
     <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => ({ flexDirection: 'row', gap: 10, padding: 12, borderRadius: RADIUS, backgroundColor: bg, marginBottom: 8, opacity: pressed ? 0.8 : 1 })}>
-      <Text style={{ fontSize: 18 }}>{icon}</Text>
+      <Icon name={icon} size={22} color={level === 'danger' ? c.danger : level === 'warn' ? c.warn : c.info} style={{ marginTop: 1 }} />
       <View style={{ flex: 1 }}>
         <Text style={{ fontWeight: '700', color: c.text, fontSize: 15 }}>{title}</Text>
         {subtitle ? <Text style={{ color: c.text, fontSize: 13.5, marginTop: 1 }}>{subtitle}</Text> : null}

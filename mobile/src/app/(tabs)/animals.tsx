@@ -6,7 +6,7 @@ import { age } from '../../domain/dates';
 import { animalLabel, isPregnant, sexLabel, speciesOf, weightStats, withdrawal } from '../../domain/logic';
 import type { SpeciesKey } from '../../domain/types';
 import { farmStore, useFarm } from '../../store/farmStore';
-import { Badge, Btn, ChipSelect, Empty, Field, ListItem, Photo } from '../../ui/components';
+import { Badge, Btn, ChipSelect, Empty, Field, IconTile, ListItem, Photo } from '../../ui/components';
 import { TreatmentSheet } from '../../ui/TreatmentSheet';
 import { useToast } from '../../ui/feedback';
 import { useWide } from '../../ui/layout';
@@ -43,7 +43,7 @@ export default function Animals() {
         </View>
         <Btn
           title="Qrup"
-          icon="💊"
+          icon="pill-multiple"
           small
           style={{ paddingVertical: 12 }}
           onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? setGroupOpen(true) : toast('Əvvəlcə heyvan əlavə edin'))}
@@ -51,7 +51,7 @@ export default function Animals() {
       </View>
       <View style={{ marginTop: 10 }}>
         <ChipSelect<SpeciesFilter>
-          options={[{ value: 'all', label: 'Hamısı' }, ...SPECIES_KEYS.map((k) => ({ value: k, label: `${SPECIES[k].icon} ${SPECIES[k].label}` }))]}
+          options={[{ value: 'all', label: 'Hamısı' }, ...SPECIES_KEYS.map((k) => ({ value: k, label: SPECIES[k].label, icon: SPECIES[k].icon }))]}
           value={species}
           onChange={setSpecies}
         />
@@ -86,7 +86,7 @@ export default function Animals() {
         }
         ListEmptyComponent={
           <View style={{ backgroundColor: c.card, borderRadius: RADIUS, borderWidth: 1, borderColor: c.line }}>
-            <Empty>Heyvan tapılmadı. Yenisini "＋ Əlavə et" ilə əlavə edin.</Empty>
+            <Empty>Heyvan tapılmadı. Yenisini "Əlavə et" ilə əlavə edin.</Empty>
           </View>
         }
         renderItem={({ item: a, index }) => {
@@ -105,7 +105,7 @@ export default function Animals() {
             >
               <ListItem
                 first={index === 0}
-                icon={<Photo src={a.photo} style={{ width: 38, height: 38, borderRadius: 19 }} fallback={<Text style={{ fontSize: 26 }}>{s.icon}</Text>} />}
+                icon={<Photo src={a.photo} style={{ width: 38, height: 38, borderRadius: 19 }} fallback={<IconTile name={s.icon} />} />}
                 title={animalLabel(a)}
                 subtitle={`${a.breed || s.label} · ${sexLabel(a)}${a.dob ? ' · ' + age(a.dob) : ''}`}
                 right={

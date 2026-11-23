@@ -16,7 +16,7 @@ export default function Meds() {
 
   return (
     <Screen>
-      <Btn title="＋ Dərman əlavə et" onPress={() => setEditing('new')} />
+      <Btn title="Dərman əlavə et" icon="plus" onPress={() => setEditing('new')} />
       <View style={{ marginTop: 12 }}>
         <List>
           {items.length ? (
@@ -27,7 +27,7 @@ export default function Meds() {
                 <ListItem
                   key={m.id}
                   first={i === 0}
-                  icon="💊"
+                  icon="pill"
                   title={m.name}
                   subtitle={`${m.qty} ${m.unit}${m.expiry ? ' · son istifadə ' + fmt(m.expiry) : ''}${wd ? ' · qalıq: ' + wd : ''}`}
                   right={
@@ -91,7 +91,7 @@ function MedSheet({ med, onClose }: { med: Med | 'new' | null; onClose: () => vo
 
   const units = MED_UNITS.includes(f.unit) ? MED_UNITS : [...MED_UNITS, f.unit];
   return (
-    <Sheet visible={!!med} title={existing ? `💊 ${existing.name}` : '💊 Yeni dərman'} onClose={onClose} onSubmit={submit}>
+    <Sheet visible={!!med} icon="medical-bag" title={existing ? existing.name : 'Yeni dərman'} onClose={onClose} onSubmit={submit}>
       <Field label="Ad *" value={f.name} onChangeText={(t) => set('name', t)} placeholder="Məs: İvermektin 1%" />
       <NumField label="Ehtiyat" value={f.qty} onChange={(t) => set('qty', t)} decimal />
       <ChipSelect label="Vahid" options={units.map((u) => ({ value: u, label: u }))} value={f.unit} onChange={(u) => set('unit', u)} />

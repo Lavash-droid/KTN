@@ -4,14 +4,16 @@ import type { BottomTabBarProps } from 'expo-router/tabs';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { useAuth } from '../store/auth';
 import { farmStore, useFarm } from '../store/farmStore';
+import { Icon, type IconName } from './Icon';
+import { Logo } from './Logo';
 import { useColors } from './theme';
 
-const ITEMS: Record<string, { icon: string; label: string }> = {
-  index: { icon: '🏠', label: 'Panel' },
-  animals: { icon: '🐄', label: 'Heyvanlar' },
-  add: { icon: '＋', label: 'Heyvan əlavə et' },
-  tasks: { icon: '✅', label: 'Tapşırıqlar' },
-  more: { icon: '⚙️', label: 'Digər' },
+const ITEMS: Record<string, { icon: IconName; label: string }> = {
+  index: { icon: 'home', label: 'Panel' },
+  animals: { icon: 'cow', label: 'Heyvanlar' },
+  add: { icon: 'plus', label: 'Heyvan əlavə et' },
+  tasks: { icon: 'tasks', label: 'Tapşırıqlar' },
+  more: { icon: 'settings', label: 'Digər' },
 };
 
 export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
@@ -23,9 +25,7 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   return (
     <View style={{ width: 240, backgroundColor: c.card, borderRightWidth: 1, borderRightColor: c.line, paddingVertical: 16, paddingHorizontal: 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 4 }}>
-        <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 20 }}>🐄</Text>
-        </View>
+        <Logo size={36} />
         <Text style={{ fontSize: 22, fontWeight: '800', color: c.green }}>Sürü</Text>
       </View>
       <Text numberOfLines={1} style={{ color: c.muted, fontSize: 13, paddingHorizontal: 8, marginBottom: 18 }}>
@@ -54,10 +54,10 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
           >
             {isAdd ? (
               <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: c.green, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: c.onGreen, fontSize: 16, lineHeight: 20 }}>＋</Text>
+                <Icon name="plus" size={17} color={c.onGreen} />
               </View>
             ) : (
-              <Text style={{ fontSize: 19, width: 24, textAlign: 'center' }}>{item.icon}</Text>
+              <Icon name={item.icon} size={22} color={active ? c.green : c.muted} />
             )}
             <Text style={{ fontSize: 15, color: active ? c.green : c.text, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
           </Pressable>
@@ -76,8 +76,9 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         </Text>
       ) : null}
       {Platform.OS === 'web' && base ? (
-        <Pressable onPress={() => window.location.assign('/')} style={{ paddingHorizontal: 8, paddingVertical: 8 }}>
-          <Text style={{ color: c.green, fontSize: 13.5 }}>← Ana səhifə</Text>
+        <Pressable onPress={() => window.location.assign('/')} style={{ paddingHorizontal: 8, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Icon name="arrow-left" size={16} color={c.green} />
+          <Text style={{ color: c.green, fontSize: 13.5 }}>Ana səhifə</Text>
         </Pressable>
       ) : null}
     </View>

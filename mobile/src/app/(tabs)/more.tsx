@@ -10,7 +10,7 @@ import { emptyFarmData, type Farm } from '../../domain/types';
 import { readTextFile, shareTextFile } from '../../lib/files';
 import { useAuth } from '../../store/auth';
 import { farmStore, useFarm } from '../../store/farmStore';
-import { Btn, Card, Field, Grid2, H2, List, ListItem, Muted, Screen } from '../../ui/components';
+import { Btn, Card, Field, Grid2, H2, IconTile, List, ListItem, Muted, Screen } from '../../ui/components';
 import { confirm, useToast } from '../../ui/feedback';
 import { useColors } from '../../ui/theme';
 
@@ -96,15 +96,15 @@ export default function More() {
 
       <H2>Ferma ehtiyatı</H2>
       <List>
-        <ListItem first icon="🧴" title="Dərman şkafı" subtitle={`${data.meds.length} dərman${sizeNote}`} onPress={() => router.push('/meds')} />
+        <ListItem first icon="medical-bag" title="Dərman şkafı" subtitle={`${data.meds.length} dərman${sizeNote}`} onPress={() => router.push('/meds')} />
       </List>
 
       <H2>Hesabatlar və ehtiyat nüsxə</H2>
       <List>
-        <ListItem first icon="📄" title="Heyvan siyahısı (CSV / Excel)" subtitle="Bütün heyvanlar, son çəki, status" onPress={() => run(() => shareTextFile(`suru-heyvanlar-${todayISO()}.csv`, animalsCsv(data), 'text/csv'))} />
-        <ListItem icon="💊" title="Dərman jurnalı (CSV / Excel)" subtitle="Baytar və yoxlama üçün" onPress={() => run(() => shareTextFile(`suru-derman-jurnali-${todayISO()}.csv`, treatmentsCsv(data), 'text/csv'))} />
-        <ListItem icon="💾" title="Ehtiyat nüsxə (JSON)" subtitle="Bütün qeydlər bir faylda" onPress={() => run(() => shareTextFile(`suru-ehtiyat-${todayISO()}.json`, JSON.stringify(makeBackup(data)), 'application/json'))} />
-        <ListItem icon="📥" title="Ehtiyat nüsxəni bərpa et" subtitle="Köhnə veb-tətbiqin (PWA) faylı da qəbul olunur · mövcud məlumatı əvəz edir" onPress={restore} />
+        <ListItem first icon="file-excel" title="Heyvan siyahısı (CSV / Excel)" subtitle="Bütün heyvanlar, son çəki, status" onPress={() => run(() => shareTextFile(`suru-heyvanlar-${todayISO()}.csv`, animalsCsv(data), 'text/csv'))} />
+        <ListItem icon="clipboard-text" title="Dərman jurnalı (CSV / Excel)" subtitle="Baytar və yoxlama üçün" onPress={() => run(() => shareTextFile(`suru-derman-jurnali-${todayISO()}.csv`, treatmentsCsv(data), 'text/csv'))} />
+        <ListItem icon="download" title="Ehtiyat nüsxə (JSON)" subtitle="Bütün qeydlər bir faylda" onPress={() => run(() => shareTextFile(`suru-ehtiyat-${todayISO()}.json`, JSON.stringify(makeBackup(data)), 'application/json'))} />
+        <ListItem icon="upload" title="Ehtiyat nüsxəni bərpa et" subtitle="Köhnə veb-tətbiqin (PWA) faylı da qəbul olunur · mövcud məlumatı əvəz edir" onPress={restore} />
       </List>
 
       <H2>Hesab və sinxronizasiya</H2>
@@ -113,10 +113,11 @@ export default function More() {
           {`Yaddaş: ${BACKEND_LABEL[repo.kind]}${session?.email || session?.name ? `\nHesab: ${[session.name, session.email].filter(Boolean).join(' · ')}` : ''}${session?.provider === 'mygov' ? ' (myGov)' : ''}\nSon sinxronizasiya: ${lastSync}${status.pending ? `\nGöndərilməmiş dəyişikliklər: ${status.pending}` : ''}${!status.online ? '\nServer hazırda əlçatan deyil — dəyişikliklər cihazda saxlanılır.' : ''}`}
         </Muted>
         <Grid2>
-          <Btn title="İndi sinxronlaşdır" variant="ghost" small style={{ marginTop: 12 }} onPress={() => run(() => farmStore.sync())} loading={status.syncing} />
+          <Btn title="İndi sinxronlaşdır" icon="sync" variant="ghost" small style={{ marginTop: 12 }} onPress={() => run(() => farmStore.sync())} loading={status.syncing} />
           {repo.kind !== 'local' ? (
             <Btn
               title="Çıxış"
+              icon="logout"
               variant="ghost"
               small
               style={{ marginTop: 12 }}
@@ -132,6 +133,7 @@ export default function More() {
         {repo.kind !== 'local' && (
           <Btn
             title="Hesabı sil"
+            icon="account-remove"
             variant="ghost"
             small
             style={{ marginTop: 10, alignSelf: 'flex-start', borderColor: c.danger }}
@@ -144,7 +146,7 @@ export default function More() {
       <List>
         <ListItem
           first
-          icon="🧪"
+          icon="flask"
           title="Nümunə məlumat yüklə"
           subtitle="Tətbiqi sınamaq üçün"
           onPress={async () => {
@@ -157,7 +159,7 @@ export default function More() {
           }}
         />
         <ListItem
-          icon="🗑️"
+          icon={<IconTile name="trash" color={c.danger} bg={c.dangerSoft} />}
           title="Bütün məlumatı sil"
           titleColor={c.danger}
           subtitle="Geri qaytarmaq olmaz"

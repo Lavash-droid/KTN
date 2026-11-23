@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
 import { mygovEnabled, signInWithMygov } from '../lib/mygov';
 import { Btn, Card, ChipSelect, Field, Muted } from '../ui/components';
+import { Logo } from '../ui/Logo';
 import { useColors } from '../ui/theme';
 
 type Mode = 'login' | 'register';
@@ -48,7 +49,9 @@ export default function Login() {
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20, paddingTop: insets.top + 20 }} keyboardShouldPersistTaps="handled">
         <View style={{ width: '100%', maxWidth: 420, alignSelf: 'center' }}>
-          <Text style={{ fontSize: 56, textAlign: 'center' }}>🐄🐑</Text>
+          <View style={{ alignItems: 'center' }}>
+            <Logo size={72} />
+          </View>
           <Text style={{ fontSize: 28, fontWeight: '800', textAlign: 'center', color: c.green, marginTop: 6 }}>Sürü</Text>
           <Muted center style={{ marginBottom: 20 }}>Fermanız cibinizdə — heyvan uçotu, müalicə, mayalanma və çəki qeydləri.</Muted>
           <Card>
@@ -83,7 +86,7 @@ export default function Login() {
               </View>
               <Btn
                 title="myGov ilə daxil ol"
-                icon="🇦🇿"
+                icon="id-card"
                 variant="ghost"
                 loading={mygovBusy}
                 style={{ backgroundColor: c.card }}

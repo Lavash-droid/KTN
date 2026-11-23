@@ -12,6 +12,7 @@ import { uid } from '../../lib/id';
 import { farmStore, useFarm } from '../../store/farmStore';
 import { Btn, Card, ChipSelect, DateField, Field, Grid2, Muted, Photo, Row, Screen, SuggestField } from '../../ui/components';
 import { confirm, useToast } from '../../ui/feedback';
+import { Icon } from '../../ui/Icon';
 import { RADIUS, useColors } from '../../ui/theme';
 
 type Params = { id?: string; species?: string; damTag?: string; dob?: string; breed?: string };
@@ -88,19 +89,19 @@ export default function AnimalForm() {
       <Card>
         <Row gap={14} style={{ alignItems: 'center', marginBottom: 4 }}>
           <View style={{ width: 84, height: 84, borderRadius: RADIUS, backgroundColor: c.greenSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <Photo src={shownPhoto} style={{ width: 84, height: 84 }} fallback={<Text style={{ fontSize: 30 }}>📷</Text>} />
+            <Photo src={shownPhoto} style={{ width: 84, height: 84 }} fallback={<Icon name="camera" size={32} color={c.green} />} />
           </View>
           <View style={{ flex: 1, gap: 6 }}>
             <Row gap={6} style={{ flexWrap: 'wrap' }}>
-              <Btn title="Şəkil çək" variant="ghost" small onPress={() => pick(true)} />
-              <Btn title="Qalereya" variant="ghost" small onPress={() => pick(false)} />
+              <Btn title="Şəkil çək" icon="camera" variant="ghost" small onPress={() => pick(true)} />
+              <Btn title="Qalereya" icon="image" variant="ghost" small onPress={() => pick(false)} />
               {shownPhoto ? <Btn title="Sil" variant="ghost" small onPress={() => setPhoto(null)} /> : null}
             </Row>
             <Muted small>Bırka itəndə heyvanı tanımağa kömək edir.</Muted>
           </View>
         </Row>
 
-        <ChipSelect<SpeciesKey> label="Növ" options={SPECIES_KEYS.map((k) => ({ value: k, label: `${SPECIES[k].icon} ${SPECIES[k].label}` }))} value={v.species} onChange={(s) => set('species', s)} />
+        <ChipSelect<SpeciesKey> label="Növ" options={SPECIES_KEYS.map((k) => ({ value: k, label: SPECIES[k].label, icon: SPECIES[k].icon }))} value={v.species} onChange={(s) => set('species', s)} />
         <Grid2>
           <Field label="Bırka nömrəsi *" value={v.tag} onChangeText={(t) => set('tag', t)} placeholder="AZ 0001 2345" autoCapitalize="characters" autoCorrect={false} />
           <Field label="Ad (istəyə görə)" value={v.name} onChangeText={(t) => set('name', t)} placeholder="Maral" />

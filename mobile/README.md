@@ -57,6 +57,13 @@ src/
 **Daxili serverə keçid:** `docs/BACKEND.md`-dəki API-ni serverdə reallaşdırın və `.env`-də
 `EXPO_PUBLIC_BACKEND=rest`, `EXPO_PUBLIC_API_URL=...` təyin edin. Ekranlar dəyişmir.
 
+## İkonlar
+
+Tətbiq və sayt eyni ikon dəstini işlədir: Material Design Icons (Apache 2.0) + Sürü üçün çəkilmiş keçi və camış.
+Yeni ikon lazımdırsa, `scripts/gen-icons.mjs`-dəki siyahıya əlavə edib `node scripts/gen-icons.mjs` işə salın —
+`src/ui/iconPaths.ts` (tətbiq), `website/icons.svg` (sayt) və loqo yenilənir. Tətbiq ikonları (PNG):
+`node scripts/render-app-icons.cjs assets/logo.svg assets`.
+
 ## Yoxlama
 
 ```bash

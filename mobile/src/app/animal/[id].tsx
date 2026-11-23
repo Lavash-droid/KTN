@@ -7,9 +7,10 @@ import { animalLabel, events, sexLabel, speciesOf, weightStats, withdrawal, type
 import type { Animal, BreedingMethod } from '../../domain/types';
 import { uid } from '../../lib/id';
 import { farmStore, useFarm } from '../../store/farmStore';
-import { AlertBox, Btn, Card, ChipSelect, DateField, Field, Grid2, H2, Muted, NumField, Photo, Row, Screen, Sheet, toNum } from '../../ui/components';
+import { AlertBox, Btn, Card, ChipSelect, DateField, Field, Grid2, H2, IconTile, Muted, NumField, Photo, Row, Screen, Sheet, toNum } from '../../ui/components';
 import { confirm, useToast } from '../../ui/feedback';
 import { TreatmentSheet } from '../../ui/TreatmentSheet';
+import { Icon } from '../../ui/Icon';
 import { useColors } from '../../ui/theme';
 
 type SheetKind = null | 'tr' | 'w' | 'b' | { outcome: string };
@@ -76,7 +77,7 @@ export default function AnimalDetail() {
       <Card>
         {a.photo ? <Photo src={a.photo} style={{ width: '100%', height: 240, borderRadius: 12, marginBottom: 12, backgroundColor: c.greenSoft }} /> : null}
         <Row gap={12} style={{ alignItems: 'center', marginBottom: 10 }}>
-          <Text style={{ fontSize: 38 }}>{s.icon}</Text>
+          <IconTile name={s.icon} size={52} />
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: c.text }}>{a.tag}</Text>
             {a.name ? <Muted>{a.name}</Muted> : null}
@@ -86,12 +87,12 @@ export default function AnimalDetail() {
         {w && (
           <AlertBox
             level="danger"
-            icon="💊"
+            icon="pill"
             title="Dərman qalığı dövrü"
             subtitle={`${w.meat ? 'Ət: ' + fmt(w.meat) + '-dək. ' : ''}${w.milk ? 'Süd: ' + fmt(w.milk) + '-dək. ' : ''}Bu müddətdə məhsulu satmayın.`}
           />
         )}
-        {preg && <AlertBox level="info" icon="🍼" title={`Gözlənilən doğum: ${fmt(preg.expected)}`} subtitle={inDays(daysBetween(todayISO(), preg.expected))} />}
+        {preg && <AlertBox level="info" icon="baby-bottle" title={`Gözlənilən doğum: ${fmt(preg.expected)}`} subtitle={inDays(daysBetween(todayISO(), preg.expected))} />}
         <View style={{ gap: 6 }}>
           {kv.map(([k, val]) => (
             <Row key={k} gap={14}>
@@ -104,9 +105,9 @@ export default function AnimalDetail() {
       </Card>
 
       <Row style={{ marginVertical: 12 }}>
-        <Btn title="Müalicə" icon="💊" vertical onPress={() => setSheet('tr')} style={{ flex: 1 }} />
-        <Btn title="Çəki" icon="⚖️" vertical onPress={() => setSheet('w')} style={{ flex: 1 }} />
-        <Btn title="Mayalanma" icon="🧬" vertical onPress={() => setSheet('b')} disabled={a.sex !== 'd'} style={{ flex: 1 }} />
+        <Btn title="Müalicə" icon="pill" vertical onPress={() => setSheet('tr')} style={{ flex: 1 }} />
+        <Btn title="Çəki" icon="weight" vertical onPress={() => setSheet('w')} style={{ flex: 1 }} />
+        <Btn title="Mayalanma" icon="dna" vertical onPress={() => setSheet('b')} disabled={a.sex !== 'd'} style={{ flex: 1 }} />
       </Row>
 
       <H2>Tarixçə</H2>
@@ -114,14 +115,14 @@ export default function AnimalDetail() {
         {list.length ? (
           list.map((e, i) => (
             <Row key={e.kind + e.id} gap={10} style={{ paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
-              <Text style={{ fontSize: 18, width: 28, textAlign: 'center' }}>{e.icon}</Text>
+              <IconTile name={e.icon} size={34} />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontWeight: '700', color: c.text, fontSize: 15 }}>{e.title}</Text>
                 <Muted small>{`${fmt(e.date)}${e.subtitle ? ' · ' + e.subtitle : ''}`}</Muted>
                 {e.openBreeding && <Btn title="Nəticəni qeyd et" variant="ghost" small style={{ alignSelf: 'flex-start', marginTop: 6 }} onPress={() => setSheet({ outcome: e.id })} />}
               </View>
               <Pressable onPress={() => delEvent(e)} hitSlop={10} accessibilityLabel="Qeydi sil">
-                <Text style={{ color: c.muted, fontSize: 16 }}>✕</Text>
+                <Icon name="close" size={18} color={c.muted} />
               </Pressable>
             </Row>
           ))
@@ -165,7 +166,7 @@ function WeightSheet({ visible, onClose, animal }: { visible: boolean; onClose: 
     onClose();
   };
   return (
-    <Sheet visible={visible} title={`⚖️ Çəki — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
+    <Sheet visible={visible} icon="weight" title={`Çəki — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
       <Grid2>
         <DateField label="Tarix" value={date} onChange={(v) => setDate(v ?? todayISO())} max={todayISO()} />
         <NumField label="Çəki (kq) *" value={kg} onChange={setKg} decimal />
@@ -194,7 +195,7 @@ function BreedingSheet({ visible, onClose, animal }: { visible: boolean; onClose
     onClose();
   };
   return (
-    <Sheet visible={visible} title={`🧬 Mayalanma — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
+    <Sheet visible={visible} icon="dna" title={`Mayalanma — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
       <DateField label="Tarix" value={date} onChange={(v) => setDate(v ?? todayISO())} max={todayISO()} />
       <ChipSelect<BreedingMethod> label="Üsul" options={[{ value: 'suni', label: 'Süni mayalanma' }, { value: 'tebii', label: 'Təbii cütləşmə' }]} value={method} onChange={setMethod} />
       <Field label="Ata (buğa/qoç, toxum kodu)" value={sire} onChangeText={setSire} autoCorrect={false} />
@@ -225,7 +226,7 @@ function OutcomeSheet({ breedingId, onClose, animal }: { breedingId: string | nu
     }
   };
   return (
-    <Sheet visible={!!breedingId} title={`Nəticə — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
+    <Sheet visible={!!breedingId} icon="baby-bottle" title={`Nəticə — ${animal.tag}`} onClose={onClose} onSubmit={submit}>
       <ChipSelect label="Nəticə" options={OUTCOMES.map((o) => ({ value: o, label: o }))} value={outcome} onChange={setOutcome} vertical />
       <DateField label="Tarix" value={date} onChange={(v) => setDate(v ?? todayISO())} max={todayISO()} />
       <Muted small style={{ marginTop: 10 }}>"Doğdu" seçsəniz, balanı ayrıca heyvan kimi əlavə etmək üçün forma açılacaq.</Muted>

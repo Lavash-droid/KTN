@@ -1,5 +1,5 @@
 /** Biznes məntiqi — PWA versiyasından köçürülüb, UI və backend-dən asılı deyil. */
-import { SPECIES, STATUS } from './constants';
+import { SPECIES, STATUS, type IconKey } from './constants';
 import { addDays, daysBetween, fmt, inDays, todayISO } from './dates';
 import type { Animal, Breeding, FarmData, Med } from './types';
 
@@ -105,7 +105,7 @@ export type AlertLevel = 'danger' | 'warn' | 'info';
 export interface HomeAlert {
   key: string;
   level: AlertLevel;
-  icon: string;
+  icon: IconKey;
   title: string;
   subtitle: string;
   /** Expo Router marşrutu. */
@@ -123,19 +123,19 @@ export function homeAlerts(data: FarmData): HomeAlert[] {
     const parts: string[] = [];
     if (w.meat) parts.push(`ət: ${fmt(w.meat)}-dək`);
     if (w.milk) parts.push(`süd: ${fmt(w.milk)}-dək`);
-    out.push({ key: 'wd' + a.id, level: 'danger', icon: '💊', title: `${animalLabel(a)} — dərman qalığı`, subtitle: parts.join(', '), href: `/animal/${a.id}` });
+    out.push({ key: 'wd' + a.id, level: 'danger', icon: 'pill', title: `${animalLabel(a)} — dərman qalığı`, subtitle: parts.join(', '), href: `/animal/${a.id}` });
   }
   for (const b of pendingBirths(data)) {
     const n = daysBetween(t, b.expected);
     if (n > 30) continue;
-    out.push({ key: 'b' + b.id, level: n < 0 ? 'warn' : 'info', icon: '🍼', title: `${animalLabel(b.animal)} — gözlənilən doğum`, subtitle: `${fmt(b.expected)} (${inDays(n)})`, href: `/animal/${b.animal.id}` });
+    out.push({ key: 'b' + b.id, level: n < 0 ? 'warn' : 'info', icon: 'baby-bottle', title: `${animalLabel(b.animal)} — gözlənilən doğum`, subtitle: `${fmt(b.expected)} (${inDays(n)})`, href: `/animal/${b.animal.id}` });
   }
   const tasks = data.tasks
     .filter((x) => !x.done && x.due && x.due <= addDays(t, 7))
     .sort((a, b) => (a.due ?? '').localeCompare(b.due ?? ''));
   for (const k of tasks) {
     const n = daysBetween(t, k.due!);
-    out.push({ key: 't' + k.id, level: n < 0 ? 'warn' : 'info', icon: '📌', title: k.title, subtitle: `${fmt(k.due)} (${inDays(n)})`, href: '/tasks' });
+    out.push({ key: 't' + k.id, level: n < 0 ? 'warn' : 'info', icon: 'calendar-clock', title: k.title, subtitle: `${fmt(k.due)} (${inDays(n)})`, href: '/tasks' });
   }
   for (const m of data.meds) {
     const s = medStatus(m);
@@ -144,7 +144,7 @@ export function homeAlerts(data: FarmData): HomeAlert[] {
     if (s.expired) parts.push(`son istifadə tarixi keçib (${fmt(m.expiry)})`);
     if (s.soon) parts.push(`son istifadə: ${fmt(m.expiry)} (${inDays(daysBetween(t, m.expiry!))})`);
     if (s.low) parts.push(`az qalıb: ${m.qty} ${m.unit}`);
-    out.push({ key: 'm' + m.id, level: s.expired ? 'danger' : 'warn', icon: '🧴', title: `${m.name} — dərman şkafı`, subtitle: parts.join(' · '), href: '/meds' });
+    out.push({ key: 'm' + m.id, level: s.expired ? 'danger' : 'warn', icon: 'medical-bag', title: `${m.name} — dərman şkafı`, subtitle: parts.join(' · '), href: '/meds' });
   }
   return out;
 }
@@ -156,7 +156,7 @@ export interface AnimalEvent {
   id: string;
   animalId: string;
   date: string;
-  icon: string;
+  icon: IconKey;
   title: string;
   subtitle: string;
   /** Mayalanma nəticəsi hələ qeyd olunmayıbsa true. */
@@ -171,14 +171,14 @@ export function events(data: FarmData, animalId?: string): AnimalEvent[] {
     if (e.reason) p.push(e.reason);
     if (e.meatWd) p.push(`ət qalığı ${e.meatWd} gün`);
     if (e.milkWd) p.push(`süd qalığı ${e.milkWd} gün`);
-    list.push({ kind: 'tr', id: e.id, animalId: e.animalId, date: e.date, icon: '💊', title: `${e.medicine}${e.dose ? ' · ' + e.dose : ''}`, subtitle: p.join(' · '), openBreeding: false });
+    list.push({ kind: 'tr', id: e.id, animalId: e.animalId, date: e.date, icon: 'pill', title: `${e.medicine}${e.dose ? ' · ' + e.dose : ''}`, subtitle: p.join(' · '), openBreeding: false });
   }
   for (const e of data.weights.filter(match)) {
-    list.push({ kind: 'w', id: e.id, animalId: e.animalId, date: e.date, icon: '⚖️', title: `${e.kg} kq`, subtitle: '', openBreeding: false });
+    list.push({ kind: 'w', id: e.id, animalId: e.animalId, date: e.date, icon: 'weight', title: `${e.kg} kq`, subtitle: '', openBreeding: false });
   }
   for (const e of data.breedings.filter(match)) {
     const sub = [e.sire ? `Ata: ${e.sire}` : '', `Gözlənilən doğum: ${fmt(e.expected)}`, e.outcome ? `Nəticə: ${e.outcome}` : ''].filter(Boolean).join(' · ');
-    list.push({ kind: 'b', id: e.id, animalId: e.animalId, date: e.date, icon: '🧬', title: e.method === 'suni' ? 'Süni mayalanma' : 'Təbii cütləşmə', subtitle: sub, openBreeding: !e.outcome });
+    list.push({ kind: 'b', id: e.id, animalId: e.animalId, date: e.date, icon: 'dna', title: e.method === 'suni' ? 'Süni mayalanma' : 'Təbii cütləşmə', subtitle: sub, openBreeding: !e.outcome });
   }
   return list.sort((a, b) => b.date.localeCompare(a.date));
 }
