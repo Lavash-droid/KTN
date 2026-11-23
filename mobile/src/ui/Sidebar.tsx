@@ -6,7 +6,7 @@ import { useAuth } from '../store/auth';
 import { farmStore, useFarm } from '../store/farmStore';
 import { Icon, type IconName } from './Icon';
 import { Logo } from './Logo';
-import { useColors } from './theme';
+import { useColors, useScheme, useThemePref } from './theme';
 
 const ITEMS: Record<string, { icon: IconName; label: string }> = {
   index: { icon: 'home', label: 'Panel' },
@@ -21,6 +21,8 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const { data, status } = useFarm();
   const { session } = useAuth();
   const base = process.env.EXPO_BASE_URL ?? '';
+  const scheme = useScheme();
+  const { setPref } = useThemePref();
 
   return (
     <View style={{ width: 240, backgroundColor: c.card, borderRightWidth: 1, borderRightColor: c.line, paddingVertical: 16, paddingHorizontal: 10 }}>
@@ -65,6 +67,18 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       })}
 
       <View style={{ flex: 1 }} />
+      <Pressable
+        onPress={() => setPref(scheme === 'dark' ? 'light' : 'dark')}
+        accessibilityRole="button"
+        accessibilityLabel={scheme === 'dark' ? 'Açıq mövzu' : 'Qaranlıq mövzu'}
+        style={({ hovered }: { hovered?: boolean; pressed: boolean }) => ({
+          flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingVertical: 8, borderRadius: 10, marginBottom: 4,
+          backgroundColor: hovered ? c.bg : 'transparent',
+        })}
+      >
+        <Icon name={scheme === 'dark' ? 'sun' : 'moon'} size={18} color={c.muted} />
+        <Text style={{ color: c.muted, fontSize: 13.5 }}>{scheme === 'dark' ? 'Açıq mövzu' : 'Qaranlıq mövzu'}</Text>
+      </Pressable>
       <Pressable onPress={() => void farmStore.sync()} style={{ paddingHorizontal: 8, paddingVertical: 6 }} accessibilityLabel="Sinxronizasiya et">
         <Text style={{ color: status.online ? c.muted : c.warn, fontSize: 12.5 }}>
           {status.syncing ? '⟳ Sinxronlaşır…' : !status.online ? `● Offline${status.pending ? ` · ${status.pending} gözləyir` : ''}` : status.pending ? `${status.pending} dəyişiklik gözləyir` : '● Sinxronlaşdırılıb'}

@@ -1,18 +1,18 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, useColorScheme, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
 import { mygovEnabled, signInWithMygov } from '../lib/mygov';
 import { Btn, Card, ChipSelect, Field, Muted } from '../ui/components';
 import { Logo } from '../ui/Logo';
-import { useColors } from '../ui/theme';
+import { useColors, useScheme } from '../ui/theme';
 
 type Mode = 'login' | 'register';
 
 export default function Login() {
   const c = useColors();
-  const scheme = useColorScheme();
+  const scheme = useScheme();
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');

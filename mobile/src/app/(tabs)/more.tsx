@@ -10,14 +10,15 @@ import { emptyFarmData, type Farm } from '../../domain/types';
 import { readTextFile, shareTextFile } from '../../lib/files';
 import { useAuth } from '../../store/auth';
 import { farmStore, useFarm } from '../../store/farmStore';
-import { Btn, Card, Field, Grid2, H2, IconTile, List, ListItem, Muted, Screen } from '../../ui/components';
+import { Btn, Card, ChipSelect, Field, Grid2, H2, IconTile, List, ListItem, Muted, Screen } from '../../ui/components';
 import { confirm, useToast } from '../../ui/feedback';
-import { useColors } from '../../ui/theme';
+import { useColors, useThemePref, type ThemePref } from '../../ui/theme';
 
 const BACKEND_LABEL = { supabase: 'Bulud (Supabase)', rest: 'Daxili server', local: 'Yalnız bu cihaz' } as const;
 
 export default function More() {
   const c = useColors();
+  const { pref, setPref } = useThemePref();
   const toast = useToast();
   const { session } = useAuth();
   const { data, status } = useFarm();
@@ -106,6 +107,20 @@ export default function More() {
         <ListItem icon="download" title="Ehtiyat nüsxə (JSON)" subtitle="Bütün qeydlər bir faylda" onPress={() => run(() => shareTextFile(`suru-ehtiyat-${todayISO()}.json`, JSON.stringify(makeBackup(data)), 'application/json'))} />
         <ListItem icon="upload" title="Ehtiyat nüsxəni bərpa et" subtitle="Köhnə veb-tətbiqin (PWA) faylı da qəbul olunur · mövcud məlumatı əvəz edir" onPress={restore} />
       </List>
+
+      <H2>Görünüş</H2>
+      <Card>
+        <ChipSelect<ThemePref>
+          options={[
+            { value: 'light', label: 'Açıq', icon: 'sun' },
+            { value: 'dark', label: 'Qaranlıq', icon: 'moon' },
+            { value: 'system', label: 'Sistem', icon: 'theme-auto' },
+          ]}
+          value={pref}
+          onChange={setPref}
+        />
+        <Muted small style={{ marginTop: 8 }}>"Sistem" — telefonun və ya kompüterin ayarına uyğun dəyişir.</Muted>
+      </Card>
 
       <H2>Hesab və sinxronizasiya</H2>
       <Card>

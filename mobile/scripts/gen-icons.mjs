@@ -44,6 +44,9 @@ const MDI = {
   'cloud-off': 'mdiCloudOffOutline',
   'id-card': 'mdiCardAccountDetailsOutline',
   pencil: 'mdiPencilOutline',
+  sun: 'mdiWeatherSunny',
+  moon: 'mdiWeatherNight',
+  'theme-auto': 'mdiThemeLightDark',
   // sayt
   menu: 'mdiMenu',
   notebook: 'mdiNotebookOutline',

@@ -6,7 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../store/auth';
 import { farmStore } from '../store/farmStore';
 import { ToastProvider, useToast } from '../ui/feedback';
-import { useColors } from '../ui/theme';
+import { ThemeProvider, useColors, useScheme } from '../ui/theme';
 
 /** Store xətalarını ekranda bildiriş kimi göstərir. */
 function ErrorToasts() {
@@ -16,6 +16,11 @@ function ErrorToasts() {
     return () => void off();
   }, [toast]);
   return null;
+}
+
+function ThemedStatusBar() {
+  const scheme = useScheme();
+  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
 }
 
 function RootStack() {
@@ -57,13 +62,15 @@ function RootStack() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
+      <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
           <ErrorToasts />
-          <StatusBar style="auto" />
+          <ThemedStatusBar />
           <RootStack />
         </ToastProvider>
       </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
