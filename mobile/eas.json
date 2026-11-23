@@ -1,0 +1,34 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "env": {
+        "EXPO_PUBLIC_BACKEND": "supabase",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rutlmhwzintycizfpgyv.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_KEY": "sb_publishable_fS-KjISyVodT6azL2s8Vfg_chgnWdMp",
+        "EXPO_PUBLIC_MYGOV_ENABLED": "false"
+      }
+    },
+    "simulator": {
+      "extends": "base",
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "extends": "base",
+      "autoIncrement": true
+    }
+  }
+}

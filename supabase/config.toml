@@ -1,0 +1,4 @@
+# Supabase CLI konfiqurasiyası (yalnız bu layihəyə aid hissə).
+# myGov girişindən qayıdan brauzer sorğuları Supabase JWT daşımır — funksiya öz yoxlamasını edir (OIDC state/PKCE).
+[functions.mygov-auth]
+verify_jwt = false

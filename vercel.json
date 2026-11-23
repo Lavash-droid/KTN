@@ -1,0 +1,27 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci && npm ci --prefix mobile",
+  "buildCommand": "npm run build",
+  "outputDirectory": "site-dist",
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/panel", "destination": "/panel/index.html" },
+    { "source": "/panel/:path*", "destination": "/panel/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=()" }
+      ]
+    },
+    {
+      "source": "/panel/_expo/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}

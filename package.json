@@ -1,0 +1,12 @@
+{
+  "name": "suru-site",
+  "private": true,
+  "description": "Sürü vahid saytı: tanıtım səhifəsi (/) + idarəetmə paneli (/panel)",
+  "scripts": {
+    "build": "bash scripts/build-site.sh",
+    "preview": "npx serve site-dist -s"
+  },
+  "devDependencies": {
+    "marked": "^15.0.12"
+  }
+}

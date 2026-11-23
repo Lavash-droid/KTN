@@ -8,8 +8,11 @@ Herdwatch (İrlandiya) modelindən ilhamlanan, Azərbaycan bazarı üçün yerli
 |---|---|
 | `docs/biznes-plan.md` | Herdwatch araşdırması (yalnız ictimai mənbələr), Sürü üçün nəticələr, Azərbaycan bazarı, gəlir modeli, şirkətin qurulması, yol xəritəsi |
 | `docs/mexfilik-siyaseti.md` | Sürü-nün məxfilik siyasəti və data prinsipləri (qaralama) |
-| `app/` | **Sürü tətbiqi** — telefona quraşdırıla bilən, internetsiz işləyən veb-tətbiq (PWA) |
-| `website/` | Tanıtım saytı — imkanlar, qiymətlər (AZN), suallar, əlaqə forması |
+| `mobile/` | **Sürü tətbiqi** (Expo / React Native) — iOS, Android və veb (kompüterdən idarə); məlumat Supabase-də, offline iş, myGov ilə giriş, daxili serverə keçid üçün ayrıca backend qatı. Bax: [`mobile/README.md`](mobile/README.md) |
+| `supabase/` | Verilənlər bazası sxemi (cədvəllər, Row Level Security, şəkil bucket-i) və `mygov-auth` Edge Function |
+| `app/` | İlkin veb-tətbiq (PWA) — mobil tətbiqə köçürülüb; köhnə ehtiyat faylları mobil tətbiqə idxal oluna bilər |
+| `website/` | Tanıtım saytı — imkanlar, qiymətlər (AZN), suallar, əlaqə forması (müraciətlər Supabase-ə yazılır) |
+| `scripts/`, `vercel.json` | **Vahid sayt**: `suru.az/` tanıtım + `suru.az/panel` idarəetmə paneli + məxfilik səhifəsi — bir əmrlə yığılır. Bax: [`mobile/docs/WEB.md`](mobile/docs/WEB.md) |
 
 ## Tətbiqin imkanları (MVP)
 - Heyvan reyestri: inək, camış, qoyun, keçi (bırka, cins, doğum tarixi, ana, qrup, status)
@@ -25,16 +28,24 @@ Herdwatch (İrlandiya) modelindən ilhamlanan, Azərbaycan bazarı üçün yerli
 
 ## Lokal işə salmaq
 
+**Telefon tətbiqi** (Expo Go ilə):
 ```bash
-python3 -m http.server 8000
+cd mobile && npm install && cp .env.example .env && npx expo start
 ```
 
-Sonra brauzerdə: `http://localhost:8000/website/` (sayt) və `http://localhost:8000/app/` (tətbiq).
-Telefonda tətbiqi açıb "Ana ekrana əlavə et" seçin.
+**Vahid sayt** (tanıtım + `/panel` idarəetmə paneli):
+```bash
+npm install && npm install --prefix mobile
+npm run build
+npx serve site-dist -s
+```
+
+İlkin PWA (`app/`) arxiv kimi saxlanılıb: `python3 -m http.server 8000` → `http://localhost:8000/app/`.
 
 ## Növbəti addımlar
-1. Backend + istifadəçi hesabları + bulud sinxronizasiyası (çox cihaz, çox istifadəçi)
-2. Android/iOS mağaza versiyası — eyni kod Capacitor ilə
-3. Rus dili
-4. Əlaqə formasını CRM/serverə qoşmaq (`website/script.js` — TODO)
-5. Elektron bırka oxuyucu, tərəzi, dövlət sistemləri ilə inteqrasiya
+1. ~~Backend + istifadəçi hesabları + bulud sinxronizasiyası~~ — `mobile/` (Supabase). Növbəti: fermaya işçi/baytar dəvəti (rollar sxemdə hazırdır)
+2. Android/iOS mağaza versiyası — `mobile/` EAS build ilə
+3. Daxili serverə keçid — `mobile/docs/BACKEND.md`
+4. Rus dili
+5. Əlaqə formasını CRM/serverə qoşmaq (`website/script.js` — TODO)
+6. Elektron bırka oxuyucu, tərəzi, dövlət sistemləri ilə inteqrasiya
