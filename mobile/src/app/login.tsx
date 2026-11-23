@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
+import { mygovEnabled, signInWithMygov } from '../lib/mygov';
 import { Btn, Card, ChipSelect, Field, Muted } from '../ui/components';
 import { useColors } from '../ui/theme';
 
@@ -16,6 +17,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [mygovBusy, setMygovBusy] = useState(false);
   const [msg, setMsg] = useState<{ text: string; error: boolean } | null>(null);
 
   const submit = async () => {
@@ -72,6 +74,34 @@ export default function Login() {
             {msg ? <Text style={{ color: msg.error ? c.danger : c.green, marginTop: 12 }}>{msg.text}</Text> : null}
             <Btn title={mode === 'login' ? 'Daxil ol' : 'Hesab yarat'} onPress={submit} loading={busy} style={{ marginTop: 16 }} />
           </Card>
+          {mygovEnabled && (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 16 }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: c.line }} />
+                <Text style={{ color: c.muted }}>və ya</Text>
+                <View style={{ flex: 1, height: 1, backgroundColor: c.line }} />
+              </View>
+              <Btn
+                title="myGov ilə daxil ol"
+                icon="🇦🇿"
+                variant="ghost"
+                loading={mygovBusy}
+                style={{ backgroundColor: c.card }}
+                onPress={async () => {
+                  setMygovBusy(true);
+                  setMsg(null);
+                  try {
+                    await signInWithMygov();
+                  } catch (e) {
+                    setMsg({ text: (e as Error).message, error: true });
+                  } finally {
+                    setMygovBusy(false);
+                  }
+                }}
+              />
+              <Muted small center style={{ marginTop: 8 }}>SİMA, ASAN İmza və ya dövlət hesabınızla — qeydiyyat tələb olunmur.</Muted>
+            </>
+          )}
           <Muted small center style={{ marginTop: 16 }}>
             Məlumatlarınız buludda saxlanılır və bir neçə cihazdan istifadə edə bilərsiniz. İnternet olmayanda da işləyir — bağlantı bərpa olunanda sinxronlaşır.
           </Muted>

@@ -1,6 +1,6 @@
-# Sürü — mobil tətbiq (Expo)
+# Sürü — mobil və veb tətbiq (Expo)
 
-iOS və Android üçün ferma idarəetmə tətbiqi. Köhnə veb-tətbiqin (`/app`, PWA) bütün imkanları
+iOS, Android və **veb** (kompüter brauzeri) üçün ferma idarəetmə tətbiqi — eyni kod, eyni hesab. Köhnə veb-tətbiqin (`/app`, PWA) bütün imkanları
 React Native + Expo-ya köçürülüb; məlumat **Supabase**-də saxlanılır, gələcəkdə daxili serverə keçmək
 üçün backend qatı ayrıca saxlanılıb.
 
@@ -11,7 +11,7 @@ React Native + Expo-ya köçürülüb; məlumat **Supabase**-də saxlanılır, g
 - Mayalanma → gözlənilən doğum; "Doğdu" → bala formasının avtomatik açılması
 - Çəki və orta gündəlik artım; tapşırıqlar; paneldə xatırlatmalar
 - CSV (Excel) ixrac, JSON ehtiyat nüsxə; **köhnə PWA-nın ehtiyat faylını idxal** (şəkillər daxil)
-- Hesab (e-poçt + şifrə), tətbiqdən hesabın silinməsi, bir neçə cihaz, **internetsiz iş**: dəyişikliklər cihazda növbəyə düşür
+- Hesab: e-poçt + şifrə və ya **myGov ilə giriş** (SİMA / ASAN İmza — [`docs/MYGOV.md`](docs/MYGOV.md)); tətbiqdən hesabın silinməsi, bir neçə cihaz, **internetsiz iş**: dəyişikliklər cihazda növbəyə düşür
   və bağlantı bərpa olunanda serverə göndərilir
 
 ## Quraşdırma
@@ -35,6 +35,10 @@ Yeni mühit (məs. ayrıca test layihəsi) qurmaq üçün:
 3. Project Settings → API-dən URL və **publishable** açarı `.env`-ə yazın.
    `service_role` açarını heç vaxt tətbiqə qoymayın — publishable açar açıq olmaq üçündür, məlumatı RLS qoruyur.
 4. Authentication → Providers → Email: test zamanı "Confirm email"-i söndürmək olar.
+
+## Veb versiya
+
+Kompüterdən idarə üçün: `npx expo start --web`. Yerləşdirmə (Vercel, `vercel.json` hazırdır): [`docs/WEB.md`](docs/WEB.md).
 
 ## Struktur
 

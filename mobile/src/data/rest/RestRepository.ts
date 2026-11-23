@@ -41,7 +41,7 @@ export class RestRepository implements FarmRepository {
     this.auth = {
       getSession: async () => {
         await this.loaded;
-        return this.session ? { userId: this.session.userId, email: this.session.email } : null;
+        return this.session ? { userId: this.session.userId, email: this.session.email, name: this.session.name ?? null, provider: this.session.provider } : null;
       },
       onChange: (cb) => {
         this.listeners.add(cb);
@@ -53,6 +53,13 @@ export class RestRepository implements FarmRepository {
       signUp: async (email, password) => {
         const res = await authCall('/auth/register', email, password);
         return { needsConfirmation: !res.token };
+      },
+      mygovStartUrl: (redirectTo) => `${this.baseUrl}/auth/mygov/start?redirect_to=${encodeURIComponent(redirectTo)}`,
+      completeMygov: async (params) => {
+        const token = params.get('token');
+        const userId = params.get('user_id');
+        if (!token || !userId) throw new RepoError('Giriş tokeni yoxdur', false);
+        await setSession({ token, userId, email: null, name: params.get('name'), provider: 'mygov' });
       },
       signOut: async () => {
         try {
@@ -69,7 +76,7 @@ export class RestRepository implements FarmRepository {
     this.session = s;
     if (s) await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(s));
     else await AsyncStorage.removeItem(TOKEN_KEY);
-    const pub = s ? { userId: s.userId, email: s.email } : null;
+    const pub: Session | null = s ? { userId: s.userId, email: s.email, name: s.name ?? null, provider: s.provider } : null;
     this.listeners.forEach((cb) => cb(pub));
   }
 

@@ -34,6 +34,7 @@ Daxili server hazır olanda ekranlara, biznes məntiqinə və offline növbəyə
 | POST | `/auth/register` | `{ email, password }` | `{ token \| null, user: { id, email } }` — token `null` = e-poçt təsdiqi lazımdır |
 | POST | `/auth/login` | `{ email, password }` | `{ token, user: { id, email } }` |
 | POST | `/auth/logout` | — | `204` |
+| GET | `/auth/mygov/start?redirect_to=` | — | myGov (OIDC) girişinə yönləndirir; sonda `302 → <redirect_to>#token=…&user_id=…&name=…` (xəta: `#error=…`). Supabase versiyası: `supabase/functions/mygov-auth` |
 | DELETE | `/auth/account` | — | `204` — hesabı və istifadəçinin yeganə sahibi olduğu fermanın bütün məlumatını (şəkillər daxil) silir. App Store tələbidir |
 | GET | `/farm/data` | — | `FarmData` (bax aşağı) |
 | PUT | `/farm/data` | `FarmData` | `204` — fermanın bütün məlumatını əvəz edir |

@@ -35,8 +35,20 @@ export class SupabaseRepository implements FarmRepository {
   constructor(url: string, key: string) {
     this.sb = getSupabase(url, key);
     const sb = this.sb;
-    const toSession = (s: { user: { id: string; email?: string | null } } | null): Session | null =>
-      s ? { userId: s.user.id, email: s.user.email ?? null } : null;
+    const toSession = (
+      s: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> } } | null,
+    ): Session | null => {
+      if (!s) return null;
+      const provider = String(s.user.app_metadata?.provider ?? 'email');
+      const external = provider !== 'email';
+      return {
+        userId: s.user.id,
+        // Dövlət girişi ilə yaradılan hesabların e-poçtu texniki (saxta) ünvandır — göstərilmir.
+        email: external ? null : (s.user.email ?? null),
+        name: (s.user.user_metadata?.full_name as string | undefined) || null,
+        provider,
+      };
+    };
 
     this.auth = {
       getSession: async () => toSession((await sb.auth.getSession()).data.session),
@@ -59,6 +71,13 @@ export class SupabaseRepository implements FarmRepository {
       signOut: async () => {
         this.farmIdPromise = null;
         await sb.auth.signOut();
+      },
+      mygovStartUrl: (redirectTo) => `${url.replace(/\/+$/, '')}/functions/v1/mygov-auth/start?redirect_to=${encodeURIComponent(redirectTo)}`,
+      completeMygov: async (params) => {
+        const tokenHash = params.get('token_hash');
+        if (!tokenHash) throw new RepoError('Giriş tokeni yoxdur', false);
+        const { error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type: 'email' });
+        if (error) throw new RepoError(authMessage(error.message), false);
       },
     };
   }

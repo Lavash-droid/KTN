@@ -17,6 +17,8 @@ export class LocalRepository implements FarmRepository {
     signIn: async () => {},
     signUp: async () => ({ needsConfirmation: false }),
     signOut: async () => {},
+    mygovStartUrl: () => null,
+    completeMygov: async () => {},
   };
 
   private async read(): Promise<FarmData> {

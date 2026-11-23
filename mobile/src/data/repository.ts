@@ -13,6 +13,10 @@ export type BackendKind = 'supabase' | 'rest' | 'local';
 export interface Session {
   userId: string;
   email: string | null;
+  /** Dövlət girişindən (myGov) gələn ad və s. */
+  name?: string | null;
+  /** Giriş üsulu: 'email' və ya 'mygov'. */
+  provider?: string;
 }
 
 export interface AuthApi {
@@ -23,6 +27,13 @@ export interface AuthApi {
   /** `needsConfirmation` — e-poçt təsdiqi tələb olunursa true. */
   signUp(email: string, password: string): Promise<{ needsConfirmation: boolean }>;
   signOut(): Promise<void>;
+  /**
+   * myGov (dövlət vahid girişi) — server tərəfində OIDC axınının başlanğıc ünvanı.
+   * `redirectTo` — giriş bitəndən sonra qayıdılacaq tətbiq ünvanı. Dəstəklənmirsə null.
+   */
+  mygovStartUrl(redirectTo: string): string | null;
+  /** Qayıdış ünvanının fraqmentindəki parametrlərlə sessiyanı tamamlayır. */
+  completeMygov(params: URLSearchParams): Promise<void>;
 }
 
 export interface FarmRepository {

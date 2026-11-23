@@ -47,6 +47,8 @@ function RootStack() {
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
       </Stack.Protected>
+      {/* myGov-dan qayıdış — sessiya hələ yoxdur, ona görə qorunmur */}
+      <Stack.Screen name="mygov" options={{ headerShown: false }} />
     </Stack>
   );
 }

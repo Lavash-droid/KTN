@@ -24,6 +24,8 @@
 | Lokasiya | Yalnız fermer icazə verdikdə | Yaxın baytar/xidmət tapmaq |
 | Ödəniş | Ödəniş provayderi vasitəsilə; kart məlumatını saxlamırıq | Abunə |
 
+**myGov ilə giriş:** dövlət vahid girişindən yalnız ad-soyad və unikal identifikator alınır. Identifikator (məs. FİN) açıq saxlanılmır — yalnız geri çevrilə bilməyən şifrələnmiş (HMAC) dəyəri hesabı tanımaq üçün saxlanılır.
+
 **Toplamırıq:** dövlət portallarının (məs. EKTİS) şifrələrini. İnteqrasiya yalnız rəsmi API/token ilə və fermerin icazəsi ilə qurulacaq.
 
 ## 3. Hüquqi əsaslar

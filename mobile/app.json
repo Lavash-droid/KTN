@@ -99,7 +99,8 @@
           "cameraPermission": "Heyvanın şəklini çəkmək üçün kameraya icazə lazımdır.",
           "photosPermission": "Heyvanın şəklini qalereyadan seçmək üçün icazə lazımdır."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "scheme": "suru",
     "description": "Ferma idarəetməsi: heyvan uçotu, müalicə, mayalanma və çəki qeydləri.",

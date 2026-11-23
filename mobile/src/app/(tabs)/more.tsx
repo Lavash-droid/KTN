@@ -60,7 +60,7 @@ export default function More() {
       'Davam et',
     );
     if (!ok1) return;
-    const ok2 = await confirm('Son təsdiq', `${session?.email ?? 'Hesab'} və bütün məlumat silinsin?`, 'Hesabı sil');
+    const ok2 = await confirm('Son təsdiq', `${session?.email ?? session?.name ?? 'Hesab'} və bütün məlumat silinsin?`, 'Hesabı sil');
     if (!ok2) return;
     await run(async () => {
       try {
@@ -110,7 +110,7 @@ export default function More() {
       <H2>Hesab və sinxronizasiya</H2>
       <Card>
         <Muted small>
-          {`Yaddaş: ${BACKEND_LABEL[repo.kind]}${session?.email ? `\nHesab: ${session.email}` : ''}\nSon sinxronizasiya: ${lastSync}${status.pending ? `\nGöndərilməmiş dəyişikliklər: ${status.pending}` : ''}${!status.online ? '\nServer hazırda əlçatan deyil — dəyişikliklər cihazda saxlanılır.' : ''}`}
+          {`Yaddaş: ${BACKEND_LABEL[repo.kind]}${session?.email || session?.name ? `\nHesab: ${[session.name, session.email].filter(Boolean).join(' · ')}` : ''}${session?.provider === 'mygov' ? ' (myGov)' : ''}\nSon sinxronizasiya: ${lastSync}${status.pending ? `\nGöndərilməmiş dəyişikliklər: ${status.pending}` : ''}${!status.online ? '\nServer hazırda əlçatan deyil — dəyişikliklər cihazda saxlanılır.' : ''}`}
         </Muted>
         <Grid2>
           <Btn title="İndi sinxronlaşdır" variant="ghost" small style={{ marginTop: 12 }} onPress={() => run(() => farmStore.sync())} loading={status.syncing} />
