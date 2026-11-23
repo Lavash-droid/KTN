@@ -179,7 +179,7 @@ export class SupabaseRepository implements FarmRepository {
   async replaceAll(data: FarmData) {
     const fid = await this.farmId();
     // Uşaq cədvəllər heyvanlar silinəndə CASCADE ilə silinir; qalanları ayrıca.
-    for (const t of ['animals', 'meds', 'tasks'] as const) {
+    for (const t of ['animals', 'meds', 'tasks', 'feeds', 'purchases', 'milk_records'] as const) {
       const { error } = await this.sb.from(t).delete().eq('farm_id', fid);
       wrap(error, t);
     }

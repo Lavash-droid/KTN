@@ -9,6 +9,7 @@ və vebdə eyni işləyir.
 | Hissə | Vəziyyət |
 |---|---|
 | Server (Supabase Edge Function `mygov-auth`) | ✅ yazılıb, test olunub, "suru" layihəsinə **yerləşdirilib** — açarlar təyin olunanadək `503` qaytarır |
+| Daxili server (`/server`, `/auth/mygov/*`) | ✅ eyni kod (`handler.ts`); qayıdış ünvanı `https://<API_DOMAIN>/auth/mygov/callback`, açarlar `server/.env`-də. `MYGOV_ID_SECRET` Supabase-dəki ilə eyni olmalıdır |
 | Verilənlər bazası (`private.external_identities`) | ✅ tətbiq olunub |
 | Tətbiq (düymə, qayıdış səhifəsi `/mygov`) | ✅ hazırdır, `EXPO_PUBLIC_MYGOV_ENABLED=true` olanda görünür |
 | **Provayderin açarları və texniki sənədi** | ⏳ **İRİA ilə müqavilədən sonra** |

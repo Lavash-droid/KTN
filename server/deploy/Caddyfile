@@ -1,0 +1,17 @@
+# Caddy: HTTPS sertifikatı (Let's Encrypt) avtomatik alınır və yenilənir.
+# Tələb: API_DOMAIN-in DNS A qeydi bu serverin IP-sinə yönəlib, 80 və 443 portları açıqdır.
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy api:8080
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Əlavə saytlar (məs. tanıtım saytı + /panel): sites/*.caddy
+import sites/*.caddy

@@ -1,0 +1,108 @@
+# Sürü — fiziki serverdə tam stack: PostgreSQL + API + Caddy (avtomatik HTTPS) + gündəlik ehtiyat nüsxə.
+#
+#   cd server && cp .env.example .env   # doldurun
+#   docker compose up -d --build
+#
+# Ətraflı: server/README.md
+
+name: suru
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: suru
+      POSTGRES_USER: suru
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD .env-də təyin olunmalıdır}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Port xaricə açılmır — baza yalnız daxili şəbəkədən (api, backup) əlçatandır.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U suru -d suru"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    shm_size: 256mb
+
+  api:
+    image: suru-api
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://suru:${POSTGRES_PASSWORD}@db:5432/suru
+      STORAGE_DIR: /data/photos
+      TRUST_PROXY: "true"
+    volumes:
+      - photos:/data/photos
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN .env-də təyin olunmalıdır}
+      SITE_DOMAIN: ${SITE_DOMAIN:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/sites:/etc/caddy/sites:ro
+      # Tanıtım saytı + /panel (istəyə görə): repo kökündə `npm run build` → site-dist/
+      - ../site-dist:/srv/site:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/backup.sh", "loop"]
+    environment:
+      PGHOST: db
+      PGUSER: suru
+      PGDATABASE: suru
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      TZ: ${TZ:-Asia/Baku}
+    volumes:
+      - ./deploy/backup.sh:/backup.sh:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+      - photos:/data/photos:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Supabase-dən köçürmə və keçid dövrü sinxronizasiyası — "up" ilə başlamır, yalnız əl ilə / cron:
+  #   docker compose run --rm supabase-sync [--reset | --continue]
+  # Supabase açarları: supabase.env (README.md → "Supabase-dən keçid")
+  supabase-sync:
+    image: suru-api
+    profiles: ["migration"]
+    entrypoint: ["node", "--enable-source-maps", "dist/migrate-from-supabase.js"]
+    env_file:
+      - path: supabase.env
+        required: false
+    environment:
+      DATABASE_URL: postgres://suru:${POSTGRES_PASSWORD}@db:5432/suru
+      STORAGE_DIR: /data/photos
+    volumes:
+      - photos:/data/photos
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:
+  photos:
+  caddy-data:
+  caddy-config:

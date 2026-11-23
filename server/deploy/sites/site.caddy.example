@@ -1,0 +1,27 @@
+# Tanıtım saytını və /panel idarəetmə panelini də bu serverdən vermək üçün:
+#   1) repo kökündə: npm run build   (→ site-dist/; panel EXPO_PUBLIC_BACKEND=rest ilə yığılmalıdır)
+#   2) bu faylı "site.caddy" adı ilə kopyalayın, .env-də SITE_DOMAIN=suru.az yazın
+#   3) docker compose up -d
+# Vercel-də qalırsa — bu fayla ehtiyac yoxdur.
+
+{$SITE_DOMAIN}, www.{$SITE_DOMAIN} {
+	encode zstd gzip
+	root * /srv/site
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "geolocation=(), microphone=()"
+	}
+	@assets path /panel/_expo/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	handle /panel* {
+		try_files {path} /panel/index.html
+		file_server
+	}
+	handle {
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+}

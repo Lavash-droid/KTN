@@ -6,16 +6,19 @@ Hazırda üç reallaşdırma var:
 | `EXPO_PUBLIC_BACKEND` | Fayl | Nə vaxt |
 |---|---|---|
 | `supabase` | `src/data/supabase/SupabaseRepository.ts` | **İndi** — Supabase (Postgres + Auth + Storage) |
-| `rest` | `src/data/rest/RestRepository.ts` | **Gələcək** — öz (daxili) serveriniz |
+| `rest` | `src/data/rest/RestRepository.ts` | **Daxili (fiziki) server** — reallaşdırma hazırdır: [`/server`](../../server/README.md) |
 | `local` | `src/data/local/LocalRepository.ts` | Server olmadan sınaq / inkişaf |
 
-Daxili server hazır olanda ekranlara, biznes məntiqinə və offline növbəyə toxunmaq lazım deyil:
+Aşağıdakı API `/server`-də reallaşdırılıb (Node.js + PostgreSQL, Docker ilə fiziki serverə qurulur).
+Keçid üçün ekranlara, biznes məntiqinə və offline növbəyə toxunmaq lazım deyil:
 
-1. Server aşağıdakı API-ni reallaşdırır (və ya `RestRepository.ts` serverin mövcud API-sinə uyğunlaşdırılır).
-2. `.env`: `EXPO_PUBLIC_BACKEND=rest`, `EXPO_PUBLIC_API_URL=https://...`
-3. Supabase-dən köçürmə: tətbiqdə **Digər → Ehtiyat nüsxə (JSON)** ixrac edib serverə `PUT /farm/data` ilə yükləmək
-   və ya birbaşa Postgres dump (sxem: `/supabase/migrations`). Cədvəllər standart Postgres-dir — Supabase-ə bağlı deyil
-   (yalnız `auth.users` və `storage.objects` istinadları əvəz olunmalıdır).
+1. Serveri qurmaq: [`server/README.md`](../../server/README.md) → bölmə 1.
+2. `.env` / `eas.json` / `.env.production`: `EXPO_PUBLIC_BACKEND=rest`, `EXPO_PUBLIC_API_URL=https://api.suru.az`
+3. Supabase-dən köçürmə (istifadəçilər eyni şifrə ilə, id-lər və şəkillər dəyişmədən) və keçid dövrü:
+   [`server/README.md`](../../server/README.md) → bölmə 4. Tətbiqin yeni versiyası köhnə versiyanın göndərilməmiş
+   dəyişikliklərini avtomatik yeni serverə ötürür (`farmStore.adoptFromPreviousBackend`).
+
+Bu müqavilə dəyişəndə həm `RestRepository.ts`, həm də `server/src/routes/*` yenilənməli, `server/test` testləri keçməlidir.
 
 ## Ümumi qaydalar
 
@@ -42,7 +45,7 @@ Daxili server hazır olanda ekranlara, biznes məntiqinə və offline növbəyə
 | PUT | `/records/:table` | `Row[]` | `204` — upsert. `photo` sahəsi gəlməyibsə köhnə dəyər saxlanılır |
 | POST | `/records/:table/delete` | `{ ids: string[] }` | `204`. `animals` silinəndə ona aid `treatments`, `weights`, `breedings` də silinir |
 | POST | `/photos/:animalId` | `multipart/form-data`, sahə `file` (JPEG) | `{ ref }` — saxlanılan şəklin istinadı |
-| GET | `/photos/url?ref=` | — | `{ url }` — göstərmək üçün (müddətli) URL |
+| GET | `/photos/url?ref=` | — | `{ url }` — göstərmək üçün (müddətli, imzalı) URL; tətbiq onu cihazda keşləyir |
 | DELETE | `/photos?ref=` | — | `204` |
 
 `:table` ∈ `animals`, `treatments`, `weights`, `breedings`, `tasks`, `meds`, `pregChecks`, `heats`, `movements`, `feeds`, `purchases`, `milkRecords`.
@@ -66,5 +69,7 @@ interface FarmData {
 }
 ```
 
-Verilənlər bazası sxemi, məhdudiyyətlər (məs. fermada bırka nömrəsi unikaldır) və icazə qaydaları üçün
-istinad: `/supabase/migrations/20261123000000_suru_init.sql`.
+Əlavə (tətbiq istifadə etmir): `GET /auth/me`, `POST /leads` (saytın əlaqə forması), `GET /health`.
+
+Verilənlər bazası sxemi, məhdudiyyətlər (məs. fermada bırka nömrəsi unikaldır):
+`/server/db/migrations` (daxili server) və `/supabase/migrations` (Supabase) — cədvəllər eynidir.

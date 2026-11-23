@@ -26,7 +26,8 @@ document.querySelectorAll('[data-plan]').forEach((a) => a.addEventListener('clic
   document.querySelector('#contactForm select[name=plan]').value = a.dataset.plan;
 }));
 
-// Əlaqə forması → Supabase "leads" cədvəli (yalnız əlavə etmək olar, oxumaq olmaz — RLS).
+// Əlaqə forması → müraciətlər cədvəli. config.js-də apiUrl varsa — daxili server (POST /leads),
+// yoxsa Supabase "leads" cədvəli (yalnız əlavə etmək olar, oxumaq olmaz — RLS).
 document.getElementById('contactForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
@@ -39,18 +40,21 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
   btn.disabled = true;
   try {
     const cfg = window.SURU_CONFIG || {};
-    const res = await fetch(`${cfg.supabaseUrl}/rest/v1/leads`, {
-      method: 'POST',
-      headers: { apikey: cfg.supabaseKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        name: String(f.name || '').trim().slice(0, 120),
-        phone: String(f.phone || '').trim().slice(0, 40),
-        region: String(f.region || '').trim().slice(0, 120),
-        herd_size: String(f.size || ''),
-        plan: String(f.plan || ''),
-        message: String(f.msg || '').trim().slice(0, 2000),
-      }),
+    const body = JSON.stringify({
+      name: String(f.name || '').trim().slice(0, 120),
+      phone: String(f.phone || '').trim().slice(0, 40),
+      region: String(f.region || '').trim().slice(0, 120),
+      herd_size: String(f.size || ''),
+      plan: String(f.plan || ''),
+      message: String(f.msg || '').trim().slice(0, 2000),
     });
+    const res = cfg.apiUrl
+      ? await fetch(`${cfg.apiUrl.replace(/\/+$/, '')}/leads`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+      : await fetch(`${cfg.supabaseUrl}/rest/v1/leads`, {
+          method: 'POST',
+          headers: { apikey: cfg.supabaseKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body,
+        });
     if (!res.ok) throw new Error(String(res.status));
     ok.hidden = false;
     form.reset();

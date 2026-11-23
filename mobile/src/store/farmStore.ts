@@ -89,7 +89,8 @@ class FarmStore {
     if (this.userId === userId) return;
     this.stop();
     this.userId = userId;
-    const [cache, outbox] = await Promise.all([AsyncStorage.getItem(this.cacheKey()), AsyncStorage.getItem(this.outboxKey())]);
+    let [cache, outbox] = await Promise.all([AsyncStorage.getItem(this.cacheKey()), AsyncStorage.getItem(this.outboxKey())]);
+    if (!cache && !outbox) [cache, outbox] = await this.adoptFromPreviousBackend(userId);
     if (this.userId !== userId) return;
     this.outbox = outbox ? JSON.parse(outbox) : [];
     this.emit({ data: cache ? { ...emptyFarmData(), ...JSON.parse(cache) } : emptyFarmData(), status: { loading: !cache } });
@@ -100,6 +101,32 @@ class FarmStore {
       if (s === 'active') void this.sync();
     });
     await this.sync();
+  }
+
+  /**
+   * Backend dəyişəndə (Supabase → daxili server) bu istifadəçinin köhnə keşini və GÖNDƏRİLMƏMİŞ
+   * dəyişikliklərini yeni backend-ə keçirir. Köçürmədə istifadəçi və qeyd id-ləri saxlanılır
+   * (server/scripts/migrate-from-supabase.ts), yazılar isə idempotentdir — internetsiz edilmiş
+   * dəyişikliklər itmir, yeni serverə göndərilir. Bax: server/README.md → "Keçid".
+   */
+  private async adoptFromPreviousBackend(userId: string): Promise<[string | null, string | null]> {
+    if (repo.kind === 'local') return [null, null];
+    for (const kind of ['supabase', 'rest'].filter((k) => k !== repo.kind)) {
+      const keys = [`suru-cache:${kind}:${userId}`, `suru-outbox:${kind}:${userId}`];
+      try {
+        const [[, cache], [, outbox]] = await AsyncStorage.multiGet(keys);
+        if (!cache && !outbox) continue;
+        await Promise.all([
+          cache ? AsyncStorage.setItem(this.cacheKey(userId), cache) : null,
+          outbox ? AsyncStorage.setItem(this.outboxKey(userId), outbox) : null,
+        ]);
+        await AsyncStorage.multiRemove(keys);
+        return [cache, outbox];
+      } catch {
+        /* köhnə keş oxunmadısa — serverdən təzə yüklənir */
+      }
+    }
+    return [null, null];
   }
 
   stop() {

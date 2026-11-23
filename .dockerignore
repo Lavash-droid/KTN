@@ -1,0 +1,13 @@
+# Docker build konteksti repo köküdür (server/Dockerfile) — yalnız lazım olan fayllar göndərilsin.
+.git
+**/node_modules
+**/.env
+**/*.env
+site-dist
+app
+website
+docs
+mobile/assets
+server/dist
+server/data
+server/backups

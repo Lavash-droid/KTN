@@ -12,7 +12,8 @@
  *   6. Tətbiq `supabase.auth.verifyOtp({ token_hash, type: 'email' })` ilə sessiya alır.
  *
  * Bu fayl yalnız Web API-lərindən (fetch, crypto.subtle, Request/Response) istifadə edir —
- * Deno-da (Edge Function) və Node-da (testlər) eyni işləyir. Supabase-ə bağlı hissələr `Deps`-dədir.
+ * Deno-da (Edge Function) və Node-da (daxili server, testlər) eyni işləyir. Backend-ə bağlı hissələr `Deps`-dədir:
+ * Supabase versiyası — index.ts, daxili server versiyası — server/src/routes/mygov.ts.
  *
  * Provayderin texniki sənədləri (İRİA / digital.login, ASAN Login) müqavilədən sonra verilir.
  * Bütün ünvanlar, claim adları və autentifikasiya üsulu mühit dəyişənləri ilə tənzimlənir (README.md).
@@ -50,7 +51,13 @@ export interface Deps {
   linkIdentity(subjectHash: string, userId: string): Promise<void>;
   updateName(userId: string, fullName: string): Promise<void>;
   getEmail(userId: string): Promise<string>;
-  magicLinkHash(email: string): Promise<string>;
+  /** Supabase: birdəfəlik giriş tokeni → tətbiqə `#token_hash=…&type=email`. */
+  magicLinkHash?(email: string): Promise<string>;
+  /**
+   * Daxili server (server/src/routes/mygov.ts): sessiya yaradıb tətbiqə qaytarılacaq parametrlər
+   * (`#token=…&user_id=…&name=…`). Verilibsə, magicLinkHash əvəzinə istifadə olunur.
+   */
+  loginParams?(userId: string, fullName: string): Promise<Record<string, string>>;
   now?: () => number;
 }
 
@@ -61,7 +68,7 @@ export function loadConfig(env: Env): Config | { error: string } {
   const missing = req.filter((k) => !env(k));
   if (!env('MYGOV_ISSUER') && !(env('MYGOV_AUTHORIZE_URL') && env('MYGOV_TOKEN_URL'))) missing.push('MYGOV_ISSUER və ya MYGOV_AUTHORIZE_URL+MYGOV_TOKEN_URL');
   const base = env('SUPABASE_URL');
-  if (!env('MYGOV_CALLBACK_URL') && !base) missing.push('SUPABASE_URL');
+  if (!env('MYGOV_CALLBACK_URL') && !base) missing.push('MYGOV_CALLBACK_URL (və ya SUPABASE_URL)');
   if (missing.length) return { error: `myGov girişi konfiqurasiya olunmayıb: ${missing.join(', ')}` };
   if ((env('MYGOV_STATE_SECRET') ?? '').length < 32 || (env('MYGOV_ID_SECRET') ?? '').length < 32) {
     return { error: 'MYGOV_STATE_SECRET və MYGOV_ID_SECRET ən azı 32 simvol olmalıdır' };
@@ -306,6 +313,8 @@ export async function handle(req: Request, cfg: Config, deps: Deps): Promise<Res
         userId = (await deps.findUserByEmail(email)) ?? (await deps.createUser(email, fullName));
         await deps.linkIdentity(subjectHash, userId);
       }
+      if (deps.loginParams) return back(await deps.loginParams(userId, fullName));
+      if (!deps.magicLinkHash) throw new Error('giriş üsulu konfiqurasiya olunmayıb');
       const tokenHash = await deps.magicLinkHash(email);
       return back({ token_hash: tokenHash, type: 'email' });
     } catch (e) {

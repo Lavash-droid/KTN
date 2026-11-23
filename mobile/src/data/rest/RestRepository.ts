@@ -12,6 +12,9 @@ import { isLocalPhoto } from '../mapping';
 import { RepoError, type AuthApi, type FarmRepository, type Session } from '../repository';
 
 const TOKEN_KEY = 'suru-rest-session';
+const URL_CACHE_KEY = 'suru-rest-photo-urls';
+/** Server imzalı URL-i 7 günlük verir; bir gün tez yeniləyirik. */
+const URL_CACHE_MS = 6 * 24 * 3600 * 1000;
 
 interface StoredSession extends Session {
   token: string;
@@ -23,6 +26,8 @@ export class RestRepository implements FarmRepository {
   private session: StoredSession | null = null;
   private loaded: Promise<void>;
   private listeners = new Set<(s: Session | null) => void>();
+  private urlCache = new Map<string, { url: string; exp: number }>();
+  private urlCacheLoaded: Promise<void> | null = null;
 
   constructor(private baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
@@ -142,9 +147,29 @@ export class RestRepository implements FarmRepository {
     return res.ref;
   }
 
+  /**
+   * İmzalı URL-lər cihazda yadda saxlanılır: internet olmayanda köhnə URL qaytarılır və
+   * şəkil expo-image-in disk keşindən (cacheKey = istinad) göstərilir.
+   */
   async photoUrl(ref: string) {
-    const res = await this.request<{ url: string }>('GET', `/photos/url?ref=${encodeURIComponent(ref)}`);
-    return res.url;
+    if (!this.urlCacheLoaded) {
+      this.urlCacheLoaded = AsyncStorage.getItem(URL_CACHE_KEY)
+        .then((raw) => {
+          if (raw) for (const [k, v] of Object.entries(JSON.parse(raw) as Record<string, { url: string; exp: number }>)) this.urlCache.set(k, v);
+        })
+        .catch(() => {});
+    }
+    await this.urlCacheLoaded;
+    const hit = this.urlCache.get(ref);
+    if (hit && hit.exp > Date.now()) return hit.url;
+    try {
+      const res = await this.request<{ url: string }>('GET', `/photos/url?ref=${encodeURIComponent(ref)}`);
+      this.urlCache.set(ref, { url: res.url, exp: Date.now() + URL_CACHE_MS });
+      void AsyncStorage.setItem(URL_CACHE_KEY, JSON.stringify(Object.fromEntries(this.urlCache))).catch(() => {});
+      return res.url;
+    } catch {
+      return hit?.url ?? null;
+    }
   }
 
   async deletePhoto(ref: string) {
@@ -157,6 +182,8 @@ export class RestRepository implements FarmRepository {
 
   async deleteAccount() {
     await this.request('DELETE', '/auth/account');
+    this.urlCache.clear();
+    await AsyncStorage.removeItem(URL_CACHE_KEY).catch(() => {});
     await this.setSession(null);
   }
 }
