@@ -60,4 +60,10 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
   }
 });
 
+// Sürüşdürəndə menyunun alt xətti görünür
+const nav = document.querySelector('.nav');
+const onScroll = () => { nav.style.borderBottomColor = window.scrollY > 8 ? 'var(--line)' : 'transparent'; };
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
 document.getElementById('year').textContent = new Date().getFullYear();

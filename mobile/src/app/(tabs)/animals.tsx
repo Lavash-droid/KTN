@@ -59,50 +59,62 @@ export default function Animals() {
   const allShown = !!sel && items.length > 0 && items.every((a) => sel.has(a.id));
   const selIds = sel ? [...sel].filter((id) => data.animals.some((a) => a.id === id)) : [];
 
+  const btns = (
+    <>
+      <Btn
+        title={sel ? 'Bitir' : 'Seç'}
+        icon={sel ? 'close' : 'checkbox-on'}
+        variant={sel ? 'primary' : 'tonal'}
+        small
+        style={wide ? { minHeight: 48 } : { flex: 1, minHeight: 42 }}
+        onPress={() => (sel ? setSel(null) : items.length ? setSel(new Set()) : toast('Siyahıda heyvan yoxdur'))}
+      />
+      <Btn
+        title="Qrup"
+        icon="pill-multiple"
+        variant="tonal"
+        small
+        style={wide ? { minHeight: 48 } : { flex: 1, minHeight: 42 }}
+        onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? setGroupOpen(true) : toast('Əvvəlcə heyvan əlavə edin'))}
+      />
+      <Btn
+        title="Çəki"
+        icon="weight"
+        variant="tonal"
+        small
+        style={wide ? { minHeight: 48 } : { flex: 1, minHeight: 42 }}
+        onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? router.push('/weigh') : toast('Əvvəlcə heyvan əlavə edin'))}
+      />
+    </>
+  );
+
   const header = (
-    <View style={{ paddingBottom: 10 }}>
-      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
-        <View style={{ flex: 1 }}>
-          <Field value={q} onChangeText={setQ} placeholder="Bırka, ad və ya cins ilə axtar…" accessibilityLabel="Axtar" clearButtonMode="while-editing" autoCorrect={false} />
+    <View style={{ paddingBottom: 12 }}>
+      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <Field value={q} onChangeText={setQ} placeholder="Bırka, ad və ya cins ilə axtar…" accessibilityLabel="Axtar" clearButtonMode="while-editing" autoCorrect={false} style={{ paddingLeft: 42 }} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: 14 }}>
+            <Icon name="search" size={20} color={c.faint} />
+          </View>
         </View>
-        <Btn
-          title={sel ? 'Bitir' : 'Seç'}
-          icon={sel ? 'close' : 'checkbox-on'}
-          variant={sel ? 'primary' : 'tonal'}
-          small
-          style={{ paddingVertical: 12 }}
-          onPress={() => (sel ? setSel(null) : items.length ? setSel(new Set()) : toast('Siyahıda heyvan yoxdur'))}
-        />
-        <Btn
-          title="Qrup"
-          icon="pill-multiple"
-          variant="tonal"
-          small
-          style={{ paddingVertical: 12 }}
-          onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? setGroupOpen(true) : toast('Əvvəlcə heyvan əlavə edin'))}
-        />
-        <Btn
-          title="Çəki"
-          icon="weight"
-          variant="tonal"
-          small
-          style={{ paddingVertical: 12 }}
-          onPress={() => (data.animals.some((a) => a.status === 'aktiv') ? router.push('/weigh') : toast('Əvvəlcə heyvan əlavə edin'))}
-        />
+        {wide && btns}
       </View>
-      <View style={{ marginTop: 10 }}>
+      {!wide && <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>{btns}</View>}
+      <View style={{ marginTop: 14 }}>
         <ChipSelect<SpeciesFilter>
+          scroll={!wide}
           options={[{ value: 'all', label: 'Hamısı' }, ...SPECIES_KEYS.map((k) => ({ value: k, label: SPECIES[k].label, icon: SPECIES[k].icon }))]}
           value={species}
           onChange={setSpecies}
         />
       </View>
       <View style={{ marginTop: 8 }}>
-        <ChipSelect<StatusFilter> options={[{ value: 'aktiv', label: 'Aktiv' }, { value: 'all', label: 'Bütün statuslar' }]} value={status} onChange={setStatus} />
+        <ChipSelect<StatusFilter> scroll={!wide} options={[{ value: 'aktiv', label: 'Aktiv' }, { value: 'all', label: 'Bütün statuslar' }]} value={status} onChange={setStatus} />
       </View>
       {groups.length > 0 && (
         <View style={{ marginTop: 8 }}>
           <ChipSelect
+            scroll={!wide}
             options={[{ value: 'all', label: 'Bütün qruplar' }, ...groups.map((g) => ({ value: g, label: g, icon: 'group-move' as const })), { value: 'none', label: 'Qrupsuz' }]}
             value={groupFilter}
             onChange={setGroupFilter}
@@ -154,6 +166,12 @@ export default function Animals() {
           const w = withdrawal(data, a.id);
           const preg = pregnancy(data, a.id).state;
           const s = speciesOf(a);
+          const badges = [
+            w && <Badge key="w" kind="danger">Dərman qalığı</Badge>,
+            preg === 'pregnant' && <Badge key="p" kind="info">Boğaz</Badge>,
+            preg === 'bred' && <Badge key="b" kind="info">Mayalanıb</Badge>,
+            a.status !== 'aktiv' && <Badge key="s" kind="warn">{STATUS[a.status]}</Badge>,
+          ].filter(Boolean);
           const last = index === items.length - 1;
           return (
             <View
@@ -176,16 +194,14 @@ export default function Animals() {
                 }
                 title={animalLabel(a)}
                 subtitle={`${a.breed || s.label} · ${sexLabel(a)}${a.dob ? ' · ' + age(a.dob) : ''}`}
+                meta={wide || !badges.length ? undefined : badges}
                 right={
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-                    {wide && <WideCols group={a.group} weight={weightStats(data, a.id)?.last.kg} status={STATUS[a.status]} />}
-                  <View style={{ gap: 4, alignItems: 'flex-end' }}>
-                    {w && <Badge kind="danger">Dərman qalığı</Badge>}
-                    {preg === 'pregnant' && <Badge kind="info">Boğaz</Badge>}
-                    {preg === 'bred' && <Badge kind="info">Mayalanıb</Badge>}
-                    {a.status !== 'aktiv' && <Badge kind="warn">{STATUS[a.status]}</Badge>}
-                  </View>
-                  </View>
+                  wide ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                      <WideCols group={a.group} weight={weightStats(data, a.id)?.last.kg} status={STATUS[a.status]} />
+                      <View style={{ gap: 4, alignItems: 'flex-end', width: 120 }}>{badges}</View>
+                    </View>
+                  ) : undefined
                 }
                 onPress={() => (sel ? toggle(a.id) : router.push(`/animal/${a.id}`))}
               />

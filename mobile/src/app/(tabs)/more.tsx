@@ -10,9 +10,9 @@ import { emptyFarmData, type Farm } from '../../domain/types';
 import { readTextFile, shareTextFile } from '../../lib/files';
 import { useAuth } from '../../store/auth';
 import { farmStore, useFarm } from '../../store/farmStore';
-import { Btn, Card, ChipSelect, Field, Grid2, H2, IconTile, List, ListItem, Muted, Screen } from '../../ui/components';
+import { Btn, Card, Field, Grid2, H2, IconTile, List, ListItem, Muted, Screen, Segmented } from '../../ui/components';
 import { confirm, useToast } from '../../ui/feedback';
-import { useColors, useThemePref, type ThemePref } from '../../ui/theme';
+import { FONT, useColors, useThemePref, type ThemePref } from '../../ui/theme';
 
 const BACKEND_LABEL = { supabase: 'Bulud (Supabase)', rest: 'Daxili server', local: 'Yalnız bu cihaz' } as const;
 
@@ -136,7 +136,7 @@ export default function More() {
 
       <H2>Görünüş</H2>
       <Card>
-        <ChipSelect<ThemePref>
+        <Segmented<ThemePref>
           options={[
             { value: 'light', label: 'Açıq', icon: 'sun' },
             { value: 'dark', label: 'Qaranlıq', icon: 'moon' },
@@ -230,9 +230,9 @@ function TradeCard() {
   const t = tradeSummary(data, `${todayISO().slice(0, 4)}-01-01`);
   const net = Math.round((t.revenue - t.spend) * 100) / 100;
   const cell = (label: string, value: string, sub?: string, color?: string) => (
-    <View style={{ flexGrow: 1, flexBasis: 140, padding: 12, borderRadius: 12, backgroundColor: c.bg }}>
+    <View style={{ flexGrow: 1, flexBasis: 140, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt, borderWidth: 1, borderColor: c.line }}>
       <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
-      <Text style={{ color: color ?? c.text, fontSize: 20, fontWeight: '700', marginTop: 2 }}>{value}</Text>
+      <Text style={{ color: color ?? c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4, letterSpacing: -0.3 }}>{value}</Text>
       {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
     </View>
   );
@@ -255,9 +255,9 @@ function ExpenseCard() {
   const e = expenseSummary(data, `${todayISO().slice(0, 4)}-01-01`);
   const net = Math.round((e.milkRevenue - e.meds - e.feeds) * 100) / 100;
   const cell = (label: string, value: string, sub?: string, color?: string) => (
-    <View style={{ flexGrow: 1, flexBasis: 140, padding: 12, borderRadius: 12, backgroundColor: c.bg }}>
+    <View style={{ flexGrow: 1, flexBasis: 140, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt, borderWidth: 1, borderColor: c.line }}>
       <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
-      <Text style={{ color: color ?? c.text, fontSize: 20, fontWeight: '700', marginTop: 2 }}>{value}</Text>
+      <Text style={{ color: color ?? c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4, letterSpacing: -0.3 }}>{value}</Text>
       {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
     </View>
   );

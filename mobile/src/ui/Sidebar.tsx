@@ -6,7 +6,7 @@ import { useAuth } from '../store/auth';
 import { farmStore, useFarm } from '../store/farmStore';
 import { Icon, type IconName } from './Icon';
 import { Logo } from './Logo';
-import { useColors, useScheme, useThemePref } from './theme';
+import { FONT, useColors, useScheme, useThemePref } from './theme';
 
 const ITEMS: Record<string, { icon: IconName; label: string }> = {
   index: { icon: 'home', label: 'Panel' },
@@ -25,14 +25,17 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const { setPref } = useThemePref();
 
   return (
-    <View style={{ width: 240, backgroundColor: c.card, borderRightWidth: 1, borderRightColor: c.line, paddingVertical: 16, paddingHorizontal: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 8, marginBottom: 4 }}>
-        <Logo size={36} />
-        <Text style={{ fontSize: 22, fontWeight: '800', color: c.green }}>Sürü</Text>
+    <View style={{ width: 252, backgroundColor: c.card, borderRightWidth: 1, borderRightColor: c.line, paddingVertical: 20, paddingHorizontal: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 8 }}>
+        <Logo size={38} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={{ fontSize: 23, fontFamily: FONT.displayBold, color: c.text, letterSpacing: -0.3, lineHeight: 26 }}>Sürü</Text>
+          <Text numberOfLines={1} style={{ color: c.muted, fontSize: 12.5 }}>
+            {data.farm.name}
+          </Text>
+        </View>
       </View>
-      <Text numberOfLines={1} style={{ color: c.muted, fontSize: 13, paddingHorizontal: 8, marginBottom: 18 }}>
-        {data.farm.name}
-      </Text>
+      <View style={{ height: 1, backgroundColor: c.line, marginVertical: 18, marginHorizontal: 8 }} />
 
       {state.routes.map((route, i) => {
         const item = ITEMS[route.name];
@@ -50,8 +53,8 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
               if (!active && !ev.defaultPrevented) navigateToTab(route.key);
             }}
             style={({ hovered, pressed }: { hovered?: boolean; pressed: boolean }) => ({
-              flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 10, borderRadius: 10, marginBottom: 2,
-              backgroundColor: active ? c.greenSoft : hovered || pressed ? c.bg : 'transparent',
+              flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 12, marginBottom: 3,
+              backgroundColor: active ? c.greenSoft : hovered || pressed ? c.cardAlt : 'transparent',
             })}
           >
             {isAdd ? (
@@ -62,6 +65,7 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
               <Icon name={item.icon} size={22} color={active ? c.green : c.muted} />
             )}
             <Text style={{ fontSize: 15, color: active ? c.green : c.text, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
+            {active && !isAdd ? <View style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: 3, backgroundColor: c.green }} /> : null}
           </Pressable>
         );
       })}
@@ -79,9 +83,10 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         <Icon name={scheme === 'dark' ? 'sun' : 'moon'} size={18} color={c.muted} />
         <Text style={{ color: c.muted, fontSize: 13.5 }}>{scheme === 'dark' ? 'Açıq mövzu' : 'Qaranlıq mövzu'}</Text>
       </Pressable>
-      <Pressable onPress={() => void farmStore.sync()} style={{ paddingHorizontal: 8, paddingVertical: 6 }} accessibilityLabel="Sinxronizasiya et">
+      <Pressable onPress={() => void farmStore.sync()} style={{ paddingHorizontal: 8, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 8 }} accessibilityLabel="Sinxronizasiya et">
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: !status.online ? c.warn : status.pending || status.syncing ? c.gold : c.green2 }} />
         <Text style={{ color: status.online ? c.muted : c.warn, fontSize: 12.5 }}>
-          {status.syncing ? '⟳ Sinxronlaşır…' : !status.online ? `● Offline${status.pending ? ` · ${status.pending} gözləyir` : ''}` : status.pending ? `${status.pending} dəyişiklik gözləyir` : '● Sinxronlaşdırılıb'}
+          {status.syncing ? 'Sinxronlaşır…' : !status.online ? `Offline${status.pending ? ` · ${status.pending} gözləyir` : ''}` : status.pending ? `${status.pending} dəyişiklik gözləyir` : 'Sinxronlaşdırılıb'}
         </Text>
       </Pressable>
       {session?.name || session?.email ? (

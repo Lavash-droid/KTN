@@ -3,52 +3,68 @@ import { createContext, createElement, useCallback, useContext, useEffect, useSt
 import { useColorScheme } from 'react-native';
 
 /**
- * Rəng sistemi — sakit, göz yormayan palitra.
- * Böyük səthlər neytraldır (fon, kart, başlıq); yaşıl yalnız vurğu üçündür (ikon, aktiv element, əsas düymə).
- * Xəbərdarlıq rəngləri yüngül fon + rəngli ikon/zolaq kimi işlənir, böyük doymuş bloklar yoxdur.
+ * Rəng sistemi — "kətan və meşə": isti, kağızabənzər fon, dərin meşə yaşılı əsas rəng,
+ * buğda-qızılı yalnız kiçik vurğular üçün. Böyük səthlər neytraldır; xəbərdarlıqlar yüngül fon + rəngli ikon.
  */
 const light = {
   /** Vurğu: ikon, link, aktiv element, rəngli yazı */
-  green: '#1f6f43',
-  green2: '#2e8b57',
-  /** Tonal fon: seçilmiş çip, ikon kvadratı, ikinci dərəcəli düymə */
-  greenSoft: '#e9f3ed',
+  green: '#1e5b43',
+  green2: '#2b7356',
+  /** Tonal fon: seçilmiş element, ikon kvadratı, ikinci dərəcəli düymə */
+  greenSoft: '#e5eee8',
   /** Əsas (dolu) düymənin fonu */
-  primary: '#1f6f43',
+  primary: '#1e5b43',
+  /** Ən tünd yaşıl — ana səhifə kartı, loqo */
+  primaryDeep: '#163f30',
   /** Əsas düymə / dolu yaşıl səth üzərində yazı */
   onGreen: '#ffffff',
-  bg: '#f5f5f2',
+  /** Buğda-qızılı vurğu (ulduz, kiçik nişan) */
+  gold: '#b7802a',
+  goldSoft: '#f6ecda',
+  bg: '#f6f3ec',
   card: '#ffffff',
-  header: '#ffffff',
-  text: '#1f2622',
-  muted: '#6b746e',
-  line: '#e6e6e1',
-  warn: '#a15c07',
-  warnSoft: '#fdf5e6',
-  danger: '#b42323',
-  dangerSoft: '#fcefef',
-  info: '#2b5aa6',
-  infoSoft: '#eef3fb',
+  /** Kart içində ikinci səth (statistika xanası, sahə fonu) */
+  cardAlt: '#faf8f3',
+  header: '#f6f3ec',
+  input: '#f8f6f0',
+  text: '#1a2520',
+  muted: '#6b7268',
+  faint: '#a3a89f',
+  line: '#e8e3d7',
+  warn: '#a3620b',
+  warnSoft: '#fbf0dc',
+  danger: '#b3362e',
+  dangerSoft: '#fbebe8',
+  info: '#2f5d9b',
+  infoSoft: '#eaf0f8',
+  shadow: '#2b2416',
 };
 
 const dark: typeof light = {
-  green: '#7cc49a',
-  green2: '#8fd0aa',
-  greenSoft: '#1c2a22',
-  primary: '#2e6b4a',
-  onGreen: '#eef6f1',
-  bg: '#121513',
-  card: '#1a1e1b',
-  header: '#1a1e1b',
-  text: '#e3e7e4',
-  muted: '#99a29c',
-  line: '#2a302c',
-  warn: '#d8b169',
-  warnSoft: '#262219',
-  danger: '#e38b8b',
-  dangerSoft: '#2a1d1e',
-  info: '#97b5e6',
-  infoSoft: '#1b2130',
+  green: '#8acaa4',
+  green2: '#9ed4b3',
+  greenSoft: '#1b2c22',
+  primary: '#2f7656',
+  primaryDeep: '#173427',
+  onGreen: '#f2f8f4',
+  gold: '#d9ad62',
+  goldSoft: '#2a2418',
+  bg: '#0f1411',
+  card: '#171f1a',
+  cardAlt: '#1c251f',
+  header: '#0f1411',
+  input: '#131a16',
+  text: '#e7ebe6',
+  muted: '#9aa39b',
+  faint: '#6c766e',
+  line: '#253029',
+  warn: '#dcb26a',
+  warnSoft: '#28221a',
+  danger: '#e8958d',
+  dangerSoft: '#2b1d1c',
+  info: '#9bb8e6',
+  infoSoft: '#1a2131',
+  shadow: '#000000',
 };
 
 export type Colors = typeof light;
@@ -91,6 +107,20 @@ export function useColors(): Colors {
   return useScheme() === 'dark' ? dark : light;
 }
 
-export const RADIUS = 14;
+export const RADIUS = 18;
+
+/** Başlıq şrifti (Fraunces) — Azərbaycan hərfləri və ₼ daxil. Mətn üçün sistem şrifti qalır. */
+export const FONT = {
+  display: 'Fraunces_600SemiBold',
+  displayBold: 'Fraunces_700Bold',
+} as const;
+
+/** Yumşaq kölgə — kartlar üçün (qaranlıq mövzuda kölgə yox, yalnız xətt). */
+export function shadow(c: Colors, level: 1 | 2 = 1) {
+  if (c.bg === dark.bg) return {};
+  return level === 1
+    ? { shadowColor: c.shadow, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 1 }
+    : { shadowColor: c.shadow, shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 4 };
+}
 /** Brend rəngi — yalnız loqoda (tətbiq ikonu ilə eyni). */
-export const BRAND = light.green;
+export const BRAND = light.primaryDeep;

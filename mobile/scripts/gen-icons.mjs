@@ -129,7 +129,7 @@ writeFileSync(join(here, '../../website/icons.svg'), sprite);
 
 // 3) Loqo — yaşıl fonda ağ inək (sayt favicon-u və tətbiq ikonlarının mənbəyi)
 const logo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#1f6f43"/>
+  <rect width="512" height="512" rx="112" fill="#163f30"/>
   <g transform="translate(96 88) scale(13.33)"><path fill="#fff" d="${mdi.mdiCow}"/></g>
 </svg>
 `;

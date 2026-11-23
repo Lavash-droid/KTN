@@ -8,7 +8,7 @@ import { farmStore, useFarm } from '../store/farmStore';
 import { Badge, Btn, Card, DateField, Empty, Field, Grid2, H2, List, ListItem, Muted, NumField, Screen, Sheet, SuggestField, toNum } from '../ui/components';
 import { confirm, useToast } from '../ui/feedback';
 import { azn } from '../ui/PurchaseSheet';
-import { useColors } from '../ui/theme';
+import { FONT, useColors } from '../ui/theme';
 
 const PAGE = 40;
 
@@ -22,9 +22,9 @@ export default function Milk() {
   const rows = useMemo(() => [...data.milkRecords].sort((a, b) => b.date.localeCompare(a.date)), [data.milkRecords]);
 
   const cell = (label: string, value: string, sub?: string) => (
-    <View style={{ flexGrow: 1, flexBasis: 130, padding: 12, borderRadius: 12, backgroundColor: c.bg }}>
+    <View style={{ flexGrow: 1, flexBasis: 130, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt, borderWidth: 1, borderColor: c.line }}>
       <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
-      <Text style={{ color: c.text, fontSize: 20, fontWeight: '700', marginTop: 2 }}>{value}</Text>
+      <Text style={{ color: c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4, letterSpacing: -0.3 }}>{value}</Text>
       {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
     </View>
   );
