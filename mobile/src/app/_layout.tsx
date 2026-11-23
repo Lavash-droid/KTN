@@ -1,3 +1,4 @@
+import { Fraunces_600SemiBold, Fraunces_700Bold, useFonts } from '@expo-google-fonts/fraunces';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -6,7 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../store/auth';
 import { farmStore } from '../store/farmStore';
 import { ToastProvider, useToast } from '../ui/feedback';
-import { ThemeProvider, useColors, useScheme } from '../ui/theme';
+import { FONT, ThemeProvider, useColors, useScheme } from '../ui/theme';
 
 /** Store xətalarını ekranda bildiriş kimi göstərir. */
 function ErrorToasts() {
@@ -26,7 +27,9 @@ function ThemedStatusBar() {
 function RootStack() {
   const { session, ready } = useAuth();
   const c = useColors();
-  if (!ready) {
+  // Başlıq şrifti; yüklənməsə (xəta) sistem şrifti ilə davam edilir.
+  const [fontsLoaded, fontError] = useFonts({ Fraunces_600SemiBold, Fraunces_700Bold });
+  if (!ready || (!fontsLoaded && !fontError)) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.bg }}>
         <ActivityIndicator color={c.green} size="large" />
@@ -39,7 +42,7 @@ function RootStack() {
         headerStyle: { backgroundColor: c.header },
         headerTintColor: c.text,
         headerShadowVisible: false,
-        headerTitleStyle: { fontWeight: '700' },
+        headerTitleStyle: { fontFamily: FONT.display, fontSize: 19 },
         contentStyle: { backgroundColor: c.bg },
         headerBackButtonDisplayMode: 'minimal',
       }}

@@ -7,11 +7,11 @@ import { animalLabel, events, nextHeat, pregnancy, sexLabel, speciesOf, weightSt
 import type { Animal, BreedingMethod, MovementType, ScanResult } from '../../domain/types';
 import { uid } from '../../lib/id';
 import { farmStore, useFarm } from '../../store/farmStore';
-import { AlertBox, Btn, Card, ChipSelect, DateField, Field, Grid2, H2, IconTile, Muted, NumField, Photo, Row, Screen, Sheet, toNum } from '../../ui/components';
+import { AlertBox, Badge, Btn, Card, ChipSelect, DateField, Empty, Field, Grid2, H2, IconTile, Muted, NumField, Photo, Row, Screen, Sheet, toNum } from '../../ui/components';
 import { confirm, useToast } from '../../ui/feedback';
 import { TreatmentSheet } from '../../ui/TreatmentSheet';
 import { Icon } from '../../ui/Icon';
-import { useColors } from '../../ui/theme';
+import { FONT, shadow, useColors } from '../../ui/theme';
 
 type SheetKind = null | 'tr' | 'w' | 'b' | 'pc' | 'h' | 'exit' | { outcome: string };
 
@@ -57,7 +57,6 @@ export default function AnimalDetail() {
     ['Doğum tarixi', `${fmt(a.dob)}${a.dob ? ` (${age(a.dob)})` : ''}`],
     ['Ana', mother ? <Link key="m" onPress={() => router.push(`/animal/${mother.id}`)}>{a.damTag}</Link> : a.damTag || '—'],
     ['Qrup', a.group || '—'],
-    ['Status', STATUS[a.status] ?? a.status],
     ['Son çəki', ws ? `${ws.last.kg} kq (${fmt(ws.last.date)})` : '—'],
   ];
   if (ws && ws.adg !== null) kv.push(['Orta gündəlik artım', `${ws.adg} q/gün`]);
@@ -75,88 +74,135 @@ export default function AnimalDetail() {
     ]);
   }
 
+  const actions = [
+    ['Müalicə', 'pill', 'tr', true],
+    ['Çəki', 'weight', 'w', true],
+    ['Mayalanma', 'dna', 'b', female],
+    ['Boğazlıq yoxlaması', 'scan', 'pc', female],
+    ['Qızğınlıq', 'heat', 'h', female],
+    ['Satış / çıxış', 'cart-out', 'exit', active],
+  ] as const;
+
   return (
     <Screen>
       <Stack.Screen options={{ title: animalLabel(a) }} />
-      <Card>
-        {a.photo ? <Photo src={a.photo} style={{ width: '100%', height: 240, borderRadius: 12, marginBottom: 12, backgroundColor: c.greenSoft }} /> : null}
-        <Row gap={12} style={{ alignItems: 'center', marginBottom: 10 }}>
-          <IconTile name={s.icon} size={52} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: c.text }}>{a.tag}</Text>
-            {a.name ? <Muted>{a.name}</Muted> : null}
+      <Card style={{ padding: 0, overflow: 'hidden' }}>
+        {a.photo ? <Photo src={a.photo} style={{ width: '100%', height: 260, backgroundColor: c.greenSoft }} /> : null}
+        <View style={{ padding: 18 }}>
+          <Row gap={14} style={{ alignItems: 'center' }}>
+            {!a.photo && <IconTile name={s.icon} size={60} />}
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={{ fontSize: 28, fontFamily: FONT.display, color: c.text, letterSpacing: -0.5, lineHeight: 32 }} numberOfLines={1}>{a.tag}</Text>
+              <Text style={{ color: c.muted, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{a.name || `${s.label} · ${sexLabel(a).toLocaleLowerCase('az')}`}</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Redaktə"
+              onPress={() => router.push({ pathname: '/animal/form', params: { id: a.id } })}
+              style={({ pressed }) => ({ width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.cardAlt : c.card })}
+            >
+              <Icon name="pencil" size={19} color={c.text} />
+            </Pressable>
+          </Row>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 14 }}>
+            <Badge kind={active ? 'ok' : 'warn'}>{STATUS[a.status] ?? a.status}</Badge>
+            {pg.state === 'pregnant' && <Badge kind="info">Boğaz</Badge>}
+            {pg.state === 'bred' && <Badge kind="info">Mayalanıb</Badge>}
+            {w && <Badge kind="danger">Dərman qalığı</Badge>}
           </View>
-          <Btn title="Redaktə" variant="ghost" small onPress={() => router.push({ pathname: '/animal/form', params: { id: a.id } })} />
-        </Row>
-        {w && (
-          <AlertBox
-            level="danger"
-            icon="pill"
-            title="Dərman qalığı dövrü"
-            subtitle={`${w.meat ? 'Ət: ' + fmt(w.meat) + '-dək. ' : ''}${w.milk ? 'Süd: ' + fmt(w.milk) + '-dək. ' : ''}Bu müddətdə məhsulu satmayın.`}
-          />
-        )}
-        {exit && (
-          <AlertBox
-            level="warn"
-            icon={MOVEMENT[exit.type].icon}
-            title={`${MOVEMENT[exit.type].label} — ${fmt(exit.date)}`}
-            subtitle={[exit.counterparty, exit.price ? `${exit.price} AZN` : '', exit.weight ? `${exit.weight} kq` : ''].filter(Boolean).join(' · ') || 'Heyvan fermadan çıxıb'}
-          />
-        )}
-        {pg.breeding && (
-          <AlertBox
-            level="info"
-            icon={pg.state === 'pregnant' ? 'baby-bottle' : 'dna'}
-            title={`${pg.state === 'pregnant' ? 'Boğazdır' : 'Mayalanıb — yoxlanmayıb'} · gözlənilən doğum: ${fmt(pg.breeding.expected)}`}
-            subtitle={`${inDays(daysBetween(todayISO(), pg.breeding.expected))}${pg.scan ? ` · yoxlama ${fmt(pg.scan.date)}: ${SCAN_RESULT[pg.scan.result].toLowerCase()}${pg.scan.fetuses ? `, ${pg.scan.fetuses} döl` : ''}` : ''}`}
-          />
-        )}
-        {heat && <AlertBox level="info" icon="heat" title={`Gözlənilən qızğınlıq: ${fmt(heat)}`} subtitle={inDays(daysBetween(todayISO(), heat))} />}
-        <View style={{ gap: 6 }}>
-          {kv.map(([k, val]) => (
-            <Row key={k} gap={14}>
-              <Text style={{ color: c.muted, fontSize: 14, width: 150 }}>{k}</Text>
-              {typeof val === 'string' ? <Text style={{ color: c.text, fontSize: 15, fontWeight: '500', flex: 1 }}>{val}</Text> : <View style={{ flex: 1 }}>{val}</View>}
-            </Row>
-          ))}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 16, marginHorizontal: -4 }}>
+            {kv.map(([k, val]) => (
+              <View key={k} style={{ width: '50%', padding: 4 }}>
+                <View style={{ backgroundColor: c.cardAlt, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, minHeight: 60 }}>
+                  <Text style={{ color: c.muted, fontSize: 12.5, fontWeight: '500' }}>{k}</Text>
+                  {typeof val === 'string' ? <Text style={{ color: c.text, fontSize: 15, fontWeight: '600', marginTop: 3 }}>{val}</Text> : <View style={{ marginTop: 3 }}>{val}</View>}
+                </View>
+              </View>
+            ))}
+          </View>
+          {a.notes ? <Muted small style={{ marginTop: 12 }}>{a.notes}</Muted> : null}
         </View>
-        {a.notes ? <Muted small style={{ marginTop: 10 }}>{a.notes}</Muted> : null}
       </Card>
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 12 }}>
-        {(
-          [
-            ['Müalicə', 'pill', 'tr', true],
-            ['Çəki', 'weight', 'w', true],
-            ['Mayalanma', 'dna', 'b', female],
-            ['Boğazlıq yoxlaması', 'scan', 'pc', female],
-            ['Qızğınlıq', 'heat', 'h', female],
-            ['Satış / çıxış', 'cart-out', 'exit', active],
-          ] as const
-        ).map(([title, icon, key, enabled]) => (
-          <Btn key={key} title={title} icon={icon} variant="tonal" vertical disabled={!enabled} onPress={() => setSheet(key)} style={{ flexGrow: 1, flexBasis: '30%' }} />
+      {(w || exit || pg.breeding || heat) && (
+        <View style={{ marginTop: 12 }}>
+          {w && (
+            <AlertBox
+              level="danger"
+              icon="pill"
+              title="Dərman qalığı dövrü"
+              subtitle={`${w.meat ? 'Ət: ' + fmt(w.meat) + '-dək. ' : ''}${w.milk ? 'Süd: ' + fmt(w.milk) + '-dək. ' : ''}Bu müddətdə məhsulu satmayın.`}
+            />
+          )}
+          {exit && (
+            <AlertBox
+              level="warn"
+              icon={MOVEMENT[exit.type].icon}
+              title={`${MOVEMENT[exit.type].label} — ${fmt(exit.date)}`}
+              subtitle={[exit.counterparty, exit.price ? `${exit.price} AZN` : '', exit.weight ? `${exit.weight} kq` : ''].filter(Boolean).join(' · ') || 'Heyvan fermadan çıxıb'}
+            />
+          )}
+          {pg.breeding && (
+            <AlertBox
+              level="info"
+              icon={pg.state === 'pregnant' ? 'baby-bottle' : 'dna'}
+              title={`${pg.state === 'pregnant' ? 'Boğazdır' : 'Mayalanıb — yoxlanmayıb'} · gözlənilən doğum: ${fmt(pg.breeding.expected)}`}
+              subtitle={`${inDays(daysBetween(todayISO(), pg.breeding.expected))}${pg.scan ? ` · yoxlama ${fmt(pg.scan.date)}: ${SCAN_RESULT[pg.scan.result].toLowerCase()}${pg.scan.fetuses ? `, ${pg.scan.fetuses} döl` : ''}` : ''}`}
+            />
+          )}
+          {heat && <AlertBox level="info" icon="heat" title={`Gözlənilən qızğınlıq: ${fmt(heat)}`} subtitle={inDays(daysBetween(todayISO(), heat))} />}
+        </View>
+      )}
+
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8, marginHorizontal: -5 }}>
+        {actions.map(([title, icon, key, enabled]) => (
+          <View key={key} style={{ width: '33.333%', padding: 5 }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={title}
+              accessibilityState={{ disabled: !enabled }}
+              disabled={!enabled}
+              onPress={() => setSheet(key)}
+              style={({ pressed }) => [
+                {
+                  alignItems: 'center', gap: 8, paddingVertical: 14, paddingHorizontal: 6, borderRadius: 16, backgroundColor: c.card, minHeight: 96,
+                  borderWidth: 1, borderColor: c.line, opacity: enabled ? 1 : 0.4, transform: [{ scale: pressed ? 0.97 : 1 }],
+                },
+                shadow(c),
+              ]}
+            >
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: c.greenSoft, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={icon} size={22} color={c.green} />
+              </View>
+              <Text style={{ color: c.text, fontSize: 13, fontWeight: '600', textAlign: 'center' }} numberOfLines={2}>{title}</Text>
+            </Pressable>
+          </View>
         ))}
       </View>
 
       <H2>Tarixçə</H2>
-      <Card>
+      <Card style={{ paddingVertical: 6 }}>
         {list.length ? (
           list.map((e, i) => (
-            <Row key={e.kind + e.id} gap={10} style={{ paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
-              <IconTile name={e.icon} size={34} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: '700', color: c.text, fontSize: 15 }}>{e.title}</Text>
-                <Muted small>{`${fmt(e.date)}${e.subtitle ? ' · ' + e.subtitle : ''}`}</Muted>
-                {e.openBreeding && <Btn title="Nəticəni qeyd et" variant="ghost" small style={{ alignSelf: 'flex-start', marginTop: 6 }} onPress={() => setSheet({ outcome: e.id })} />}
+            <Row key={e.kind + e.id} gap={12} style={{ paddingVertical: 10 }}>
+              {/* Zaman xətti: ikonlar arasında şaquli xətt */}
+              <View style={{ alignItems: 'center', width: 36 }}>
+                {i > 0 && <View style={{ position: 'absolute', top: -10, height: 10, width: 2, backgroundColor: c.line }} />}
+                <IconTile name={e.icon} size={36} />
+                {i < list.length - 1 && <View style={{ position: 'absolute', top: 36, bottom: -10, width: 2, backgroundColor: c.line }} />}
               </View>
-              <Pressable onPress={() => delEvent(e)} hitSlop={10} accessibilityLabel="Qeydi sil">
-                <Icon name="close" size={18} color={c.muted} />
+              <View style={{ flex: 1, paddingTop: 1 }}>
+                <Text style={{ fontWeight: '600', color: c.text, fontSize: 15 }}>{e.title}</Text>
+                <Muted small>{`${fmt(e.date)}${e.subtitle ? ' · ' + e.subtitle : ''}`}</Muted>
+                {e.openBreeding && <Btn title="Nəticəni qeyd et" variant="tonal" small style={{ alignSelf: 'flex-start', marginTop: 8 }} onPress={() => setSheet({ outcome: e.id })} />}
+              </View>
+              <Pressable onPress={() => delEvent(e)} hitSlop={10} accessibilityLabel="Qeydi sil" style={{ width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="close" size={17} color={c.faint} />
               </Pressable>
             </Row>
           ))
         ) : (
-          <Muted>Hələ qeyd yoxdur</Muted>
+          <Empty icon="notebook">Hələ qeyd yoxdur</Empty>
         )}
       </Card>
 

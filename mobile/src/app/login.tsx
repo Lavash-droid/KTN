@@ -4,9 +4,9 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
 import { mygovEnabled, signInWithMygov } from '../lib/mygov';
-import { Btn, Card, ChipSelect, Field, Muted } from '../ui/components';
+import { Btn, Card, Field, Muted, Segmented } from '../ui/components';
 import { Logo } from '../ui/Logo';
-import { useColors, useScheme } from '../ui/theme';
+import { FONT, useColors, useScheme } from '../ui/theme';
 
 type Mode = 'login' | 'register';
 
@@ -50,12 +50,12 @@ export default function Login() {
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20, paddingTop: insets.top + 20 }} keyboardShouldPersistTaps="handled">
         <View style={{ width: '100%', maxWidth: 420, alignSelf: 'center' }}>
           <View style={{ alignItems: 'center' }}>
-            <Logo size={72} />
+            <Logo size={68} />
           </View>
-          <Text style={{ fontSize: 28, fontWeight: '800', textAlign: 'center', color: c.green, marginTop: 6 }}>Sürü</Text>
-          <Muted center style={{ marginBottom: 20 }}>Fermanız cibinizdə — heyvan uçotu, müalicə, mayalanma və çəki qeydləri.</Muted>
-          <Card>
-            <ChipSelect<Mode>
+          <Text style={{ fontSize: 38, fontFamily: FONT.displayBold, textAlign: 'center', color: c.text, marginTop: 14, letterSpacing: -0.8 }}>Sürü</Text>
+          <Muted center style={{ marginBottom: 24, marginTop: 4, paddingHorizontal: 12 }}>Fermanız cibinizdə — heyvan uçotu, müalicə, mayalanma və çəki qeydləri.</Muted>
+          <Card style={{ padding: 20 }}>
+            <Segmented<Mode>
               options={[{ value: 'login', label: 'Daxil ol' }, { value: 'register', label: 'Qeydiyyat' }]}
               value={mode}
               onChange={(m) => {
@@ -74,8 +74,12 @@ export default function Login() {
               onSubmitEditing={submit}
               placeholder="ən azı 6 simvol"
             />
-            {msg ? <Text style={{ color: msg.error ? c.danger : c.green, marginTop: 12 }}>{msg.text}</Text> : null}
-            <Btn title={mode === 'login' ? 'Daxil ol' : 'Hesab yarat'} onPress={submit} loading={busy} style={{ marginTop: 16 }} />
+            {msg ? (
+              <View style={{ marginTop: 14, padding: 12, borderRadius: 12, backgroundColor: msg.error ? c.dangerSoft : c.greenSoft }}>
+                <Text style={{ color: msg.error ? c.danger : c.green, fontSize: 14 }}>{msg.text}</Text>
+              </View>
+            ) : null}
+            <Btn title={mode === 'login' ? 'Daxil ol' : 'Hesab yarat'} onPress={submit} loading={busy} style={{ marginTop: 20 }} />
           </Card>
           {mygovEnabled && (
             <>
@@ -89,7 +93,7 @@ export default function Login() {
                 icon="id-card"
                 variant="ghost"
                 loading={mygovBusy}
-                style={{ backgroundColor: c.card }}
+                style={{ borderColor: c.line }}
                 onPress={async () => {
                   setMygovBusy(true);
                   setMsg(null);
