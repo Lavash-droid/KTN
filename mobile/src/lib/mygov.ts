@@ -19,7 +19,7 @@ const ERRORS: Record<string, string> = {
 
 /** Qayıdış ünvanı: vebdə tətbiqin öz səhifəsi, telefonda suru://mygov (Expo Go-da exp://…/--/mygov). */
 function returnUrl(): string {
-  if (Platform.OS === 'web') return `${window.location.origin}/mygov`;
+  if (Platform.OS === 'web') return `${window.location.origin}${process.env.EXPO_BASE_URL ?? ''}/mygov`;
   return Linking.createURL('mygov');
 }
 

@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
 import { isLocalPhoto } from '../data/mapping';
 import { fmt, fromISO, toISO, todayISO } from '../domain/dates';
+import { useWide } from './layout';
 import { RADIUS, useColors, type Colors } from './theme';
 
 export function useStyles<T>(factory: (c: Colors) => T): T {
@@ -31,10 +32,11 @@ export function useStyles<T>(factory: (c: Colors) => T): T {
 /* ---------- Ekran ---------- */
 export function Screen({ children, refreshControl, contentStyle }: { children: ReactNode; refreshControl?: React.ReactElement; contentStyle?: StyleProp<ViewStyle> }) {
   const c = useColors();
+  const wide = useWide();
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: c.bg }}
-      contentContainerStyle={[{ padding: 16, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' }, contentStyle]}
+      contentContainerStyle={[{ padding: wide ? 28 : 16, paddingBottom: 40, width: '100%', maxWidth: wide ? 1100 : 760, alignSelf: 'center' }, contentStyle]}
       keyboardShouldPersistTaps="handled"
       refreshControl={refreshControl as never}
     >
@@ -285,11 +287,21 @@ export function Sheet({
 }) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  // Kompüterdə ekranın ortasında dialoq, telefonda aşağıdan çıxan panel.
+  const wide = useWide();
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' }}>
+    <Modal visible={visible} animationType={wide ? 'fade' : 'slide'} transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1, justifyContent: wide ? 'center' : 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)', padding: wide ? 24 : 0 }}
+      >
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Bağla" />
-        <View style={{ backgroundColor: c.card, borderTopLeftRadius: 18, borderTopRightRadius: 18, maxHeight: '90%', width: '100%', maxWidth: 560, alignSelf: 'center' }}>
+        <View
+          style={{
+            backgroundColor: c.card, maxHeight: wide ? '88%' : '90%', width: '100%', maxWidth: 560, alignSelf: 'center',
+            borderTopLeftRadius: 18, borderTopRightRadius: 18, borderBottomLeftRadius: wide ? 18 : 0, borderBottomRightRadius: wide ? 18 : 0,
+          }}
+        >
           <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 18 + insets.bottom }} keyboardShouldPersistTaps="handled">
             <Text style={{ fontSize: 18, fontWeight: '700', color: c.text, marginBottom: 2 }}>{title}</Text>
             {children}

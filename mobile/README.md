@@ -36,9 +36,9 @@ Yeni mühit (məs. ayrıca test layihəsi) qurmaq üçün:
    `service_role` açarını heç vaxt tətbiqə qoymayın — publishable açar açıq olmaq üçündür, məlumatı RLS qoruyur.
 4. Authentication → Providers → Email: test zamanı "Confirm email"-i söndürmək olar.
 
-## Veb versiya
+## Veb panel (kompüterdən idarə)
 
-Kompüterdən idarə üçün: `npx expo start --web`. Yerləşdirmə (Vercel, `vercel.json` hazırdır): [`docs/WEB.md`](docs/WEB.md).
+Eyni kod saytda `suru.az/panel` ünvanında işləyir (kompüter üçün yan panel, geniş görünüş). Tanıtım saytı ilə birlikdə bir sayt kimi yığılır və yerləşdirilir: [`docs/WEB.md`](docs/WEB.md). Yalnız panel üzərində işləmək: `npx expo start --web`.
 
 ## Struktur
 

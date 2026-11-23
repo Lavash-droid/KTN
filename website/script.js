@@ -26,19 +26,38 @@ document.querySelectorAll('[data-plan]').forEach((a) => a.addEventListener('clic
   document.querySelector('#contactForm select[name=plan]').value = a.dataset.plan;
 }));
 
-// Əlaqə forması — backend qoşulana qədər müraciəti brauzerdə göstərir.
-// TODO: serverə və ya CRM-ə göndərmək (məs. /api/leads).
-document.getElementById('contactForm').addEventListener('submit', (e) => {
+// Əlaqə forması → Supabase "leads" cədvəli (yalnız əlavə etmək olar, oxumaq olmaz — RLS).
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
-  form.querySelector('button').disabled = true;
-  document.getElementById('formOk').hidden = false;
-  form.reset();
-});
-
-document.getElementById('privacyLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  document.getElementById('privacy').showModal();
+  const btn = form.querySelector('button');
+  const ok = document.getElementById('formOk');
+  const err = document.getElementById('formErr');
+  const f = Object.fromEntries(new FormData(form));
+  err.hidden = true;
+  if (f.website) { ok.hidden = false; form.reset(); return; } // bot
+  btn.disabled = true;
+  try {
+    const cfg = window.SURU_CONFIG || {};
+    const res = await fetch(`${cfg.supabaseUrl}/rest/v1/leads`, {
+      method: 'POST',
+      headers: { apikey: cfg.supabaseKey, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        name: String(f.name || '').trim().slice(0, 120),
+        phone: String(f.phone || '').trim().slice(0, 40),
+        region: String(f.region || '').trim().slice(0, 120),
+        herd_size: String(f.size || ''),
+        plan: String(f.plan || ''),
+        message: String(f.msg || '').trim().slice(0, 2000),
+      }),
+    });
+    if (!res.ok) throw new Error(String(res.status));
+    ok.hidden = false;
+    form.reset();
+  } catch (_) {
+    err.hidden = false;
+    btn.disabled = false;
+  }
 });
 
 document.getElementById('year').textContent = new Date().getFullYear();

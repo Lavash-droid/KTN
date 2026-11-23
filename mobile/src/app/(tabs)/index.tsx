@@ -8,12 +8,14 @@ import { demoData } from '../../domain/transfer';
 import { farmStore, useFarm } from '../../store/farmStore';
 import { AlertBox, Btn, Card, Empty, H2, List, ListItem, Muted, Screen } from '../../ui/components';
 import { useToast } from '../../ui/feedback';
+import { useWide } from '../../ui/layout';
 import { RADIUS, useColors } from '../../ui/theme';
 
 export default function Home() {
   const c = useColors();
   const toast = useToast();
   const { data, status } = useFarm();
+  const wide = useWide();
   const [refreshing, setRefreshing] = useState(false);
   const refresh = async () => {
     setRefreshing(true);
@@ -54,7 +56,7 @@ export default function Home() {
   const active = data.animals.filter((a) => a.status === 'aktiv');
   const counts = SPECIES_KEYS.map((k) => ({ k, n: active.filter((a) => a.species === k).length })).filter((x) => x.n);
   const alerts = homeAlerts(data);
-  const recent = events(data).slice(0, 5);
+  const recent = events(data).slice(0, wide ? 8 : 5);
 
   return (
     <Screen refreshControl={refreshControl}>
@@ -65,26 +67,32 @@ export default function Home() {
         ))}
       </View>
 
-      <H2>Diqqət tələb edir</H2>
-      {alerts.length ? (
-        alerts.map((a) => <AlertBox key={a.key} level={a.level} icon={a.icon} title={a.title} subtitle={a.subtitle} onPress={() => router.push(a.href as Href)} />)
-      ) : (
-        <Card>
-          <Muted>Hər şey qaydasındadır 👍 Yaxın günlərdə xatırlatma yoxdur.</Muted>
-        </Card>
-      )}
-
-      <H2>Son qeydlər</H2>
-      <List>
-        {recent.length ? (
-          recent.map((e, i) => {
-            const a = data.animals.find((x) => x.id === e.animalId);
-            return <ListItem key={e.kind + e.id} first={i === 0} icon={e.icon} title={animalLabel(a)} subtitle={`${e.title} · ${fmt(e.date)}`} onPress={() => router.push(`/animal/${e.animalId}`)} />;
-          })
-        ) : (
-          <Empty>Hələ qeyd yoxdur</Empty>
-        )}
-      </List>
+      {/* Kompüterdə iki sütun: xəbərdarlıqlar | son qeydlər */}
+      <View style={wide ? { flexDirection: 'row', gap: 24, alignItems: 'flex-start' } : undefined}>
+        <View style={wide ? { flex: 1 } : undefined}>
+          <H2>Diqqət tələb edir</H2>
+          {alerts.length ? (
+            alerts.map((a) => <AlertBox key={a.key} level={a.level} icon={a.icon} title={a.title} subtitle={a.subtitle} onPress={() => router.push(a.href as Href)} />)
+          ) : (
+            <Card>
+              <Muted>Hər şey qaydasındadır 👍 Yaxın günlərdə xatırlatma yoxdur.</Muted>
+            </Card>
+          )}
+        </View>
+        <View style={wide ? { flex: 1 } : undefined}>
+          <H2>Son qeydlər</H2>
+          <List>
+            {recent.length ? (
+              recent.map((e, i) => {
+                const a = data.animals.find((x) => x.id === e.animalId);
+                return <ListItem key={e.kind + e.id} first={i === 0} icon={e.icon} title={animalLabel(a)} subtitle={`${e.title} · ${fmt(e.date)}`} onPress={() => router.push(`/animal/${e.animalId}`)} />;
+              })
+            ) : (
+              <Empty>Hələ qeyd yoxdur</Empty>
+            )}
+          </List>
+        </View>
+      </View>
     </Screen>
   );
 }

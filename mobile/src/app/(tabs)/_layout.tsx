@@ -1,5 +1,7 @@
 import { router, Tabs } from 'expo-router';
-import { Text, useWindowDimensions, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { useWide } from '../../ui/layout';
+import { Sidebar } from '../../ui/Sidebar';
 import { useFarm } from '../../store/farmStore';
 import { SyncBadge } from '../../ui/SyncBadge';
 import { BRAND, useColors } from '../../ui/theme';
@@ -13,23 +15,19 @@ export default function TabsLayout() {
   const c = useColors();
   const { data } = useFarm();
   // Kompüter / planşet ekranında menyu solda (yan panel), telefonda altda.
-  const wide = useWindowDimensions().width >= 900;
+  const wide = useWide();
   return (
     <Tabs
+      tabBar={wide ? (props) => <Sidebar {...props} /> : undefined}
       screenOptions={{
         tabBarPosition: wide ? 'left' : 'bottom',
-        tabBarLabelPosition: wide ? 'beside-icon' : 'below-icon',
         headerStyle: { backgroundColor: BRAND },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: '700' },
         headerRight: () => <SyncBadge />,
         tabBarActiveTintColor: c.green,
         tabBarInactiveTintColor: c.muted,
-        tabBarStyle: wide
-          ? { backgroundColor: c.card, borderRightColor: c.line, width: 230, paddingTop: 12 }
-          : { backgroundColor: c.card, borderTopColor: c.line },
-        tabBarActiveBackgroundColor: wide ? c.greenSoft : undefined,
-        tabBarItemStyle: wide ? { borderRadius: 10, marginHorizontal: 8 } : undefined,
+        tabBarStyle: { backgroundColor: c.card, borderTopColor: c.line },
         sceneStyle: { backgroundColor: c.bg },
       }}
     >

@@ -1,10 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm ci",
-  "buildCommand": "npx expo export --platform web",
-  "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "installCommand": "npm ci && npm ci --prefix mobile",
+  "buildCommand": "npm run build",
+  "outputDirectory": "site-dist",
+  "cleanUrls": false,
+  "rewrites": [
+    { "source": "/panel", "destination": "/panel/index.html" },
+    { "source": "/panel/:path*", "destination": "/panel/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -16,7 +20,7 @@
       ]
     },
     {
-      "source": "/_expo/(.*)",
+      "source": "/panel/_expo/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     }
   ]

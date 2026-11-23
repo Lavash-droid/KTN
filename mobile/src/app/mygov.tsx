@@ -18,7 +18,7 @@ export default function MygovReturn() {
     let alive = true;
     completeMygovFromUrl(url)
       .then(() => {
-        if (Platform.OS === 'web') window.history.replaceState(null, '', '/mygov'); // tokeni ünvan sətrindən silirik
+        if (Platform.OS === 'web') window.history.replaceState(null, '', `${process.env.EXPO_BASE_URL ?? ''}/mygov`); // tokeni ünvan sətrindən silirik
         if (alive) router.replace('/');
       })
       .catch((e) => alive && setError((e as Error).message));

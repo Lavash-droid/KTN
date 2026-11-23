@@ -1,37 +1,46 @@
-# Veb versiya (kompüterdən idarə)
+# Vahid sayt: tanıtım + idarəetmə paneli
 
-Mobil tətbiq ilə **eyni kod** vebdə də işləyir (React Native Web). Eyni hesabla daxil olan istifadəçi
-telefonda və kompüterdə eyni fermanı görür — məlumat Supabase-də sinxronlaşır.
+Bir sayt, bir domen:
 
-- Kompüter ekranında (≥ 900 px) menyu solda yan panel kimi, telefonda altda göstərilir.
-- Bütün funksiyalar vebdə işləyir: heyvanlar, müalicə, dərman şkafı, tapşırıqlar, şəkil yükləmə,
-  CSV/JSON ixrac (fayl kimi endirilir), ehtiyat nüsxənin bərpası, myGov ilə giriş.
-- Tanıtım saytı (`/website`) ayrıdır; ondan veb tətbiqə link qoymaq olar (məs. `https://app.suru.az`).
+| Ünvan | Nədir | Mənbə |
+|---|---|---|
+| `/` | Tanıtım saytı: imkanlar, qiymətlər, suallar, əlaqə forması | `website/` |
+| `/panel` | **İdarəetmə paneli** — fermanı kompüterdən idarə etmək | `mobile/` (mobil tətbiqlə eyni kod) |
+| `/mexfilik.html` | Məxfilik siyasəti (App Store / Google Play bu ünvanı tələb edir) | `docs/mexfilik-siyaseti.md`-dən avtomatik |
 
-## Lokal işə salmaq
+Panel mobil tətbiqlə **eyni kod**dur: telefona əlavə olunan hər funksiya avtomatik saytda da görünür.
+Eyni hesabla telefonda və kompüterdə eyni ferma görünür (Supabase-də sinxronlaşır).
+
+**Kompüter görünüşü (ekran ≥ 900 px):** solda loqo, ferma adı, menyu, sinxronizasiya vəziyyəti və "ana səhifə"
+linki olan yan panel; geniş məzmun; əsas səhifə iki sütunda; heyvan siyahısında qrup / son çəki / status sütunları;
+formalar ekranın ortasında dialoq kimi açılır. Telefonda isə alt menyu və aşağıdan çıxan formalar.
+
+**Əlaqə forması** müraciətləri Supabase-dəki `leads` cədvəlinə yazır. Sayt yalnız yaza bilir, oxuya bilməz.
+Müraciətlərə baxmaq: Supabase → Table Editor → `leads`.
+
+## Lokal
 
 ```bash
-cd mobile
-npx expo start --web
+npm install && npm install --prefix mobile   # bir dəfə, repo kökündə
+npm run build                                # → site-dist/
+npx serve site-dist -s                       # http://localhost:3000 və /panel
 ```
+Yalnız panel üzərində işləyərkən (avtomatik yenilənmə ilə): `cd mobile && npx expo start --web`.
 
-## Yığmaq (statik fayllar)
+Panelin Supabase ayarları `mobile/.env`-dən götürülür (`cp mobile/.env.example mobile/.env`).
 
-```bash
-npx expo export --platform web     # nəticə: mobile/dist/
-```
-`dist/` istənilən statik hostinqdə işləyir. Yeganə şərt: bütün naməlum yollar `index.html`-ə yönləndirilməlidir (SPA).
+## İnternetdə yerləşdirmək — Vercel (`vercel.json` hazırdır)
 
-## Vercel-də yerləşdirmək (hazır konfiqurasiya: `vercel.json`)
-
-1. Vercel-də yeni layihə → GitHub reposunu seçin → **Root Directory: `mobile`**.
-2. Environment Variables:
+1. Vercel → New Project → GitHub reposu. **Root Directory: repo kökü** (boş saxlayın).
+2. Environment Variables (panelin build-i üçün):
    - `EXPO_PUBLIC_BACKEND=supabase`
    - `EXPO_PUBLIC_SUPABASE_URL=https://rutlmhwzintycizfpgyv.supabase.co`
-   - `EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_…` (`.env.example`-dəki dəyər)
+   - `EXPO_PUBLIC_SUPABASE_KEY=sb_publishable_…` (`mobile/.env.example`-dəki dəyər)
    - `EXPO_PUBLIC_MYGOV_ENABLED=false` (myGov aktivləşəndə `true`)
-3. Deploy. Öz domeniniz üçün: Settings → Domains → `app.suru.az`.
-4. myGov üçün veb ünvanını Edge Function-un `MYGOV_ALLOWED_REDIRECTS` siyahısına əlavə edin.
+3. Deploy. Domen: Settings → Domains → `suru.az`.
+4. myGov üçün `https://suru.az` ünvanını Edge Function-un `MYGOV_ALLOWED_REDIRECTS` siyahısına əlavə edin.
 
-Netlify, Cloudflare Pages və ya öz serveriniz (nginx) də olar — build əmri və `dist` qovluğu eynidir;
-nginx üçün: `try_files $uri /index.html;`.
+**Başqa hostinq (nginx və s.):** `site-dist/` qovluğunu yükləyin. Yeganə tələb — panel üçün SPA qaydası:
+```nginx
+location /panel/ { try_files $uri /panel/index.html; }
+```

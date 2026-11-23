@@ -8,13 +8,13 @@
   <meta property="og:title" content="Sürü — Fermanız cibinizdə">
   <meta property="og:description" content="Azərbaycan fermerləri üçün sadə heyvan uçotu tətbiqi. İnternetsiz işləyir.">
   <meta name="theme-color" content="#1f6f43">
-  <link rel="icon" href="../app/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="nav">
     <div class="wrap nav-in">
-      <a class="logo" href="#"><img src="../app/icon.svg" alt="" width="32" height="32">Sürü</a>
+      <a class="logo" href="#"><img src="icon.svg" alt="" width="32" height="32">Sürü</a>
       <button class="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Menyu">☰</button>
       <nav id="menu">
         <a href="#imkanlar">İmkanlar</a>
@@ -22,7 +22,7 @@
         <a href="#qiymet">Qiymətlər</a>
         <a href="#sual">Suallar</a>
         <a href="#elaqe">Əlaqə</a>
-        <a class="btn sm" href="../app/">Tətbiqi aç</a>
+        <a class="btn sm" href="/panel/">Daxil ol</a>
       </nav>
     </div>
   </header>
@@ -35,7 +35,7 @@
           <h1>Fermanız <span>cibinizdə</span></h1>
           <p class="lead">Hər heyvanın doğumu, peyvəndi, müalicəsi, mayalanması və çəkisi — bir tətbiqdə. Dəftər-qələm yox, unudulan peyvənd yox. Kənddə internet olmasa da işləyir.</p>
           <div class="cta">
-            <a class="btn lg" href="../app/">Pulsuz başla</a>
+            <a class="btn lg" href="/panel/">Pulsuz başla</a>
             <a class="btn lg ghost" href="#nece">Necə işləyir?</a>
           </div>
           <ul class="ticks">
@@ -122,7 +122,7 @@
             <p class="amount"><b>0 ₼</b></p>
             <p class="muted">Kiçik təsərrüfatlar üçün</p>
             <ul><li>25 heyvana qədər</li><li>Müalicə və dərman qalığı</li><li>Mayalanma və doğum</li><li>Tapşırıqlar</li></ul>
-            <a class="btn ghost block" href="../app/">Başla</a>
+            <a class="btn ghost block" href="/panel/">Başla</a>
           </div>
           <div class="card price featured">
             <span class="tag">Ən populyar</span>
@@ -151,7 +151,19 @@
       </div>
     </section>
 
-    <section id="kimler" class="section">
+    <section id="platformalar" class="section">
+      <div class="wrap">
+        <h2>Telefonda da, kompüterdə də</h2>
+        <p class="sub">Bir hesab — bütün cihazlarda eyni ferma. Tövlədə telefondan yazın, evdə kompüterdən hesabata baxın.</p>
+        <div class="cards three">
+          <div class="card"><div class="emoji">💻</div><h3>Veb panel</h3><p>Kompüterdən böyük ekranda: heyvan siyahısı, müalicə jurnalı, dərman şkafı, Excel ixracı.</p><a class="btn block" href="/panel/">Paneli aç</a></div>
+          <div class="card"><div class="emoji">📱</div><h3>iPhone və Android</h3><p>Tətbiq App Store və Google Play-də tezliklə. İnternet olmayanda da işləyir, sonra özü sinxronlaşır.</p><span class="btn ghost block" aria-disabled="true">Tezliklə</span></div>
+          <div class="card"><div class="emoji">🔒</div><h3>Məlumat sizindir</h3><p>Hər ferma yalnız öz məlumatını görür. İstənilən vaxt ixrac edə və ya hesabınızı silə bilərsiniz. <a href="/mexfilik.html">Məxfilik siyasəti</a></p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="kimler" class="section alt">
       <div class="wrap">
         <h2>Kimlər üçündür</h2>
         <div class="cards three">
@@ -162,7 +174,7 @@
       </div>
     </section>
 
-    <section id="sual" class="section alt">
+    <section id="sual" class="section">
       <div class="wrap narrow">
         <h2>Tez-tez verilən suallar</h2>
         <details><summary>İnternet olmayanda işləyirmi?</summary><p>Bəli. Tətbiq bir dəfə açıldıqdan sonra internet olmadan işləyir, bütün qeydlər telefonda saxlanılır.</p></details>
@@ -174,7 +186,7 @@
       </div>
     </section>
 
-    <section id="elaqe" class="section">
+    <section id="elaqe" class="section alt">
       <div class="wrap narrow">
         <h2>Bizimlə əlaqə</h2>
         <p class="sub">Pilot proqramımıza qoşulun — ilk 50 ferma üçün 1 il "Fermer" paketi pulsuz.</p>
@@ -191,7 +203,9 @@
           </div>
           <label>Paket<select name="plan"><option>Başlanğıc</option><option>Fermer</option><option>Peşəkar</option><option>Kooperativ</option></select></label>
           <label>Mesaj<textarea name="msg" rows="3" placeholder="Sualınız və ya istəyiniz"></textarea></label>
+          <label class="hp" aria-hidden="true">Veb sayt<input name="website" tabindex="-1" autocomplete="off"></label>
           <button class="btn lg block">Göndər</button>
+          <p class="form-err" id="formErr" hidden>Göndərmək alınmadı. İnternet bağlantısını yoxlayın və ya bizə zəng edin.</p>
           <p class="form-ok" id="formOk" hidden>Təşəkkür edirik! Tezliklə sizinlə əlaqə saxlayacağıq.</p>
         </form>
       </div>
@@ -200,20 +214,15 @@
 
   <footer class="footer">
     <div class="wrap foot-in">
-      <div><a class="logo" href="#"><img src="../app/icon.svg" alt="" width="28" height="28">Sürü</a><p class="muted small">Azərbaycan fermerləri üçün ferma idarəetmə platforması.</p></div>
-      <div class="small"><b>Məhsul</b><a href="#imkanlar">İmkanlar</a><a href="#qiymet">Qiymətlər</a><a href="../app/">Tətbiq</a></div>
-      <div class="small"><b>Şirkət</b><a href="#elaqe">Əlaqə</a><a href="#sual">Suallar</a><a href="#" id="privacyLink">Məxfilik</a></div>
+      <div><a class="logo" href="#"><img src="icon.svg" alt="" width="28" height="28">Sürü</a><p class="muted small">Azərbaycan fermerləri üçün ferma idarəetmə platforması.</p></div>
+      <div class="small"><b>Məhsul</b><a href="#imkanlar">İmkanlar</a><a href="#qiymet">Qiymətlər</a><a href="/panel/">Veb panel</a><a href="#platformalar">Telefon tətbiqi</a></div>
+      <div class="small"><b>Şirkət</b><a href="#elaqe">Əlaqə</a><a href="#sual">Suallar</a><a href="/mexfilik.html">Məxfilik siyasəti</a></div>
     </div>
     <p class="wrap muted small copy">© <span id="year"></span> Sürü. Bütün hüquqlar qorunur.</p>
   </footer>
 
-  <dialog id="privacy">
-    <h3>Məxfilik siyasəti (qısa)</h3>
-    <p>Fermerin daxil etdiyi bütün məlumat fermerə məxsusdur. Sürü bu məlumatı fermerin açıq razılığı olmadan üçüncü tərəflərlə paylaşmır, satmır və reklam üçün istifadə etmir. Fermer istənilən vaxt məlumatını yükləyə və silə bilər.</p>
-    <p class="muted small">Tam siyasət şirkət qeydiyyatından sonra dərc olunacaq.</p>
-    <form method="dialog"><button class="btn">Bağla</button></form>
-  </dialog>
 
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

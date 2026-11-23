@@ -3,12 +3,13 @@ import { useMemo, useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { SPECIES, SPECIES_KEYS, STATUS } from '../../domain/constants';
 import { age } from '../../domain/dates';
-import { animalLabel, isPregnant, sexLabel, speciesOf, withdrawal } from '../../domain/logic';
+import { animalLabel, isPregnant, sexLabel, speciesOf, weightStats, withdrawal } from '../../domain/logic';
 import type { SpeciesKey } from '../../domain/types';
 import { farmStore, useFarm } from '../../store/farmStore';
 import { Badge, Btn, ChipSelect, Empty, Field, ListItem, Photo } from '../../ui/components';
 import { TreatmentSheet } from '../../ui/TreatmentSheet';
 import { useToast } from '../../ui/feedback';
+import { useWide } from '../../ui/layout';
 import { RADIUS, useColors } from '../../ui/theme';
 
 type SpeciesFilter = 'all' | SpeciesKey;
@@ -18,6 +19,7 @@ export default function Animals() {
   const c = useColors();
   const toast = useToast();
   const { data } = useFarm();
+  const wide = useWide();
   const [q, setQ] = useState('');
   const [species, setSpecies] = useState<SpeciesFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('aktiv');
@@ -65,7 +67,7 @@ export default function Animals() {
     <>
       <FlatList
         style={{ flex: 1, backgroundColor: c.bg }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40, width: '100%', maxWidth: 760, alignSelf: 'center' }}
+        contentContainerStyle={{ padding: wide ? 28 : 16, paddingBottom: 40, width: '100%', maxWidth: wide ? 1100 : 760, alignSelf: 'center' }}
         data={items}
         keyExtractor={(a) => a.id}
         ListHeaderComponent={header}
@@ -107,10 +109,13 @@ export default function Animals() {
                 title={animalLabel(a)}
                 subtitle={`${a.breed || s.label} · ${sexLabel(a)}${a.dob ? ' · ' + age(a.dob) : ''}`}
                 right={
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                    {wide && <WideCols group={a.group} weight={weightStats(data, a.id)?.last.kg} status={STATUS[a.status]} />}
                   <View style={{ gap: 4, alignItems: 'flex-end' }}>
                     {w && <Badge kind="danger">Dərman qalığı</Badge>}
                     {preg && <Badge kind="info">Boğaz</Badge>}
                     {a.status !== 'aktiv' && <Badge kind="warn">{STATUS[a.status]}</Badge>}
+                  </View>
                   </View>
                 }
                 onPress={() => router.push(`/animal/${a.id}`)}
@@ -120,6 +125,24 @@ export default function Animals() {
         }}
       />
       <TreatmentSheet visible={groupOpen} onClose={() => setGroupOpen(false)} />
+    </>
+  );
+}
+
+/** Kompüter ekranında siyahıya əlavə sütunlar: qrup, son çəki, status. */
+function WideCols({ group, weight, status }: { group: string; weight?: number; status: string }) {
+  const c = useColors();
+  const col = (label: string, value: string, w: number) => (
+    <View style={{ width: w }}>
+      <Text style={{ color: c.muted, fontSize: 11.5 }}>{label}</Text>
+      <Text style={{ color: c.text, fontSize: 14 }} numberOfLines={1}>{value}</Text>
+    </View>
+  );
+  return (
+    <>
+      {col('Qrup', group || '—', 130)}
+      {col('Son çəki', weight ? `${weight} kq` : '—', 90)}
+      {col('Status', status, 80)}
     </>
   );
 }
