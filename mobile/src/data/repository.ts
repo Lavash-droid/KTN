@@ -46,6 +46,12 @@ export interface FarmRepository {
 
   /** Fermanın bütün məlumatını əvəz edir (bərpa, nümunə məlumat, silmə). */
   replaceAll(data: FarmData): Promise<void>;
+
+  /**
+   * Hesabı və istifadəçinin yeganə sahibi olduğu fermanın bütün məlumatını (şəkillər daxil) birdəfəlik silir,
+   * sonra sessiyanı bağlayır. App Store tələbi (Guideline 5.1.1(v)). İnternet tələb edir.
+   */
+  deleteAccount(): Promise<void>;
 }
 
 /**

@@ -11,7 +11,7 @@ React Native + Expo-ya köçürülüb; məlumat **Supabase**-də saxlanılır, g
 - Mayalanma → gözlənilən doğum; "Doğdu" → bala formasının avtomatik açılması
 - Çəki və orta gündəlik artım; tapşırıqlar; paneldə xatırlatmalar
 - CSV (Excel) ixrac, JSON ehtiyat nüsxə; **köhnə PWA-nın ehtiyat faylını idxal** (şəkillər daxil)
-- Hesab (e-poçt + şifrə), bir neçə cihaz, **internetsiz iş**: dəyişikliklər cihazda növbəyə düşür
+- Hesab (e-poçt + şifrə), tətbiqdən hesabın silinməsi, bir neçə cihaz, **internetsiz iş**: dəyişikliklər cihazda növbəyə düşür
   və bağlantı bərpa olunanda serverə göndərilir
 
 ## Quraşdırma
@@ -62,9 +62,13 @@ npx expo export --platform web   # bundle yoxlaması
 
 ## Mağazaya çıxarış (EAS)
 
+**iOS üçün ətraflı təlimat, App Store tələbləri və yoxlama siyahısı: [`docs/IOS.md`](docs/IOS.md).**
+
 ```bash
-npx eas-cli@latest build --platform android   # .aab / .apk
-npx eas-cli@latest build --platform ios
+npx eas-cli@latest build --platform ios --profile production       # App Store / TestFlight
+npx eas-cli@latest build --platform android --profile preview      # test üçün .apk
+npx eas-cli@latest build --platform android --profile production   # Google Play üçün .aab
 ```
 
 Paket adı: `az.suru.app` (`app.json`). İlk build-dən əvvəl `npx eas-cli@latest init` ilə layihəni bağlayın.
+Build profilləri (`eas.json`) Supabase açarlarını özündə saxlayır, çünki `.env` faylı build-ə göndərilmir.

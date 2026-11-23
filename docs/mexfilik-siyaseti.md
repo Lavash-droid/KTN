@@ -35,6 +35,12 @@ Müqavilənin icrası (xidmətin göstərilməsi), subyektin razılığı (payla
 - **Dövlət orqanları** — yalnız qanunla tələb olunduqda.
 - Analitika üçün yalnız **anonimləşdirilmiş və toplu** statistika (məs. "rayon üzrə orta buzovlama intervalı") istifadə oluna bilər; bundan da imtina etmək mümkündür.
 
+### Məlumatın harada saxlanıldığı
+Tətbiqin məlumatı (hesab, ferma qeydləri, heyvan şəkilləri) xidmət təminatçısı **Supabase**-in Avropa İttifaqındakı
+(Frankfurt, Almaniya) serverlərində saxlanılır. Ötürmə HTTPS ilə şifrələnir; hər istifadəçi yalnız üzv olduğu fermanın
+məlumatına çıxış əldə edir. İnternet olmayanda daxil edilən qeydlər bağlantı bərpa olunanadək telefonda saxlanılır.
+Gələcəkdə məlumat Sürü-nün öz serverlərinə köçürülə bilər — bu barədə əvvəlcədən xəbər veriləcək.
+
 ## 5. Saxlama müddətləri
 | Data | Müddət |
 |---|---|
@@ -44,6 +50,9 @@ Müqavilənin icrası (xidmətin göstərilməsi), subyektin razılığı (payla
 | Ödəniş və hesab-faktura sənədləri | Vergi qanunvericiliyinin tələb etdiyi müddət `[...]` |
 
 ## 6. Hüquqlarınız
+**Hesabı silmək:** tətbiqdə *Digər → Hesab və sinxronizasiya → Hesabı sil*. Hesab, yeganə sahibi olduğunuz fermanın
+bütün qeydləri və şəkilləri serverdən dərhal silinir. Silməzdən əvvəl *Ehtiyat nüsxə (JSON)* və CSV ilə məlumatı yükləyə bilərsiniz.
+
 Məlumatlarınızla tanış olmaq, düzəltmək, silmək, ixrac etmək, emalı məhdudlaşdırmaq, razılığı istənilən vaxt geri götürmək. Müraciət: `[məxfilik@...]`, cavab müddəti — 30 gün. Şikayət üçün səlahiyyətli dövlət orqanına müraciət hüququnuz var.
 
 ## 7. Cookie və analitika (sayt)

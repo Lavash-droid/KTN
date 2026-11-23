@@ -1,5 +1,6 @@
+import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
 import { Btn, Card, ChipSelect, Field, Muted } from '../ui/components';
@@ -9,6 +10,7 @@ type Mode = 'login' | 'register';
 
 export default function Login() {
   const c = useColors();
+  const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
@@ -40,6 +42,8 @@ export default function Login() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Bu ekranda yaşıl başlıq yoxdur — status bar mətni fona uyğun olmalıdır (iOS). */}
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20, paddingTop: insets.top + 20 }} keyboardShouldPersistTaps="handled">
         <View style={{ width: '100%', maxWidth: 420, alignSelf: 'center' }}>
           <Text style={{ fontSize: 56, textAlign: 'center' }}>🐄🐑</Text>

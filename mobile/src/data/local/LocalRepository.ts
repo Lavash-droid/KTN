@@ -72,4 +72,9 @@ export class LocalRepository implements FarmRepository {
   async replaceAll(data: FarmData) {
     await this.write(data);
   }
+
+  /** Lokal rejimdə hesab yoxdur — cihazdakı məlumat silinir. */
+  async deleteAccount() {
+    await AsyncStorage.removeItem(DATA_KEY);
+  }
 }

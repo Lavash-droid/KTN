@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text } from 'react-native';
-import { repo } from '../../data';
+import { isTransient, repo } from '../../data';
 import { todayISO } from '../../domain/dates';
 import { animalsCsv, medNeedsAttention, treatmentsCsv } from '../../domain/logic';
 import { demoData, makeBackup, parseBackup } from '../../domain/transfer';
@@ -52,6 +52,25 @@ export default function More() {
       toast('Bərpa olundu');
       router.navigate('/');
     });
+
+  const deleteAccount = async () => {
+    const ok1 = await confirm(
+      'Hesab silinsin?',
+      'Hesabınız, fermanızın bütün heyvanları, qeydləri və şəkilləri serverdən birdəfəlik silinəcək. Bunu geri qaytarmaq olmaz.\n\nƏvvəlcə "Ehtiyat nüsxə (JSON)" ilə məlumatı saxlamağınız tövsiyə olunur.',
+      'Davam et',
+    );
+    if (!ok1) return;
+    const ok2 = await confirm('Son təsdiq', `${session?.email ?? 'Hesab'} və bütün məlumat silinsin?`, 'Hesabı sil');
+    if (!ok2) return;
+    await run(async () => {
+      try {
+        await farmStore.deleteAccount();
+      } catch (e) {
+        throw new Error(isTransient(e) ? 'Hesabı silmək üçün internet bağlantısı lazımdır' : (e as Error).message);
+      }
+      toast('Hesab silindi');
+    });
+  };
 
   const sizeNote = data.meds.some(medNeedsAttention) ? ' · diqqət tələb edənlər var' : '';
   const lastSync = status.lastSync ? new Date(status.lastSync).toLocaleString('az-AZ') : '—';
@@ -110,6 +129,15 @@ export default function More() {
             <Text />
           )}
         </Grid2>
+        {repo.kind !== 'local' && (
+          <Btn
+            title="Hesabı sil"
+            variant="ghost"
+            small
+            style={{ marginTop: 10, alignSelf: 'flex-start', borderColor: c.danger }}
+            onPress={deleteAccount}
+          />
+        )}
       </Card>
 
       <H2>Digər</H2>

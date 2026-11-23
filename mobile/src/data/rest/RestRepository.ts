@@ -30,13 +30,7 @@ export class RestRepository implements FarmRepository {
       this.session = raw ? JSON.parse(raw) : null;
     });
 
-    const setSession = async (s: StoredSession | null) => {
-      this.session = s;
-      if (s) await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(s));
-      else await AsyncStorage.removeItem(TOKEN_KEY);
-      const pub = s ? { userId: s.userId, email: s.email } : null;
-      this.listeners.forEach((cb) => cb(pub));
-    };
+    const setSession = (s: StoredSession | null) => this.setSession(s);
 
     const authCall = async (path: string, email: string, password: string) => {
       const res = await this.request<{ token: string | null; user: { id: string; email: string } }>('POST', path, { email, password }, false);
@@ -69,6 +63,14 @@ export class RestRepository implements FarmRepository {
         await setSession(null);
       },
     };
+  }
+
+  private async setSession(s: StoredSession | null) {
+    this.session = s;
+    if (s) await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(s));
+    else await AsyncStorage.removeItem(TOKEN_KEY);
+    const pub = s ? { userId: s.userId, email: s.email } : null;
+    this.listeners.forEach((cb) => cb(pub));
   }
 
   private async request<R = unknown>(method: string, path: string, body?: unknown, auth = true): Promise<R> {
@@ -144,5 +146,10 @@ export class RestRepository implements FarmRepository {
 
   async replaceAll(data: FarmData) {
     await this.request('PUT', '/farm/data', data);
+  }
+
+  async deleteAccount() {
+    await this.request('DELETE', '/auth/account');
+    await this.setSession(null);
   }
 }

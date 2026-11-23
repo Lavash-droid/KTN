@@ -175,6 +175,30 @@ export class SupabaseRepository implements FarmRepository {
       for (let i = 0; i < rows.length; i += 500) await this.upsert(t, rows.slice(i, i + 500));
     }
   }
+
+  async deleteAccount() {
+    const fid = await this.farmId();
+    const { data: sole, error: soleErr } = await this.sb.rpc('is_sole_owner', { f: fid });
+    wrap(soleErr, 'Hesab');
+    if (sole) {
+      // Storage faylları SQL ilə silinə bilmir — əvvəlcə Storage API ilə silinir.
+      for (;;) {
+        const { data: files, error } = await this.sb.storage.from(BUCKET).list(fid, { limit: 1000 });
+        wrap(error, 'Şəkillər');
+        if (!files?.length) break;
+        const { error: rmErr } = await this.sb.storage.from(BUCKET).remove(files.map((f) => `${fid}/${f.name}`));
+        wrap(rmErr, 'Şəkillər');
+        if (files.length < 1000) break;
+      }
+    }
+    const { error } = await this.sb.rpc('delete_account');
+    wrap(error, 'Hesab');
+    this.farmIdPromise = null;
+    this.urlCache.clear();
+    await AsyncStorage.removeItem(URL_CACHE_KEY).catch(() => {});
+    // İstifadəçi serverdə artıq yoxdur — yalnız lokal sessiya silinir.
+    await this.sb.auth.signOut({ scope: 'local' });
+  }
 }
 
 function authMessage(m: string): string {

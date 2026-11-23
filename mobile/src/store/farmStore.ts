@@ -77,8 +77,8 @@ class FarmStore {
   }
 
   /* ---------- həyat dövrü ---------- */
-  private cacheKey = () => `suru-cache:${repo.kind}:${this.userId}`;
-  private outboxKey = () => `suru-outbox:${repo.kind}:${this.userId}`;
+  private cacheKey = (user = this.userId) => `suru-cache:${repo.kind}:${user}`;
+  private outboxKey = (user = this.userId) => `suru-outbox:${repo.kind}:${user}`;
 
   async start(userId: string) {
     if (this.userId === userId) return;
@@ -208,6 +208,19 @@ class FarmStore {
     this.emit({ data });
     void this.persistCache();
     void this.persistOutbox().then(() => this.flush());
+  }
+
+  /**
+   * Hesabı serverdə silir, sonra cihazdakı keşi, göndərilməmiş növbəni və gözləyən şəkilləri təmizləyir.
+   */
+  async deleteAccount() {
+    const user = this.userId;
+    const pendingPhotos = this.outbox.flatMap((op) => (op.kind === 'photo' ? [op.uri] : []));
+    const localPhotos = this.data.animals.map((a) => a.photo).filter((p): p is string => isLocalPhoto(p));
+    await repo.deleteAccount();
+    await AsyncStorage.multiRemove([this.cacheKey(user), this.outboxKey(user)]).catch(() => {});
+    for (const uri of new Set([...pendingPhotos, ...localPhotos])) deleteLocal(uri);
+    this.stop();
   }
 
   /* ---------- əməliyyatlar ---------- */
