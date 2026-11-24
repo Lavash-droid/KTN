@@ -9,7 +9,7 @@ Herdwatch (İrlandiya) modelindən ilhamlanan, Azərbaycan bazarı üçün yerli
 | `docs/biznes-plan.md` | Herdwatch araşdırması (yalnız ictimai mənbələr), Sürü üçün nəticələr, Azərbaycan bazarı, gəlir modeli, şirkətin qurulması, yol xəritəsi |
 | `docs/mexfilik-siyaseti.md` | Sürü-nün məxfilik siyasəti və data prinsipləri (qaralama) |
 | `mobile/` | **Sürü tətbiqi** (Expo / React Native) — iOS, Android və veb (kompüterdən idarə); məlumat Supabase-də, offline iş, myGov ilə giriş, daxili serverə keçid üçün ayrıca backend qatı. Bax: [`mobile/README.md`](mobile/README.md) |
-| `supabase/` | Verilənlər bazası sxemi (cədvəllər, Row Level Security, şəkil bucket-i) və `mygov-auth` Edge Function |
+| `supabase/` | Verilənlər bazası sxemi (cədvəllər, Row Level Security, şəkil bucket-i), `mygov-auth` və `gov-report` (EKTİS / AQTA hesabatları) Edge Function-ları |
 | `app/` | İlkin veb-tətbiq (PWA) — mobil tətbiqə köçürülüb; köhnə ehtiyat faylları mobil tətbiqə idxal oluna bilər |
 | `website/` | Tanıtım saytı — imkanlar, qiymətlər (AZN), suallar, əlaqə forması (müraciətlər Supabase-ə yazılır) |
 | `scripts/`, `vercel.json` | **Vahid sayt**: `suru.az/` tanıtım + `suru.az/panel` idarəetmə paneli + məxfilik səhifəsi — bir əmrlə yığılır. Bax: [`mobile/docs/WEB.md`](mobile/docs/WEB.md) |

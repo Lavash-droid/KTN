@@ -6,10 +6,10 @@
  * Server API-si fərqli olarsa, yalnız bu faylı uyğunlaşdırmaq kifayətdir.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Farm, FarmData, TableName, Tables } from '../../domain/types';
+import { normalizeFarmData, type Farm, type FarmData, type TableName, type Tables } from '../../domain/types';
 import { readBytes } from '../../lib/files';
 import { isLocalPhoto } from '../mapping';
-import { RepoError, type AuthApi, type FarmRepository, type Session } from '../repository';
+import { GOV_OFFLINE, RepoError, type AuthApi, type FarmRepository, type GovApi, type GovStatus, type GovSubmitResult, type Session } from '../repository';
 
 const TOKEN_KEY = 'suru-rest-session';
 
@@ -20,6 +20,7 @@ interface StoredSession extends Session {
 export class RestRepository implements FarmRepository {
   readonly kind = 'rest' as const;
   readonly auth: AuthApi;
+  readonly gov: GovApi;
   private session: StoredSession | null = null;
   private loaded: Promise<void>;
   private listeners = new Set<(s: Session | null) => void>();
@@ -61,6 +62,13 @@ export class RestRepository implements FarmRepository {
         if (!token || !userId) throw new RepoError('Giriş tokeni yoxdur', false);
         await setSession({ token, userId, email: null, name: params.get('name'), provider: 'mygov' });
       },
+      mygovAvailable: async () => {
+        try {
+          return (await this.request<{ configured: boolean }>('GET', '/auth/mygov/status', undefined, false)).configured === true;
+        } catch {
+          return false;
+        }
+      },
       signOut: async () => {
         try {
           await this.request('POST', '/auth/logout');
@@ -69,6 +77,17 @@ export class RestRepository implements FarmRepository {
         }
         await setSession(null);
       },
+    };
+
+    this.gov = {
+      status: async () => {
+        try {
+          return await this.request<GovStatus>('GET', '/gov/status');
+        } catch {
+          return GOV_OFFLINE;
+        }
+      },
+      submit: (agency, payload) => this.request<GovSubmitResult>('POST', `/gov/reports/${agency}`, payload),
     };
   }
 
@@ -115,8 +134,8 @@ export class RestRepository implements FarmRepository {
     return (await res.json()) as R;
   }
 
-  loadAll() {
-    return this.request<FarmData>('GET', '/farm/data');
+  async loadAll() {
+    return normalizeFarmData(await this.request<FarmData>('GET', '/farm/data'));
   }
 
   async updateFarm(farm: Farm) {

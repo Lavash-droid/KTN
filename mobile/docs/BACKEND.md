@@ -35,21 +35,24 @@ Daxili server hazır olanda ekranlara, biznes məntiqinə və offline növbəyə
 | POST | `/auth/login` | `{ email, password }` | `{ token, user: { id, email } }` |
 | POST | `/auth/logout` | — | `204` |
 | GET | `/auth/mygov/start?redirect_to=` | — | myGov (OIDC) girişinə yönləndirir; sonda `302 → <redirect_to>#token=…&user_id=…&name=…` (xəta: `#error=…`). Supabase versiyası: `supabase/functions/mygov-auth` |
+| GET | `/auth/mygov/status` | — | `{ configured: boolean }` — giriş ekranında myGov düyməsini aktiv etmək üçün |
 | DELETE | `/auth/account` | — | `204` — hesabı və istifadəçinin yeganə sahibi olduğu fermanın bütün məlumatını (şəkillər daxil) silir. App Store tələbidir |
 | GET | `/farm/data` | — | `FarmData` (bax aşağı) |
 | PUT | `/farm/data` | `FarmData` | `204` — fermanın bütün məlumatını əvəz edir |
-| PUT | `/farm` | `{ name, owner, region }` | `204` |
+| PUT | `/farm` | `{ name, owner, region, ektisNo, voen }` | `204` |
 | PUT | `/records/:table` | `Row[]` | `204` — upsert. `photo` sahəsi gəlməyibsə köhnə dəyər saxlanılır |
 | POST | `/records/:table/delete` | `{ ids: string[] }` | `204`. `animals` silinəndə ona aid `treatments`, `weights`, `breedings` də silinir |
 | POST | `/photos/:animalId` | `multipart/form-data`, sahə `file` (JPEG) | `{ ref }` — saxlanılan şəklin istinadı |
 | GET | `/photos/url?ref=` | — | `{ url }` — göstərmək üçün (müddətli) URL |
 | DELETE | `/photos?ref=` | — | `204` |
+| GET | `/gov/status` | — | `{ agencies: { ektis: boolean, aqta: boolean }, mygovRequired: boolean }` — dövlət qurumlarına birbaşa göndəriş qoşulubmu |
+| POST | `/gov/reports/:agency` | `suru-gov-report` v1 (bax [`GOV-REPORTS.md`](GOV-REPORTS.md)) | `{ status: 'sent'\|'accepted', reference }`. Xəta: `{ error: 'not_configured'\|'mygov_required'\|'forbidden'\|'rejected'\|'agency_unavailable', message? }` |
 
-`:table` ∈ `animals`, `treatments`, `weights`, `breedings`, `tasks`, `meds`, `pregChecks`, `heats`, `movements`, `feeds`, `purchases`, `milkRecords`.
+`:table` ∈ `animals`, `treatments`, `weights`, `breedings`, `tasks`, `meds`, `pregChecks`, `heats`, `movements`, `feeds`, `purchases`, `milkRecords`, `govReports`.
 
 ```ts
 interface FarmData {
-  farm: { name: string; owner: string; region: string };
+  farm: { name: string; owner: string; region: string; ektisNo: string; voen: string };
   animals:    { id; tag; name; species: 'inek'|'camis'|'qoyun'|'keci'; breed; sex: 'd'|'e'; dob: string|null;
                 damTag; group; status: 'aktiv'|'satilib'|'olub'|'kesilib'; notes; photo: string|null; createdAt }[];
   treatments: { id; animalId; batchId: string|null; date; medicine; dose; reason; meatWd: number; milkWd: number }[];
@@ -63,6 +66,7 @@ interface FarmData {
   feeds:      { id; name; qty: number; unit; minQty: number; notes }[];
   purchases:  { id; kind: 'med'|'feed'; itemId: string|null; itemName; date; qty: number; unit; price: number; supplier; batch; expiry: string|null; notes }[];
   milkRecords:{ id; date; liters: number; fat: number; protein: number; scc: number; buyer; price: number; notes }[];
+  govReports: { id; agency: 'ektis'|'aqta'; date; status: 'sent'|'accepted'|'rejected'; method: 'api'|'file'; reference; itemKeys: string[]; notes }[];
 }
 ```
 

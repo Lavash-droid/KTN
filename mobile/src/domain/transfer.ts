@@ -47,7 +47,7 @@ export function parseBackup(raw: unknown): ImportResult {
 
   const out = emptyFarmData();
   const f = src.farm ?? {};
-  out.farm = { name: str(f.name) || out.farm.name, owner: str(f.owner), region: str(f.region) };
+  out.farm = { name: str(f.name) || out.farm.name, owner: str(f.owner), region: str(f.region), ektisNo: str(f.ektisNo), voen: str(f.voen) };
 
   const legacyPhotos: Record<string, string> = obj.photos && typeof obj.photos === 'object' ? obj.photos : {};
   const photos: Record<string, string> = {};
@@ -158,6 +158,19 @@ export function parseBackup(raw: unknown): ImportResult {
       scc: Math.max(0, Math.round(num(m.scc))), buyer: str(m.buyer), price: Math.max(0, num(m.price)), notes: str(m.notes),
     });
   }
+  for (const r of arr('govReports')) {
+    if (!isISODate(r.date) || !['ektis', 'aqta'].includes(r.agency) || !Array.isArray(r.itemKeys)) continue;
+    out.govReports.push({
+      id: mapId(r.id), agency: r.agency, date: r.date,
+      status: ['sent', 'accepted', 'rejected'].includes(r.status) ? r.status : 'sent', method: r.method === 'api' ? 'api' : 'file',
+      reference: str(r.reference), notes: str(r.notes),
+      // Açarlar köhnə id-lərə istinad edir — yeni id-lərə çevrilir (açar formatı: "növ:id").
+      itemKeys: r.itemKeys.map((k: unknown) => {
+        const [kind, id] = str(k).split(':');
+        return id && idMap.has(id) ? `${kind}:${idMap.get(id)}` : str(k);
+      }),
+    });
+  }
   return { data: out, photos };
 }
 
@@ -166,7 +179,7 @@ export function demoData(): FarmData {
   const t = todayISO();
   const d = (n: number) => addDays(t, n);
   const s = emptyFarmData();
-  s.farm = { name: 'Qarabağ Ailə Ferması', owner: 'Nümunə fermer', region: 'Ağcabədi' };
+  s.farm = { name: 'Qarabağ Ailə Ferması', owner: 'Nümunə fermer', region: 'Ağcabədi', ektisNo: '', voen: '' };
   const mk = (o: Partial<Animal> & Pick<Animal, 'tag' | 'species' | 'breed' | 'sex'>) => {
     const a: Animal = { id: uid(), createdAt: t, status: 'aktiv', name: '', dob: null, damTag: '', group: '', notes: '', photo: null, ...o };
     s.animals.push(a);

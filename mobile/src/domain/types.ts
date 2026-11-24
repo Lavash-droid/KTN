@@ -17,6 +17,10 @@ export interface Farm {
   name: string;
   owner: string;
   region: string;
+  /** EKTİS-də təsərrüfatın (fermerin) qeydiyyat nömrəsi — dövlət hesabatları üçün. */
+  ektisNo: string;
+  /** VÖEN (varsa) — dövlət hesabatları üçün. */
+  voen: string;
 }
 
 export interface Animal {
@@ -168,6 +172,28 @@ export interface MilkRecord {
   notes: string;
 }
 
+/** Hesabat göndərilən dövlət qurumu: EKTİS (Kənd Təsərrüfatı Nazirliyi) və ya AQTA (Qida Təhlükəsizliyi Agentliyi). */
+export type GovAgency = 'ektis' | 'aqta';
+/** sent — göndərilib; accepted — qurum qəbul edib; rejected — rədd edilib. */
+export type GovReportStatus = 'sent' | 'accepted' | 'rejected';
+/** api — birbaşa inteqrasiya ilə; file — fayl ixrac edilib portala/qeyri-elektron yolla təqdim olunub. */
+export type GovReportMethod = 'api' | 'file';
+
+/** Dövlət qurumuna təqdim olunmuş hesabat — hansı qeydlərin artıq bildirildiyini izləmək üçün. */
+export interface GovReport {
+  id: string;
+  agency: GovAgency;
+  /** Göndərilmə tarixi. */
+  date: string;
+  status: GovReportStatus;
+  method: GovReportMethod;
+  /** Qurumun verdiyi qeydiyyat / müraciət nömrəsi (varsa). */
+  reference: string;
+  /** Hesabata daxil olan qeydlərin açarları (məs. "mv:<id>", "tr:<id>", "birth:<id>"). */
+  itemKeys: string[];
+  notes: string;
+}
+
 export interface FarmData {
   farm: Farm;
   animals: Animal[];
@@ -182,6 +208,7 @@ export interface FarmData {
   feeds: Feed[];
   purchases: Purchase[];
   milkRecords: MilkRecord[];
+  govReports: GovReport[];
 }
 
 /** Backend-də ayrıca cədvəl/kolleksiya kimi saxlanılan qeydlər. */
@@ -198,13 +225,14 @@ export interface Tables {
   feeds: Feed;
   purchases: Purchase;
   milkRecords: MilkRecord;
+  govReports: GovReport;
 }
 export type TableName = keyof Tables;
 /** Sıra vacibdir: əvvəl heyvanlar və mayalanmalar, sonra onlara istinad edən qeydlər. */
-export const TABLES: TableName[] = ['animals', 'meds', 'treatments', 'weights', 'breedings', 'tasks', 'pregChecks', 'heats', 'movements', 'feeds', 'purchases', 'milkRecords'];
+export const TABLES: TableName[] = ['animals', 'meds', 'treatments', 'weights', 'breedings', 'tasks', 'pregChecks', 'heats', 'movements', 'feeds', 'purchases', 'milkRecords', 'govReports'];
 
 export const emptyFarmData = (): FarmData => ({
-  farm: { name: 'Mənim fermam', owner: '', region: '' },
+  farm: { name: 'Mənim fermam', owner: '', region: '', ektisNo: '', voen: '' },
   animals: [],
   treatments: [],
   weights: [],
@@ -217,4 +245,11 @@ export const emptyFarmData = (): FarmData => ({
   feeds: [],
   purchases: [],
   milkRecords: [],
+  govReports: [],
 });
+
+/** Köhnə keşdən / fayldan gələn məlumatı cari formaya gətirir (yeni sahələr və cədvəllər boş dəyərlə). */
+export function normalizeFarmData(raw: Partial<FarmData> | null | undefined): FarmData {
+  const base = emptyFarmData();
+  return { ...base, ...raw, farm: { ...base.farm, ...raw?.farm } };
+}

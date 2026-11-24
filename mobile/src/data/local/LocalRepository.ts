@@ -3,8 +3,8 @@
  * istifadə olunur — tətbiqi sınamaq və inkişaf üçün.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { emptyFarmData, type Farm, type FarmData, type TableName, type Tables } from '../../domain/types';
-import type { AuthApi, FarmRepository, Session } from '../repository';
+import { emptyFarmData, normalizeFarmData, type Farm, type FarmData, type TableName, type Tables } from '../../domain/types';
+import { GOV_OFFLINE, RepoError, type AuthApi, type FarmRepository, type GovApi, type Session } from '../repository';
 
 const DATA_KEY = 'suru-local-db';
 const SESSION: Session = { userId: 'local', email: null };
@@ -19,11 +19,19 @@ export class LocalRepository implements FarmRepository {
     signOut: async () => {},
     mygovStartUrl: () => null,
     completeMygov: async () => {},
+    mygovAvailable: async () => false,
+  };
+  /** Serversiz rejimdə birbaşa göndəriş yoxdur — hesabat fayl kimi ixrac olunur. */
+  readonly gov: GovApi = {
+    status: async () => GOV_OFFLINE,
+    submit: async () => {
+      throw new RepoError('Birbaşa göndəriş üçün hesabla daxil olun', false);
+    },
   };
 
   private async read(): Promise<FarmData> {
     const raw = await AsyncStorage.getItem(DATA_KEY);
-    return raw ? { ...emptyFarmData(), ...JSON.parse(raw) } : emptyFarmData();
+    return raw ? normalizeFarmData(JSON.parse(raw)) : emptyFarmData();
   }
   private write(d: FarmData) {
     return AsyncStorage.setItem(DATA_KEY, JSON.stringify(d));

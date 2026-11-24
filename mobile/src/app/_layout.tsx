@@ -56,6 +56,7 @@ function RootStack() {
         <Stack.Screen name="weigh" options={{ title: 'Toplu çəki' }} />
         <Stack.Screen name="feeds" options={{ title: 'Yem anbarı' }} />
         <Stack.Screen name="milk" options={{ title: 'Süd çəni' }} />
+        <Stack.Screen name="reports" options={{ title: 'Dövlət hesabatları' }} />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="login" options={{ headerShown: false }} />

@@ -14,7 +14,7 @@ import { isLocalPhoto } from '../data/mapping';
 import { stockAfterUse } from '../domain/logic';
 import { MOVEMENT } from '../domain/constants';
 import { fmt } from '../domain/dates';
-import { emptyFarmData, type Animal, type Breeding, type Farm, type FarmData, type Feed, type Heat, type MilkRecord, type Purchase, type Tables, type Med, type Movement, type PregCheck, type TableName, type Task, type Treatment, type Weight } from '../domain/types';
+import { emptyFarmData, normalizeFarmData, type Animal, type Breeding, type Farm, type FarmData, type Feed, type GovReport, type Heat, type MilkRecord, type Purchase, type Tables, type Med, type Movement, type PregCheck, type TableName, type Task, type Treatment, type Weight } from '../domain/types';
 import type { EventKind } from '../domain/logic';
 import { dataUrlToFile, deleteLocal } from '../lib/files';
 
@@ -92,7 +92,7 @@ class FarmStore {
     const [cache, outbox] = await Promise.all([AsyncStorage.getItem(this.cacheKey()), AsyncStorage.getItem(this.outboxKey())]);
     if (this.userId !== userId) return;
     this.outbox = outbox ? JSON.parse(outbox) : [];
-    this.emit({ data: cache ? { ...emptyFarmData(), ...JSON.parse(cache) } : emptyFarmData(), status: { loading: !cache } });
+    this.emit({ data: cache ? normalizeFarmData(JSON.parse(cache)) : emptyFarmData(), status: { loading: !cache } });
     this.timer = setInterval(() => {
       if (this.outbox.length || !this.snap.status.online) void this.sync();
     }, RETRY_MS);
@@ -411,6 +411,15 @@ class FarmStore {
       }
     }
     this.commit(data, ops);
+  }
+
+  /* ---------- dövlət hesabatları ---------- */
+  saveGovReport(r: GovReport) {
+    this.saveRow('govReports', r);
+  }
+  /** Göndəriş qeydini silir — həmin qeydlər yenidən "bildirilməyib" siyahısına qayıdır. */
+  deleteGovReport(id: string) {
+    this.deleteRow('govReports', id);
   }
 
   /* ---------- süd ---------- */

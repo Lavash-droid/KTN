@@ -53,6 +53,12 @@ const deps: Deps = {
 
 Deno.serve(async (req) => {
   const cfg = loadConfig((k) => Deno.env.get(k));
+  // Tətbiq giriş ekranında "myGov ilə daxil ol" düyməsini aktiv edib-etməməyi buradan öyrənir.
+  if (req.method === 'GET' && new URL(req.url).pathname.endsWith('/status')) {
+    return new Response(JSON.stringify({ configured: !('error' in cfg) }), {
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'max-age=60' },
+    });
+  }
   if ('error' in cfg) {
     console.error('[mygov-auth]', cfg.error);
     return new Response('myGov girişi hələ aktiv deyil', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });

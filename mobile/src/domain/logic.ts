@@ -1,6 +1,7 @@
 /** Biznes məntiqi — PWA versiyasından köçürülüb, UI və backend-dən asılı deyil. */
 import { MOVEMENT, SCAN_RESULT, SPECIES, STATUS, type IconKey } from './constants';
 import { addDays, daysBetween, fmt, inDays, todayISO } from './dates';
+import { pendingGovItems } from './gov';
 import type { Animal, Breeding, FarmData, Feed, Med, PregCheck } from './types';
 
 export const animalLabel = (a: Animal | undefined | null) =>
@@ -200,6 +201,13 @@ export function homeAlerts(data: FarmData): HomeAlert[] {
     if (s.low) parts.push(`az qalıb: ${m.qty} ${m.unit}`);
     out.push({ key: 'm' + m.id, level: s.expired ? 'danger' : 'warn', icon: 'medical-bag', title: `${m.name} — dərman şkafı`, subtitle: parts.join(' · '), href: '/meds' });
   }
+  // Dövlət hesabatları — yalnız bu funksiyadan istifadə edənlər üçün (EKTİS nömrəsi yazılıb və ya hesabat göndərilib).
+  if (data.farm.ektisNo || data.govReports.length) {
+    for (const agency of ['ektis', 'aqta'] as const) {
+      const n = pendingGovItems(data, agency, addDays(t, -29)).length;
+      if (n) out.push({ key: 'gov' + agency, level: 'info', icon: 'bank', title: `${agency === 'ektis' ? 'EKTİS' : 'AQTA'} — bildirilməmiş qeydlər`, subtitle: `Son 30 gündə ${n} qeyd`, href: `/reports?agency=${agency}` });
+    }
+  }
   return out;
 }
 
@@ -276,7 +284,7 @@ export function tradeSummary(data: FarmData, from?: string): TradeSummary {
 }
 
 /* ---------- CSV ixrac ---------- */
-function csv(rows: (string | number | null | undefined)[][]): string {
+export function csv(rows: (string | number | null | undefined)[][]): string {
   const cell = (v: unknown) => {
     const s = String(v ?? '');
     return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;

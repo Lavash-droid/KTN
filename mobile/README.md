@@ -18,6 +18,7 @@ React Native + Expo-ya köçürülüb; məlumat **Supabase**-də saxlanılır, g
 - **Qızğınlıq** qeydi və növbəti qızğınlıq xatırlatması (növə görə tsikl)
 - **Alqı-satqı və çıxışlar**: alış (yeni heyvan əlavə edərkən), satış, köçürmə, kəsim, ölüm — qiymət, qarşı tərəf, çəki; illik yekun və CSV
 - CSV (Excel) ixrac (heyvanlar, alqı-satqı, dərman jurnalı, alışlar, süd), JSON ehtiyat nüsxə; **köhnə PWA-nın ehtiyat faylını idxal** (şəkillər daxil)
+- **Dövlət hesabatları — EKTİS və AQTA**: bildirilməli qeydlər (doğum, alış-satış, köçürmə, kəsim, ölüm, baytarlıq dərmanları), qalıq müddəti bitməmiş kəsim xəbərdarlığı, birbaşa göndəriş (myGov ilə təsdiqlənmiş hesabdan) və ya CSV ixracı, göndəriş tarixçəsi — [`docs/GOV-REPORTS.md`](docs/GOV-REPORTS.md)
 - Hesab: e-poçt + şifrə və ya **myGov ilə giriş** (SİMA / ASAN İmza — [`docs/MYGOV.md`](docs/MYGOV.md)); tətbiqdən hesabın silinməsi, bir neçə cihaz, **internetsiz iş**: dəyişikliklər cihazda növbəyə düşür
   və bağlantı bərpa olunanda serverə göndərilir
 

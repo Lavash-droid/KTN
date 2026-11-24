@@ -34,7 +34,8 @@ Müqavilənin icrası (xidmətin göstərilməsi), subyektin razılığı (payla
 ## 4. Kimlərlə paylaşırıq
 - **Fermerin seçdiyi tərəflər** (baytar, işçi, kooperativ) — yalnız fermerin dəvəti/razılığı ilə, rol əsaslı giriş.
 - **Xidmət təminatçıları** (hostinq, SMS, ödəniş) — müqavilə əsasında, yalnız xidmət üçün.
-- **Dövlət orqanları** — yalnız qanunla tələb olunduqda.
+- **EKTİS (Kənd Təsərrüfatı Nazirliyi) və AQTA (Qida Təhlükəsizliyi Agentliyi)** — yalnız fermer "Dövlət hesabatları" bölməsində hesabatı özü göndərəndə: təsərrüfatın adı, sahibi, rayonu, EKTİS nömrəsi və VÖEN, sürünün say tərkibi, hesabata daxil olan heyvanlar (bırka, növ, cins, cinsiyyət, doğum tarixi, ana), hərəkətlər (tarix, qarşı tərəf, çəki) və baytarlıq dərmanları (dərman, doza, səbəb, qalıq müddəti). Qiymətlər və digər qeydlər göndərilmir. Göndərən kimi myGov-dan alınan ad-soyad əlavə olunur.
+- **Digər dövlət orqanları** — yalnız qanunla tələb olunduqda.
 - Analitika üçün yalnız **anonimləşdirilmiş və toplu** statistika (məs. "rayon üzrə orta buzovlama intervalı") istifadə oluna bilər; bundan da imtina etmək mümkündür.
 
 ### Məlumatın harada saxlanıldığı

@@ -6,7 +6,8 @@
  * uyğunlaşdırmaq və `EXPO_PUBLIC_BACKEND=rest` təyin etmək kifayətdir — ekranlar dəyişmir.
  * Serverin reallaşdırmalı olduğu endpoint-lər: `mobile/docs/BACKEND.md`.
  */
-import type { Farm, FarmData, TableName, Tables } from '../domain/types';
+import type { GovPayload } from '../domain/gov';
+import type { Farm, FarmData, GovAgency, GovReportStatus, TableName, Tables } from '../domain/types';
 
 export type BackendKind = 'supabase' | 'rest' | 'local';
 
@@ -34,11 +35,36 @@ export interface AuthApi {
   mygovStartUrl(redirectTo: string): string | null;
   /** Qayıdış ünvanının fraqmentindəki parametrlərlə sessiyanı tamamlayır. */
   completeMygov(params: URLSearchParams): Promise<void>;
+  /** Serverdə myGov girişi qoşulubmu (provayderin açarları təyin olunub). Əlçatan deyilsə false. */
+  mygovAvailable(): Promise<boolean>;
 }
+
+/** Dövlət qurumlarına (EKTİS, AQTA) birbaşa göndəriş imkanları. */
+export interface GovStatus {
+  /** Qurum üzrə birbaşa inteqrasiya qoşulubmu. */
+  agencies: Record<GovAgency, boolean>;
+  /** Birbaşa göndəriş üçün myGov ilə təsdiqlənmiş hesab tələb olunurmu. */
+  mygovRequired: boolean;
+}
+
+export interface GovSubmitResult {
+  status: GovReportStatus;
+  /** Qurumun verdiyi qeydiyyat / müraciət nömrəsi. */
+  reference: string;
+}
+
+export interface GovApi {
+  status(): Promise<GovStatus>;
+  /** Hesabatı quruma göndərir. Uğursuzluqda RepoError (transient — sonra təkrar cəhd etmək olar). */
+  submit(agency: GovAgency, payload: GovPayload): Promise<GovSubmitResult>;
+}
+
+export const GOV_OFFLINE: GovStatus = { agencies: { ektis: false, aqta: false }, mygovRequired: true };
 
 export interface FarmRepository {
   readonly kind: BackendKind;
   readonly auth: AuthApi;
+  readonly gov: GovApi;
 
   /** İstifadəçinin fermasının bütün məlumatı (ferma yoxdursa yaradılır). */
   loadAll(): Promise<FarmData>;
