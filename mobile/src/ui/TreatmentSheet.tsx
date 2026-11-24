@@ -1,6 +1,6 @@
 /** Müalicə formu: tək heyvan və ya qrup (bütün sürü / növ / qrup). Dərman şkafı ilə bağlıdır. */
 import { useEffect, useMemo, useState } from 'react';
-import { Text } from 'react-native';
+import { Text } from './Text';
 import { SPECIES, SPECIES_KEYS } from '../domain/constants';
 import { fmt, todayISO } from '../domain/dates';
 import { findMed, medStatus } from '../domain/logic';

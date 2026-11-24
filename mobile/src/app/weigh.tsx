@@ -5,7 +5,8 @@
  */
 import { router, Stack } from 'expo-router';
 import { useMemo, useRef, useState, type ComponentRef } from 'react';
-import { FlatList, Text, TextInput, View } from 'react-native';
+import { FlatList, View } from 'react-native';
+import { Text, TextInput } from '../ui/Text';
 import { SPECIES, SPECIES_KEYS } from '../domain/constants';
 import { daysBetween, fmt, todayISO } from '../domain/dates';
 import { animalLabel, speciesOf, weightStats } from '../domain/logic';
@@ -103,7 +104,7 @@ export default function Weigh() {
             <View
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: c.card,
-                borderColor: c.line, borderLeftWidth: 1, borderRightWidth: 1, borderTopWidth: 1, borderBottomWidth: last ? 1 : 0,
+                borderColor: c.divider, borderTopWidth: first ? 0 : 1,
                 borderTopLeftRadius: first ? RADIUS : 0, borderTopRightRadius: first ? RADIUS : 0, borderBottomLeftRadius: last ? RADIUS : 0, borderBottomRightRadius: last ? RADIUS : 0,
               }}
             >
@@ -130,7 +131,7 @@ export default function Weigh() {
                 accessibilityLabel={`${a.tag} çəkisi`}
                 style={{
                   width: 96, textAlign: 'right', fontSize: 17, fontWeight: '600', color: c.text, paddingHorizontal: 10, paddingVertical: 9,
-                  borderRadius: 10, borderWidth: 1, borderColor: val > 0 ? c.green : c.line, backgroundColor: val > 0 ? c.greenSoft : c.card,
+                  borderRadius: 10, borderWidth: 1, borderColor: val > 0 ? c.accent : c.line, backgroundColor: val > 0 ? c.accentSoft : c.card,
                 }}
               />
             </View>

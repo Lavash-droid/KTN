@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
+import { Text } from '../../ui/Text';
 import { SPECIES, SPECIES_KEYS, STATUS } from '../../domain/constants';
 import { age } from '../../domain/dates';
 import { animalLabel, pregnancy, sexLabel, speciesOf, weightStats, withdrawal } from '../../domain/logic';
@@ -92,9 +93,9 @@ export default function Animals() {
     <View style={{ paddingBottom: 12 }}>
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
         <View style={{ flex: 1, justifyContent: 'center' }}>
-          <Field value={q} onChangeText={setQ} placeholder="Bırka, ad və ya cins ilə axtar…" accessibilityLabel="Axtar" clearButtonMode="while-editing" autoCorrect={false} style={{ paddingLeft: 42 }} />
-          <View pointerEvents="none" style={{ position: 'absolute', left: 14 }}>
-            <Icon name="search" size={20} color={c.faint} />
+          <Field value={q} onChangeText={setQ} placeholder="Bırka, ad və ya cins ilə axtar…" accessibilityLabel="Axtar" clearButtonMode="while-editing" autoCorrect={false} style={{ paddingLeft: 44, borderRadius: 24, borderColor: 'transparent' }} />
+          <View pointerEvents="none" style={{ position: 'absolute', left: 16 }}>
+            <Icon name="search" size={20} color={c.muted} />
           </View>
         </View>
         {wide && btns}
@@ -127,7 +128,7 @@ export default function Animals() {
           <Text
             accessibilityRole="button"
             onPress={() => setSel(allShown ? new Set() : new Set(items.map((a) => a.id)))}
-            style={{ color: c.green, fontWeight: '600', fontSize: 14 }}
+            style={{ color: c.accent, fontWeight: '600', fontSize: 14 }}
           >
             {allShown ? 'Seçimi təmizlə' : 'Hamısını seç'}
           </Text>
@@ -140,7 +141,7 @@ export default function Animals() {
     <>
       <FlatList
         style={{ flex: 1, backgroundColor: c.bg }}
-        contentContainerStyle={{ padding: wide ? 28 : 16, paddingBottom: 40, width: '100%', maxWidth: wide ? 1100 : 760, alignSelf: 'center' }}
+        contentContainerStyle={{ padding: wide ? 28 : 16, paddingBottom: wide ? 40 : 120, width: '100%', maxWidth: wide ? 1100 : 760, alignSelf: 'center' }}
         data={items}
         keyExtractor={(a) => a.id}
         ListHeaderComponent={header}
@@ -153,12 +154,12 @@ export default function Animals() {
               await farmStore.sync();
               setRefreshing(false);
             }}
-            tintColor={c.green}
-            colors={[c.green]}
+            tintColor={c.accent}
+            colors={[c.accent]}
           />
         }
         ListEmptyComponent={
-          <View style={{ backgroundColor: c.card, borderRadius: RADIUS, borderWidth: 1, borderColor: c.line }}>
+          <View style={{ backgroundColor: c.card, borderRadius: RADIUS }}>
             <Empty>Heyvan tapılmadı. Yenisini "Əlavə et" ilə əlavə edin.</Empty>
           </View>
         }
@@ -176,8 +177,7 @@ export default function Animals() {
           return (
             <View
               style={{
-                backgroundColor: c.card, borderColor: c.line, borderLeftWidth: 1, borderRightWidth: 1,
-                borderTopWidth: index === 0 ? 1 : 0, borderBottomWidth: last ? 1 : 0,
+                backgroundColor: c.card,
                 borderTopLeftRadius: index === 0 ? RADIUS : 0, borderTopRightRadius: index === 0 ? RADIUS : 0,
                 borderBottomLeftRadius: last ? RADIUS : 0, borderBottomRightRadius: last ? RADIUS : 0, overflow: 'hidden',
               }}
@@ -187,7 +187,7 @@ export default function Animals() {
                 chevron={!sel}
                 icon={
                   sel ? (
-                    <Icon name={sel.has(a.id) ? 'checkbox-on' : 'checkbox-off'} size={26} color={sel.has(a.id) ? c.green : c.muted} />
+                    <Icon name={sel.has(a.id) ? 'checkbox-on' : 'checkbox-off'} size={26} color={sel.has(a.id) ? c.accent : c.muted} />
                   ) : (
                     <Photo src={a.photo} style={{ width: 38, height: 38, borderRadius: 19 }} fallback={<IconTile name={s.icon} />} />
                   )
@@ -211,7 +211,7 @@ export default function Animals() {
       />
       {sel && (
         <View style={{ flexDirection: 'row', gap: 8, padding: 12, paddingHorizontal: 16, backgroundColor: c.card, borderTopWidth: 1, borderTopColor: c.line, alignItems: 'center', flexWrap: 'wrap' }}>
-          <Text style={{ color: c.text, fontWeight: '700', fontSize: 15, flexGrow: 1 }}>{`${selIds.length} seçilib`}</Text>
+          <Text style={{ color: c.text, fontWeight: '600', fontSize: 15, flexGrow: 1 }}>{`${selIds.length} seçilib`}</Text>
           <Btn title="Qrupa köçür" icon="group-move" small disabled={!selIds.length} onPress={() => setMoveOpen(true)} />
           <Btn title="Müalicə" icon="pill-multiple" variant="tonal" small disabled={!selIds.length} onPress={() => setGroupOpen(true)} />
         </View>

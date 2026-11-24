@@ -1,6 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '../../ui/Text';
 import { EXIT_TYPES, MOVEMENT, OUTCOMES, SCAN_RESULT, STATUS } from '../../domain/constants';
 import { addDays, age, daysBetween, fmt, inDays, todayISO } from '../../domain/dates';
 import { animalLabel, events, nextHeat, pregnancy, sexLabel, speciesOf, weightStats, withdrawal, type AnimalEvent } from '../../domain/logic';
@@ -87,19 +88,19 @@ export default function AnimalDetail() {
     <Screen>
       <Stack.Screen options={{ title: animalLabel(a) }} />
       <Card style={{ padding: 0, overflow: 'hidden' }}>
-        {a.photo ? <Photo src={a.photo} style={{ width: '100%', height: 260, backgroundColor: c.greenSoft }} /> : null}
+        {a.photo ? <Photo src={a.photo} style={{ width: '100%', height: 260, backgroundColor: c.accentSoft }} /> : null}
         <View style={{ padding: 18 }}>
           <Row gap={14} style={{ alignItems: 'center' }}>
             {!a.photo && <IconTile name={s.icon} size={60} />}
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={{ fontSize: 28, fontFamily: FONT.display, color: c.text, letterSpacing: -0.5, lineHeight: 32 }} numberOfLines={1}>{a.tag}</Text>
+              <Text style={{ fontSize: 28, fontFamily: FONT.display, color: c.text, letterSpacing: -0.3, lineHeight: 34 }} numberOfLines={1}>{a.tag}</Text>
               <Text style={{ color: c.muted, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{a.name || `${s.label} · ${sexLabel(a).toLocaleLowerCase('az')}`}</Text>
             </View>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Redaktə"
               onPress={() => router.push({ pathname: '/animal/form', params: { id: a.id } })}
-              style={({ pressed }) => ({ width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.cardAlt : c.card })}
+              style={({ pressed }) => ({ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.cardAlt : c.card })}
             >
               <Icon name="pencil" size={19} color={c.text} />
             </Pressable>
@@ -165,16 +166,15 @@ export default function AnimalDetail() {
               onPress={() => setSheet(key)}
               style={({ pressed }) => [
                 {
-                  alignItems: 'center', gap: 8, paddingVertical: 14, paddingHorizontal: 6, borderRadius: 16, backgroundColor: c.card, minHeight: 96,
-                  borderWidth: 1, borderColor: c.line, opacity: enabled ? 1 : 0.4, transform: [{ scale: pressed ? 0.97 : 1 }],
+                  alignItems: 'center', gap: 8, paddingVertical: 14, paddingHorizontal: 6, borderRadius: 16, backgroundColor: pressed ? c.cardAlt : c.card, minHeight: 96,
+                  opacity: enabled ? 1 : 0.4,
                 },
-                shadow(c),
               ]}
             >
-              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: c.greenSoft, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={icon} size={22} color={c.green} />
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: c.iconBg, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={icon} size={21} color={c.icon} />
               </View>
-              <Text style={{ color: c.text, fontSize: 13, fontWeight: '600', textAlign: 'center' }} numberOfLines={2}>{title}</Text>
+              <Text style={{ color: c.body, fontSize: 13, fontWeight: '500', textAlign: 'center' }} numberOfLines={2}>{title}</Text>
             </Pressable>
           </View>
         ))}
@@ -220,7 +220,7 @@ export default function AnimalDetail() {
 function Link({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
   const c = useColors();
   return (
-    <Text onPress={onPress} style={{ color: c.green, fontWeight: '600', fontSize: 15, textDecorationLine: 'underline' }}>
+    <Text onPress={onPress} style={{ color: c.accent, fontWeight: '600', fontSize: 15, textDecorationLine: 'underline' }}>
       {children}
     </Text>
   );

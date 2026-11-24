@@ -1,7 +1,8 @@
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Linking, Text, View } from 'react-native';
+import { Linking, View } from 'react-native';
+import { Text } from '../../ui/Text';
 import { isTransient, repo } from '../../data';
 import { addDays, todayISO } from '../../domain/dates';
 import { animalsCsv, expenseSummary, farmReport, feedLow, medNeedsAttention, milkCsv, milkStats, movementsCsv, purchasesCsv, tradeSummary, treatmentsCsv } from '../../domain/logic';
@@ -230,9 +231,9 @@ function TradeCard() {
   const t = tradeSummary(data, `${todayISO().slice(0, 4)}-01-01`);
   const net = Math.round((t.revenue - t.spend) * 100) / 100;
   const cell = (label: string, value: string, sub?: string, color?: string) => (
-    <View style={{ flexGrow: 1, flexBasis: 140, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt, borderWidth: 1, borderColor: c.line }}>
+    <View style={{ flexGrow: 1, flexBasis: 140, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt }}>
       <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
-      <Text style={{ color: color ?? c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4, letterSpacing: -0.3 }}>{value}</Text>
+      <Text style={{ color: color ?? c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4 }}>{value}</Text>
       {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
     </View>
   );
@@ -241,7 +242,7 @@ function TradeCard() {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {cell('Satış', azn(t.revenue), `${t.sold} heyvan${t.avgSale ? ` · orta ${azn(t.avgSale)}` : ''}`)}
         {cell('Alış', azn(t.spend), `${t.bought} heyvan`)}
-        {cell('Fərq', azn(net), 'satış − alış', net >= 0 ? c.green : c.danger)}
+        {cell('Fərq', azn(net), 'satış − alış', net >= 0 ? c.ok : c.danger)}
       </View>
       <Muted small style={{ marginTop: 10 }}>Satış heyvan kartında "Satış / çıxış", alış isə yeni heyvan əlavə edərkən "Alınıb" ilə qeyd olunur.</Muted>
     </Card>
@@ -255,9 +256,9 @@ function ExpenseCard() {
   const e = expenseSummary(data, `${todayISO().slice(0, 4)}-01-01`);
   const net = Math.round((e.milkRevenue - e.meds - e.feeds) * 100) / 100;
   const cell = (label: string, value: string, sub?: string, color?: string) => (
-    <View style={{ flexGrow: 1, flexBasis: 140, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt, borderWidth: 1, borderColor: c.line }}>
+    <View style={{ flexGrow: 1, flexBasis: 140, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt }}>
       <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
-      <Text style={{ color: color ?? c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4, letterSpacing: -0.3 }}>{value}</Text>
+      <Text style={{ color: color ?? c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4 }}>{value}</Text>
       {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
     </View>
   );
@@ -267,7 +268,7 @@ function ExpenseCard() {
         {cell('Dərman', azn(e.meds), 'alışlar')}
         {cell('Yem', azn(e.feeds), 'alışlar')}
         {cell('Süd satışı', azn(e.milkRevenue), `${e.milkLiters.toLocaleString('az-AZ')} l`)}
-        {cell('Fərq', azn(net), 'süd − dərman − yem', net >= 0 ? c.green : c.danger)}
+        {cell('Fərq', azn(net), 'süd − dərman − yem', net >= 0 ? c.ok : c.danger)}
       </View>
       <Muted small style={{ marginTop: 10 }}>Heyvan alqı-satqısı yuxarıdakı kartdadır. Xərclər məbləği yazılmış alışlar üzrə hesablanır.</Muted>
     </Card>

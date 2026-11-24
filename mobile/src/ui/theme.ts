@@ -3,67 +3,86 @@ import { createContext, createElement, useCallback, useContext, useEffect, useSt
 import { useColorScheme } from 'react-native';
 
 /**
- * Rəng sistemi — "kətan və meşə": isti, kağızabənzər fon, dərin meşə yaşılı əsas rəng,
- * buğda-qızılı yalnız kiçik vurğular üçün. Böyük səthlər neytraldır; xəbərdarlıqlar yüngül fon + rəngli ikon.
+ * Rəng sistemi — myGov üslubu: açıq boz fon üzərində kontursuz ağ kartlar, boz dairədə boz ikonlar,
+ * dövlət göyü yalnız aktiv element və əsas düymə üçün. Yaşıl yalnız "qaydasındadır" vəziyyəti üçün.
  */
 const light = {
-  /** Vurğu: ikon, link, aktiv element, rəngli yazı */
-  green: '#1e5b43',
-  green2: '#2b7356',
-  /** Tonal fon: seçilmiş element, ikon kvadratı, ikinci dərəcəli düymə */
-  greenSoft: '#e5eee8',
+  /** Vurğu: ikon, link, aktiv element, rəngli başlıq */
+  accent: '#315ab5',
+  /** Yüngül fon: seçilməmiş "pill" düymə, ikon kvadratı, ikinci dərəcəli düymə */
+  accentSoft: '#f0f2fd',
+  /** Parlaq göy — yan paneldə aktiv zolaq, kiçik nişanlar */
+  bright: '#0f7ef5',
   /** Əsas (dolu) düymənin fonu */
-  primary: '#1e5b43',
-  /** Ən tünd yaşıl — ana səhifə kartı, loqo */
-  primaryDeep: '#163f30',
-  /** Əsas düymə / dolu yaşıl səth üzərində yazı */
-  onGreen: '#ffffff',
-  /** Buğda-qızılı vurğu (ulduz, kiçik nişan) */
+  primary: '#315ab5',
+  /** Tünd göy — ana səhifə kartı, loqo */
+  primaryDeep: '#24468f',
+  /** Əsas düymə / dolu göy səth üzərində yazı */
+  onAccent: '#ffffff',
+  /** Uğur / qaydasındadır */
+  ok: '#1f8a5b',
+  okSoft: '#e7f5ee',
+  /** İsti vurğu (kiçik nişan) */
   gold: '#b7802a',
-  goldSoft: '#f6ecda',
-  bg: '#f6f3ec',
+  goldSoft: '#f8efdf',
+  bg: '#f2f3f7',
   card: '#ffffff',
   /** Kart içində ikinci səth (statistika xanası, sahə fonu) */
-  cardAlt: '#faf8f3',
-  header: '#f6f3ec',
-  input: '#f8f6f0',
-  text: '#1a2520',
-  muted: '#6b7268',
-  faint: '#a3a89f',
-  line: '#e8e3d7',
-  warn: '#a3620b',
-  warnSoft: '#fbf0dc',
-  danger: '#b3362e',
-  dangerSoft: '#fbebe8',
-  info: '#2f5d9b',
-  infoSoft: '#eaf0f8',
-  shadow: '#2b2416',
+  cardAlt: '#f3f4f7',
+  header: '#f2f3f7',
+  input: '#ffffff',
+  /** Başlıqlar */
+  text: '#1b1d26',
+  /** Siyahı sətirlərinin əsas mətni (bir az yumşaq) */
+  body: '#45464f',
+  muted: '#7988a6',
+  faint: '#a8b1c4',
+  /** Sahə (input) konturu */
+  line: '#dfe3ec',
+  /** Kart içində bölücü xətt */
+  divider: '#eceef3',
+  /** Siyahı ikonu: boz dairə və boz ikon */
+  iconBg: '#f1f2f6',
+  icon: '#5d6472',
+  warn: '#b26a00',
+  warnSoft: '#fdf3e1',
+  danger: '#c62f2f',
+  dangerSoft: '#fdecec',
+  info: '#315ab5',
+  infoSoft: '#eef2fd',
+  shadow: '#1b2a4e',
 };
 
 const dark: typeof light = {
-  green: '#8acaa4',
-  green2: '#9ed4b3',
-  greenSoft: '#1b2c22',
-  primary: '#2f7656',
-  primaryDeep: '#173427',
-  onGreen: '#f2f8f4',
+  accent: '#8eaaf0',
+  accentSoft: '#1b2440',
+  bright: '#5aa5ff',
+  primary: '#3d67c6',
+  primaryDeep: '#1d2d55',
+  onAccent: '#ffffff',
+  ok: '#6fcf9c',
+  okSoft: '#16291f',
   gold: '#d9ad62',
   goldSoft: '#2a2418',
-  bg: '#0f1411',
-  card: '#171f1a',
-  cardAlt: '#1c251f',
-  header: '#0f1411',
-  input: '#131a16',
-  text: '#e7ebe6',
-  muted: '#9aa39b',
-  faint: '#6c766e',
-  line: '#253029',
-  warn: '#dcb26a',
-  warnSoft: '#28221a',
-  danger: '#e8958d',
-  dangerSoft: '#2b1d1c',
-  info: '#9bb8e6',
-  infoSoft: '#1a2131',
+  bg: '#0e121b',
+  card: '#151a26',
+  cardAlt: '#1a2030',
+  header: '#0e121b',
+  input: '#121722',
+  text: '#e8ebf3',
+  body: '#c9cedb',
+  muted: '#8f9ab3',
+  faint: '#5f6a82',
+  line: '#2a3248',
+  divider: '#222a3b',
+  iconBg: '#222838',
+  icon: '#aab2c5',
+  warn: '#e5b467',
+  warnSoft: '#2a2317',
+  danger: '#f19a94',
+  dangerSoft: '#2d1b1d',
+  info: '#8eaaf0',
+  infoSoft: '#1b2440',
   shadow: '#000000',
 };
 
@@ -107,20 +126,45 @@ export function useColors(): Colors {
   return useScheme() === 'dark' ? dark : light;
 }
 
-export const RADIUS = 18;
+export const RADIUS = 16;
 
-/** Başlıq şrifti (Fraunces) — Azərbaycan hərfləri və ₼ daxil. Mətn üçün sistem şrifti qalır. */
+/**
+ * Şrift — Inter (myGov kimi sadə, neytral sans-serif; Azərbaycan hərfləri və ₼ daxil).
+ * Hər çəki ayrıca ailə kimi yüklənir; `ui/Text` komponenti `fontWeight`-ə görə ailəni özü seçir.
+ */
 export const FONT = {
-  display: 'Fraunces_600SemiBold',
-  displayBold: 'Fraunces_700Bold',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  /** Başlıqlar üçün (əvvəlki serif başlıq şriftinin yerinə) */
+  display: 'Inter_600SemiBold',
+  displayBold: 'Inter_700Bold',
 } as const;
+
+/** `fontWeight` → Inter ailəsi. */
+export function fontFamilyFor(weight: unknown): string {
+  switch (String(weight ?? '400')) {
+    case '500':
+      return FONT.medium;
+    case '600':
+      return FONT.semibold;
+    case '700':
+    case '800':
+    case '900':
+    case 'bold':
+      return FONT.bold;
+    default:
+      return FONT.regular;
+  }
+}
 
 /** Yumşaq kölgə — kartlar üçün (qaranlıq mövzuda kölgə yox, yalnız xətt). */
 export function shadow(c: Colors, level: 1 | 2 = 1) {
   if (c.bg === dark.bg) return {};
   return level === 1
-    ? { shadowColor: c.shadow, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 2 }, elevation: 1 }
-    : { shadowColor: c.shadow, shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 8 }, elevation: 4 };
+    ? { shadowColor: c.shadow, shadowOpacity: 0.03, shadowRadius: 6, shadowOffset: { width: 0, height: 1 }, elevation: 0 }
+    : { shadowColor: c.shadow, shadowOpacity: 0.12, shadowRadius: 28, shadowOffset: { width: 0, height: 10 }, elevation: 6 };
 }
-/** Brend rəngi — yalnız loqoda (tətbiq ikonu ilə eyni). */
-export const BRAND = light.primaryDeep;
+/** Brend rəngi — loqoda. */
+export const BRAND = light.primary;

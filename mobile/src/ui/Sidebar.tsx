@@ -1,7 +1,8 @@
 /** Kompüter ekranı üçün sol yan panel (geniş ekranda alt menyunun əvəzinə). */
 import { router } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/tabs';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
+import { Text } from './Text';
 import { useAuth } from '../store/auth';
 import { farmStore, useFarm } from '../store/farmStore';
 import { Icon, type IconName } from './Icon';
@@ -29,7 +30,7 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 8 }}>
         <Logo size={38} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ fontSize: 23, fontFamily: FONT.displayBold, color: c.text, letterSpacing: -0.3, lineHeight: 26 }}>Sürü</Text>
+          <Text style={{ fontSize: 20, fontFamily: FONT.displayBold, color: c.text, lineHeight: 24 }}>Sürü</Text>
           <Text numberOfLines={1} style={{ color: c.muted, fontSize: 12.5 }}>
             {data.farm.name}
           </Text>
@@ -53,19 +54,20 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
               if (!active && !ev.defaultPrevented) navigateToTab(route.key);
             }}
             style={({ hovered, pressed }: { hovered?: boolean; pressed: boolean }) => ({
-              flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 12, marginBottom: 3,
-              backgroundColor: active ? c.greenSoft : hovered || pressed ? c.cardAlt : 'transparent',
+              flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12, marginBottom: 4,
+              backgroundColor: active ? c.accentSoft : hovered || pressed ? c.cardAlt : 'transparent',
             })}
           >
+            {/* myGov kimi: aktiv bəndin solunda göy zolaq */}
+            {active && !isAdd ? <View style={{ position: 'absolute', left: -12, top: 8, bottom: 8, width: 3, borderTopRightRadius: 3, borderBottomRightRadius: 3, backgroundColor: c.bright }} /> : null}
             {isAdd ? (
-              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name="plus" size={17} color={c.onGreen} />
+              <View style={{ width: 24, height: 24, borderRadius: 8, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="plus" size={17} color={c.onAccent} />
               </View>
             ) : (
-              <Icon name={item.icon} size={22} color={active ? c.green : c.muted} />
+              <Icon name={item.icon} size={22} color={active ? c.accent : c.muted} />
             )}
-            <Text style={{ fontSize: 15, color: active ? c.green : c.text, fontWeight: active ? '700' : '500' }}>{item.label}</Text>
-            {active && !isAdd ? <View style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: 3, backgroundColor: c.green }} /> : null}
+            <Text style={{ fontSize: 15, color: active ? c.accent : c.body, fontWeight: active ? '600' : '400' }}>{item.label}</Text>
           </Pressable>
         );
       })}
@@ -84,7 +86,7 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         <Text style={{ color: c.muted, fontSize: 13.5 }}>{scheme === 'dark' ? 'Açıq mövzu' : 'Qaranlıq mövzu'}</Text>
       </Pressable>
       <Pressable onPress={() => void farmStore.sync()} style={{ paddingHorizontal: 8, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 8 }} accessibilityLabel="Sinxronizasiya et">
-        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: !status.online ? c.warn : status.pending || status.syncing ? c.gold : c.green2 }} />
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: !status.online ? c.warn : status.pending || status.syncing ? c.gold : c.ok }} />
         <Text style={{ color: status.online ? c.muted : c.warn, fontSize: 12.5 }}>
           {status.syncing ? 'Sinxronlaşır…' : !status.online ? `Offline${status.pending ? ` · ${status.pending} gözləyir` : ''}` : status.pending ? `${status.pending} dəyişiklik gözləyir` : 'Sinxronlaşdırılıb'}
         </Text>
@@ -96,8 +98,8 @@ export function Sidebar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       ) : null}
       {Platform.OS === 'web' && base ? (
         <Pressable onPress={() => window.location.assign('/')} style={{ paddingHorizontal: 8, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Icon name="arrow-left" size={16} color={c.green} />
-          <Text style={{ color: c.green, fontSize: 13.5 }}>Ana səhifə</Text>
+          <Icon name="arrow-left" size={16} color={c.accent} />
+          <Text style={{ color: c.accent, fontSize: 13.5 }}>Ana səhifə</Text>
         </Pressable>
       ) : null}
     </View>

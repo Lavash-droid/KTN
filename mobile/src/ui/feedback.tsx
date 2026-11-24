@@ -1,6 +1,7 @@
 /** Qısa bildiriş (toast) və təsdiq pəncərəsi — iOS, Android və vebdə eyni davranış. */
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Alert, Animated, Platform, StyleSheet, Text } from 'react-native';
+import { Alert, Animated, Platform, StyleSheet } from 'react-native';
+import { Text } from './Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ToastCtx = createContext<(msg: string) => void>(() => {});
@@ -54,10 +55,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignSelf: 'center',
     maxWidth: '90%',
-    backgroundColor: '#222',
+    backgroundColor: '#1b1d26',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     zIndex: 100,
   },
   text: { color: '#fff', fontSize: 14 },

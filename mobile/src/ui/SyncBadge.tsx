@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { ActivityIndicator, Pressable } from 'react-native';
+import { Text } from './Text';
 import { farmStore, useFarm } from '../store/farmStore';
 import { Icon } from './Icon';
 import { useColors } from './theme';
@@ -13,10 +14,10 @@ export function SyncBadge() {
     <Pressable
       onPress={() => void farmStore.sync()}
       accessibilityLabel="Sinxronizasiya et"
-      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: status.online ? c.greenSoft : c.warnSoft, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3, marginRight: 12 }}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: status.online ? c.accentSoft : c.warnSoft, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginRight: 12 }}
     >
-      {status.syncing ? <ActivityIndicator size="small" color={c.green} /> : <Icon name={status.online ? 'sync' : 'cloud-off'} size={15} color={status.online ? c.green : c.warn} />}
-      {label ? <Text style={{ color: status.online ? c.green : c.warn, fontSize: 12.5, fontWeight: '600' }}>{label}</Text> : null}
+      {status.syncing ? <ActivityIndicator size="small" color={c.accent} /> : <Icon name={status.online ? 'sync' : 'cloud-off'} size={15} color={status.online ? c.accent : c.warn} />}
+      {label ? <Text style={{ color: status.online ? c.accent : c.warn, fontSize: 12.5, fontWeight: '500' }}>{label}</Text> : null}
     </Pressable>
   );
 }

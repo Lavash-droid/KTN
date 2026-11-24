@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../ui/Text';
 import { addDays, fmt, todayISO } from '../domain/dates';
 import { expenseSummary, milkStats } from '../domain/logic';
 import type { MilkRecord } from '../domain/types';
@@ -22,9 +23,9 @@ export default function Milk() {
   const rows = useMemo(() => [...data.milkRecords].sort((a, b) => b.date.localeCompare(a.date)), [data.milkRecords]);
 
   const cell = (label: string, value: string, sub?: string) => (
-    <View style={{ flexGrow: 1, flexBasis: 130, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt, borderWidth: 1, borderColor: c.line }}>
+    <View style={{ flexGrow: 1, flexBasis: 130, padding: 14, borderRadius: 14, backgroundColor: c.cardAlt }}>
       <Text style={{ color: c.muted, fontSize: 13 }}>{label}</Text>
-      <Text style={{ color: c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4, letterSpacing: -0.3 }}>{value}</Text>
+      <Text style={{ color: c.text, fontSize: 24, fontFamily: FONT.display, marginTop: 4 }}>{value}</Text>
       {sub ? <Text style={{ color: c.muted, fontSize: 12.5 }}>{sub}</Text> : null}
     </View>
   );
