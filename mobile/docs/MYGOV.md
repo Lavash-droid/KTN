@@ -10,7 +10,8 @@ və vebdə eyni işləyir.
 |---|---|
 | Server (Supabase Edge Function `mygov-auth`) | ✅ yazılıb, test olunub, "suru" layihəsinə **yerləşdirilib** — açarlar təyin olunanadək `503` qaytarır |
 | Verilənlər bazası (`private.external_identities`) | ✅ tətbiq olunub |
-| Tətbiq (düymə, qayıdış səhifəsi `/mygov`) | ✅ hazırdır, `EXPO_PUBLIC_MYGOV_ENABLED=true` olanda görünür |
+| Tətbiq (giriş ekranında "myGov ilə giriş" bölməsi, qayıdış səhifəsi `/mygov`) | ✅ hazırdır — bölmə həmişə görünür; düymə server açarları təyin olunanda özü aktivləşir (`GET /mygov-auth/status`) |
+| Dövlət hesabatları (EKTİS / AQTA) | ✅ birbaşa göndəriş myGov ilə təsdiqlənmiş hesab tələb edir — [`GOV-REPORTS.md`](GOV-REPORTS.md) |
 | **Provayderin açarları və texniki sənədi** | ⏳ **İRİA ilə müqavilədən sonra** |
 
 ## Provayder: kimə müraciət etmək lazımdır
@@ -49,7 +50,12 @@ Supabase → Edge Functions → Secrets (və ya `supabase secrets set ...`):
 | `MYGOV_PKCE` | | `false` — provayder PKCE dəstəkləmirsə |
 | `MYGOV_EXTRA_AUTHORIZE_PARAMS` | | Əlavə parametrlər, JSON: `{"acr_values":"sima"}` |
 
-Sonra tətbiqdə `EXPO_PUBLIC_MYGOV_ENABLED=true` edin (`.env`, `eas.json`, veb hostinqin env dəyişənləri).
+Tətbiqdə heç nə dəyişmək lazım deyil: giriş ekranı `GET /functions/v1/mygov-auth/status` ilə yoxlayır
+(`{ "configured": true }`) və "myGov ilə daxil ol" düyməsi avtomatik aktivləşir. Açarlar yoxdursa bölmə görünür,
+düymə isə deaktivdir və istifadəçiyə hələlik e-poçt ilə daxil olmaq təklif olunur.
+
+**Qeyd:** `/status` endpoint-i `mygov-auth` funksiyasının yeni versiyasındadır — funksiyanı yenidən yerləşdirin:
+`supabase functions deploy mygov-auth`.
 
 Provayderin protokolu standart OIDC-dən fərqlənərsə, yalnız `supabase/functions/mygov-auth/handler.ts`
 dəyişdirilir — tətbiq və verilənlər bazası toxunulmaz qalır.

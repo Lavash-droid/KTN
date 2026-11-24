@@ -2,3 +2,8 @@
 # myGov girişindən qayıdan brauzer sorğuları Supabase JWT daşımır — funksiya öz yoxlamasını edir (OIDC state/PKCE).
 [functions.mygov-auth]
 verify_jwt = false
+
+# Hesabat göndərişi istifadəçinin JWT-si ilə gəlir və funksiyanın içində yoxlanılır (auth.getUser);
+# /status isə ictimai məlumatdır. Yeni "publishable" açarlar JWT olmadığı üçün platforma yoxlaması söndürülür.
+[functions.gov-report]
+verify_jwt = false

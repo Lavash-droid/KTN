@@ -1,10 +1,11 @@
 /** Supabase (Postgres + Auth + Storage) üzərində backend. Sxem: `/supabase/migrations`. */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
-import { emptyFarmData, TABLES, type Farm, type FarmData, type TableName, type Tables } from '../../domain/types';
+import { FunctionsFetchError, FunctionsHttpError, type PostgrestError, type SupabaseClient } from '@supabase/supabase-js';
+import type { GovPayload } from '../../domain/gov';
+import { emptyFarmData, TABLES, type Farm, type FarmData, type GovAgency, type TableName, type Tables } from '../../domain/types';
 import { readBytes } from '../../lib/files';
 import { dbTable, fromRow, toRow } from '../mapping';
-import { RepoError, type AuthApi, type FarmRepository, type Session } from '../repository';
+import { GOV_OFFLINE, RepoError, type AuthApi, type FarmRepository, type GovApi, type GovStatus, type GovSubmitResult, type Session } from '../repository';
 import { getSupabase } from './client';
 
 const BUCKET = 'animal-photos';
@@ -27,6 +28,7 @@ function wrap(error: PostgrestError | { message: string; status?: number; status
 export class SupabaseRepository implements FarmRepository {
   readonly kind = 'supabase' as const;
   readonly auth: AuthApi;
+  readonly gov: GovApi;
   private sb: SupabaseClient;
   private farmIdPromise: Promise<string> | null = null;
   private urlCache = new Map<string, { url: string; exp: number }>();
@@ -79,7 +81,47 @@ export class SupabaseRepository implements FarmRepository {
         const { error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type: 'email' });
         if (error) throw new RepoError(authMessage(error.message), false);
       },
+      mygovAvailable: async () => {
+        try {
+          // Sadə GET (xüsusi başlıqsız) — vebdə CORS preflight tələb etmir.
+          const res = await fetch(`${url.replace(/\/+$/, '')}/functions/v1/mygov-auth/status`);
+          if (!res.ok) return false;
+          return ((await res.json()) as { configured?: boolean }).configured === true;
+        } catch {
+          return false;
+        }
+      },
     };
+
+    this.gov = {
+      status: async () => {
+        try {
+          const { data, error } = await sb.functions.invoke<GovStatus>('gov-report/status', { method: 'GET' });
+          return !error && data?.agencies ? data : GOV_OFFLINE;
+        } catch {
+          return GOV_OFFLINE;
+        }
+      },
+      submit: (agency, payload) => this.submitGov(agency, payload),
+    };
+  }
+
+  private async submitGov(agency: GovAgency, payload: GovPayload): Promise<GovSubmitResult> {
+    const farmId = await this.farmId();
+    const { data, error } = await this.sb.functions.invoke<GovSubmitResult>('gov-report/submit', { body: { agency, farmId, payload } });
+    if (!error && data) return data;
+    if (error instanceof FunctionsHttpError) {
+      let body: { error?: string; message?: string } = {};
+      try {
+        body = await (error.context as Response).json();
+      } catch {
+        /* JSON deyil */
+      }
+      const status = (error.context as Response).status;
+      throw new RepoError(GOV_ERRORS[body.error ?? ''] ?? body.message ?? `Göndərilmədi (HTTP ${status})`, status >= 500 && body.error !== 'not_configured');
+    }
+    if (error instanceof FunctionsFetchError) throw new RepoError('İnternet bağlantısı yoxdur', true);
+    throw new RepoError(error?.message ?? 'Göndərilmədi', true);
   }
 
   /** İstifadəçinin fermasının id-si; ferma yoxdursa serverdə yaradılır (`ensure_farm` RPC). */
@@ -98,12 +140,12 @@ export class SupabaseRepository implements FarmRepository {
   async loadAll(): Promise<FarmData> {
     const fid = await this.farmId();
     const out = emptyFarmData();
-    const farmQ = this.sb.from('farms').select('name, owner_name, region').eq('id', fid).single();
+    const farmQ = this.sb.from('farms').select('name, owner_name, region, ektis_no, voen').eq('id', fid).single();
     const results = await Promise.all([farmQ, ...TABLES.map((t) => this.sb.from(dbTable(t)).select('*').eq('farm_id', fid).limit(100000))]);
     const [farmRes, ...tableRes] = results;
     wrap(farmRes.error, 'Ferma');
-    const f = farmRes.data as { name: string; owner_name: string; region: string };
-    out.farm = { name: f.name, owner: f.owner_name, region: f.region };
+    const f = farmRes.data as { name: string; owner_name: string; region: string; ektis_no: string | null; voen: string | null };
+    out.farm = { name: f.name, owner: f.owner_name, region: f.region, ektisNo: f.ektis_no ?? '', voen: f.voen ?? '' };
     TABLES.forEach((t, i) => {
       const r = tableRes[i];
       wrap(r.error, t);
@@ -114,7 +156,7 @@ export class SupabaseRepository implements FarmRepository {
 
   async updateFarm(farm: Farm) {
     const fid = await this.farmId();
-    const { error } = await this.sb.from('farms').update({ name: farm.name, owner_name: farm.owner, region: farm.region }).eq('id', fid);
+    const { error } = await this.sb.from('farms').update({ name: farm.name, owner_name: farm.owner, region: farm.region, ektis_no: farm.ektisNo, voen: farm.voen }).eq('id', fid);
     wrap(error, 'Ferma');
   }
 
@@ -179,8 +221,8 @@ export class SupabaseRepository implements FarmRepository {
   async replaceAll(data: FarmData) {
     const fid = await this.farmId();
     // Uşaq cədvəllər heyvanlar silinəndə CASCADE ilə silinir; qalanları ayrıca.
-    for (const t of ['animals', 'meds', 'tasks'] as const) {
-      const { error } = await this.sb.from(t).delete().eq('farm_id', fid);
+    for (const t of ['animals', 'meds', 'tasks', 'feeds', 'purchases', 'milkRecords', 'govReports'] as const) {
+      const { error } = await this.sb.from(dbTable(t)).delete().eq('farm_id', fid);
       wrap(error, t);
     }
     const { data: files } = await this.sb.storage.from(BUCKET).list(fid, { limit: 1000 });
@@ -219,6 +261,15 @@ export class SupabaseRepository implements FarmRepository {
     await this.sb.auth.signOut({ scope: 'local' });
   }
 }
+
+const GOV_ERRORS: Record<string, string> = {
+  not_configured: 'Bu quruma birbaşa göndəriş hələ qoşulmayıb — hesabatı fayl kimi ixrac edin',
+  mygov_required: 'Dövlət qurumuna birbaşa göndəriş üçün myGov ilə daxil olun',
+  forbidden: 'Bu fermanın adından hesabat göndərməyə icazəniz yoxdur',
+  unauthorized: 'Sessiya bitib — yenidən daxil olun',
+  agency_unavailable: 'Qurumun sistemi hazırda cavab vermir, bir az sonra yenidən cəhd edin',
+  bad_request: 'Hesabat formatı qəbul olunmadı',
+};
 
 function authMessage(m: string): string {
   if (/invalid login credentials/i.test(m)) return 'E-poçt və ya şifrə yanlışdır';

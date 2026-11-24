@@ -64,6 +64,10 @@ const MDI = {
   sun: 'mdiWeatherSunny',
   moon: 'mdiWeatherNight',
   'theme-auto': 'mdiThemeLightDark',
+  bank: 'mdiBankOutline',
+  send: 'mdiSendOutline',
+  'file-export': 'mdiFileExportOutline',
+  history: 'mdiHistory',
   // sayt
   menu: 'mdiMenu',
   notebook: 'mdiNotebookOutline',

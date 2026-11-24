@@ -1,13 +1,43 @@
 /**
  * myGov (dövlət vahid girişi) ilə daxil olma — tətbiq tərəfi.
- * Server hissəsi: supabase/functions/mygov-auth. Düymə yalnız EXPO_PUBLIC_MYGOV_ENABLED=true olanda görünür.
+ * Server hissəsi: supabase/functions/mygov-auth. Giriş ekranındakı bölmə həmişə görünür; düymə server
+ * provayderin açarları ilə qurulanda (GET /mygov-auth/status → configured) aktiv olur.
  */
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
+import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { repo } from '../data';
 
-export const mygovEnabled = process.env.EXPO_PUBLIC_MYGOV_ENABLED === 'true' && repo.auth.mygovStartUrl('x') !== null;
+/** Bu backend myGov girişini dəstəkləyirmi (lokal rejimdə yox). */
+export const mygovSupported = repo.auth.mygovStartUrl('x') !== null;
+
+export type MygovAvailability = 'checking' | 'ready' | 'unavailable';
+
+let cached: Promise<boolean> | null = null;
+/** Serverdə myGov girişinin qoşulub-qoşulmadığı (bir dəfə yoxlanılır; uğursuzluqda növbəti dəfə təkrar). */
+export function checkMygov(): Promise<boolean> {
+  if (!mygovSupported) return Promise.resolve(false);
+  if (!cached) {
+    cached = repo.auth.mygovAvailable();
+    void cached.then((ok) => {
+      if (!ok) cached = null;
+    });
+  }
+  return cached;
+}
+
+export function useMygovAvailability(): MygovAvailability {
+  const [state, setState] = useState<MygovAvailability>(mygovSupported ? 'checking' : 'unavailable');
+  useEffect(() => {
+    let alive = true;
+    void checkMygov().then((ok) => alive && setState(ok ? 'ready' : 'unavailable'));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return state;
+}
 
 const ERRORS: Record<string, string> = {
   access_denied: 'Giriş ləğv olundu',

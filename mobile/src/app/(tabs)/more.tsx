@@ -6,6 +6,7 @@ import { Text } from '../../ui/Text';
 import { isTransient, repo } from '../../data';
 import { addDays, todayISO } from '../../domain/dates';
 import { animalsCsv, expenseSummary, farmReport, feedLow, medNeedsAttention, milkCsv, milkStats, movementsCsv, purchasesCsv, tradeSummary, treatmentsCsv } from '../../domain/logic';
+import { pendingGovItems } from '../../domain/gov';
 import { demoData, makeBackup, parseBackup } from '../../domain/transfer';
 import { emptyFarmData, type Farm } from '../../domain/types';
 import { readTextFile, shareTextFile } from '../../lib/files';
@@ -77,6 +78,10 @@ export default function More() {
   const sizeNote = data.meds.some(medNeedsAttention) ? ' · diqqət tələb edənlər var' : '';
   const feedNote = data.feeds.some(feedLow) ? ' · az qalanlar var' : '';
   const milk = milkStats(data, 30);
+  const govNote = (agency: 'ektis' | 'aqta') => {
+    const n = pendingGovItems(data, agency, addDays(todayISO(), -29)).length;
+    return n ? ` · ${n} bildirilməmiş qeyd (30 gün)` : '';
+  };
   const emailReport = (days: number) =>
     run(async () => {
       const from = addDays(todayISO(), -days + 1);
@@ -103,7 +108,7 @@ export default function More() {
           title="Yadda saxla"
           style={{ marginTop: 14 }}
           onPress={() => {
-            farmStore.saveFarm({ name: farm.name.trim() || 'Mənim fermam', owner: farm.owner.trim(), region: farm.region.trim() });
+            farmStore.saveFarm({ ...farm, name: farm.name.trim() || 'Mənim fermam', owner: farm.owner.trim(), region: farm.region.trim() });
             toast('Yadda saxlanıldı');
           }}
         />
@@ -121,6 +126,23 @@ export default function More() {
 
       <H2>{`Xərc və gəlir — ${todayISO().slice(0, 4)}`}</H2>
       <ExpenseCard />
+
+      <H2>Dövlət hesabatları</H2>
+      <List>
+        <ListItem
+          first
+          icon="bank"
+          title="EKTİS"
+          subtitle={`Heyvan qeydiyyatı və hərəkəti${govNote('ektis')}`}
+          onPress={() => router.push({ pathname: '/reports', params: { agency: 'ektis' } })}
+        />
+        <ListItem
+          icon="bank"
+          title="AQTA"
+          subtitle={`Baytarlıq dərmanları, kəsim, ölüm halları${govNote('aqta')}`}
+          onPress={() => router.push({ pathname: '/reports', params: { agency: 'aqta' } })}
+        />
+      </List>
 
       <H2>Hesabatlar və ehtiyat nüsxə</H2>
       <List>
