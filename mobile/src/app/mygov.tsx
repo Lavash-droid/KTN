@@ -36,7 +36,7 @@ export default function MygovReturn() {
         </Card>
       ) : (
         <>
-          <ActivityIndicator color={c.green} size="large" />
+          <ActivityIndicator color={c.accent} size="large" />
           <Muted style={{ marginTop: 12 }}>myGov ilə giriş tamamlanır…</Muted>
         </>
       )}

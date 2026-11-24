@@ -5,7 +5,7 @@ const fs = require('fs');
 const svg = fs.readFileSync(process.argv[2], 'utf8');
 const out = process.argv[3];
 // Inner artwork without rounded background (for Android foreground / monochrome)
-const inner = svg.replace(/<rect width="512" height="512" rx="112" fill="#163f30"\/>/, '');
+const inner = svg.replace(/<rect width="512" height="512" rx="112" fill="#[0-9a-fA-F]{6}"\/>/, '');
 const mono = inner.replace(/fill="#[0-9a-fA-F]{6}"/g, 'fill="#fff"').replace(/stroke="#[0-9a-fA-F]{6}"/g, 'stroke="#fff"');
 const full = svg.replace('rx="112"', 'rx="0"');
 (async () => {

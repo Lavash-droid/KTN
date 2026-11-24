@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { Text } from '../ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { repo } from '../data';
 import { mygovEnabled, signInWithMygov } from '../lib/mygov';
@@ -52,7 +53,7 @@ export default function Login() {
           <View style={{ alignItems: 'center' }}>
             <Logo size={68} />
           </View>
-          <Text style={{ fontSize: 38, fontFamily: FONT.displayBold, textAlign: 'center', color: c.text, marginTop: 14, letterSpacing: -0.8 }}>Sürü</Text>
+          <Text style={{ fontSize: 30, fontFamily: FONT.displayBold, textAlign: 'center', color: c.text, marginTop: 14, letterSpacing: -0.4 }}>Sürü</Text>
           <Muted center style={{ marginBottom: 24, marginTop: 4, paddingHorizontal: 12 }}>Fermanız cibinizdə — heyvan uçotu, müalicə, mayalanma və çəki qeydləri.</Muted>
           <Card style={{ padding: 20 }}>
             <Segmented<Mode>
@@ -75,8 +76,8 @@ export default function Login() {
               placeholder="ən azı 6 simvol"
             />
             {msg ? (
-              <View style={{ marginTop: 14, padding: 12, borderRadius: 12, backgroundColor: msg.error ? c.dangerSoft : c.greenSoft }}>
-                <Text style={{ color: msg.error ? c.danger : c.green, fontSize: 14 }}>{msg.text}</Text>
+              <View style={{ marginTop: 14, padding: 12, borderRadius: 12, backgroundColor: msg.error ? c.dangerSoft : c.okSoft }}>
+                <Text style={{ color: msg.error ? c.danger : c.ok, fontSize: 14 }}>{msg.text}</Text>
               </View>
             ) : null}
             <Btn title={mode === 'login' ? 'Daxil ol' : 'Hesab yarat'} onPress={submit} loading={busy} style={{ marginTop: 20 }} />

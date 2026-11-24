@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '../../ui/Text';
 import { daysBetween, fmt, inDays, todayISO } from '../../domain/dates';
 import type { Task } from '../../domain/types';
 import { uid } from '../../lib/id';
@@ -60,11 +61,11 @@ function TaskRow({ task: k, first }: { task: Task; first: boolean }) {
         accessibilityState={{ checked: k.done }}
         accessibilityLabel="Tamamlandı"
         hitSlop={8}
-        style={{ width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: c.green, backgroundColor: k.done ? c.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}
+        style={{ width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: c.accent, backgroundColor: k.done ? c.primary : 'transparent', alignItems: 'center', justifyContent: 'center' }}
       >
-        {k.done ? <Icon name="check" size={17} color={c.onGreen} /> : null}
+        {k.done ? <Icon name="check" size={17} color={c.onAccent} /> : null}
       </Pressable>
-      <Text style={{ flex: 1, fontWeight: '700', fontSize: 15.5, color: k.done ? c.muted : c.text, textDecorationLine: k.done ? 'line-through' : 'none' }}>{k.title}</Text>
+      <Text style={{ flex: 1, fontWeight: '500', fontSize: 15.5, color: k.done ? c.muted : c.text, textDecorationLine: k.done ? 'line-through' : 'none' }}>{k.title}</Text>
       {!k.done && n !== null && (n < 0 ? <Badge kind="danger">{inDays(n)}</Badge> : n <= 2 ? <Badge kind="warn">{inDays(n)}</Badge> : <Badge kind="ok">{fmt(k.due)}</Badge>)}
       <Pressable onPress={() => farmStore.deleteTask(k.id)} hitSlop={10} accessibilityLabel="Sil">
         <Icon name="close" size={18} color={c.muted} />

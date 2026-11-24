@@ -77,7 +77,7 @@
     "android": {
       "package": "az.suru.app",
       "adaptiveIcon": {
-        "backgroundColor": "#163f30",
+        "backgroundColor": "#315ab5",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },

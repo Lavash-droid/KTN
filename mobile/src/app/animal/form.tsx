@@ -2,7 +2,8 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '../../ui/Text';
 import { SPECIES, SPECIES_KEYS, STATUS } from '../../domain/constants';
 import { isISODate, todayISO } from '../../domain/dates';
 import { animalLabel } from '../../domain/logic';
@@ -97,8 +98,8 @@ export default function AnimalForm() {
       {isCalf && <Muted small style={{ marginBottom: 10 }}>Balanın məlumatlarını tamamlayın — ana, növ və doğum tarixi artıq doldurulub.</Muted>}
       <Card>
         <Row gap={14} style={{ alignItems: 'center', marginBottom: 4 }}>
-          <View style={{ width: 84, height: 84, borderRadius: RADIUS, backgroundColor: c.greenSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <Photo src={shownPhoto} style={{ width: 84, height: 84 }} fallback={<Icon name="camera" size={32} color={c.green} />} />
+          <View style={{ width: 84, height: 84, borderRadius: RADIUS, backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <Photo src={shownPhoto} style={{ width: 84, height: 84 }} fallback={<Icon name="camera" size={32} color={c.accent} />} />
           </View>
           <View style={{ flex: 1, gap: 6 }}>
             <Row gap={6} style={{ flexWrap: 'wrap' }}>

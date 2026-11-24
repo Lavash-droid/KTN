@@ -1,4 +1,4 @@
-import { Fraunces_600SemiBold, Fraunces_700Bold, useFonts } from '@expo-google-fonts/fraunces';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -27,12 +27,12 @@ function ThemedStatusBar() {
 function RootStack() {
   const { session, ready } = useAuth();
   const c = useColors();
-  // Başlıq şrifti; yüklənməsə (xəta) sistem şrifti ilə davam edilir.
-  const [fontsLoaded, fontError] = useFonts({ Fraunces_600SemiBold, Fraunces_700Bold });
+  // Inter şrifti; yüklənməsə (xəta) sistem şrifti ilə davam edilir.
+  const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold });
   if (!ready || (!fontsLoaded && !fontError)) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.bg }}>
-        <ActivityIndicator color={c.green} size="large" />
+        <ActivityIndicator color={c.accent} size="large" />
       </View>
     );
   }
@@ -42,7 +42,8 @@ function RootStack() {
         headerStyle: { backgroundColor: c.header },
         headerTintColor: c.text,
         headerShadowVisible: false,
-        headerTitleStyle: { fontFamily: FONT.display, fontSize: 19 },
+        headerTitleStyle: { fontFamily: FONT.semibold, fontSize: 17, color: c.text },
+        headerTitleAlign: 'center',
         contentStyle: { backgroundColor: c.bg },
         headerBackButtonDisplayMode: 'minimal',
       }}
